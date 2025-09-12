@@ -1,39 +1,90 @@
 import express from "express";
-import logger from "./libs/winston";
-import { listingsRouter } from "./listings/listingsRouter";
+import session from "express-session";
 import z from "zod";
+import { Logger } from "./libs/winston";
+import { ExpressOIDC } from "@okta/oidc-middleware";
+import { listingsRouter } from "./listings/listingsRouter";
+
 import { listingsRepository } from "./listings/listingsRepository";
 
 const envSchema = z.object({
-  port: z.string().optional(),
+  app: z.object({
+    PORT: z.string().optional(),
+    HOST: z.string().optional(),
+    LOG_LEVEL: z.string(),
+  }),
   db: z.object({
-    DB_HOST: z.string().optional(),
-    DB_PORT: z.string().optional(),
-    DB_USER: z.string().optional(),
-    DB_PASSWORD: z.string().optional(),
-    DB_NAME: z.string().optional(),
+    HOST: z.string().optional(),
+    PORT: z.string().optional(),
+    USER: z.string().optional(),
+    PASSWORD: z.string().optional(),
+    NAME: z.string().optional(),
     }),
+  oicd: z.object({
+    SESSION: z.string(),
+    ISSUER: z.string(),
+    CLIENT_ID: z.string(),
+    CLIENT_SECRET: z.string(),
+    APP_BASE_URL: z.string(),
+  }),
 });
 
 const env = envSchema.parse({
-  port: process.env.PORT || "3000",
-  db: {
-    DB_HOST: process.env.DB_HOST || "localhost",
-    DB_PORT: process.env.DB_PORT  || "5432",
-    DB_USER: process.env.DB_USER  || "defaut_user",
-    DB_PASSWORD: process.env.DB_PASSWORD  || "password",
-    DB_NAME: process.env.DB_NAME  || "store",
+  app: {
+    PORT: process.env.APP_PORT || "3000",
+    HOST: process.env.APP_HOST || "localhost",
+    LOG_LEVEL: process.env.APP_LOG_LEVEL || "info",
   },
+  db: {
+    HOST: process.env.DB_HOST || "localhost",
+    PORT: process.env.DB_PORT  || "5432",
+    USER: process.env.DB_USER,
+    PASSWORD: process.env.DB_PASSWORD,
+    NAME: process.env.DB_NAME,
+  },
+  oicd: {
+    SESSION: process.env.AUTH_SESSION_SECRET,
+    ISSUER: process.env.AUTH_ISSUER,
+    CLIENT_ID: process.env.AUTH_CLIENT_ID,
+    CLIENT_SECRET: process.env.AUTH_CLIENT_SECRET,
+    APP_BASE_URL: process.env.AUTH_APP_BASE_URL,
+  }
 });
 
+console.log(env);
+const logger = Logger(env.app.LOG_LEVEL);
 const repository = listingsRepository(env.db, logger);
 const listingRouter = listingsRouter(repository, logger);
 
 const app = express();
-
 app.use(express.json());
-app.use(listingRouter);
+app.use(
+  session({
+    secret: env.oicd.SESSION,
+    resave: true,
+    saveUninitialized: false,
+  })
+);
 
-app.listen(env.port, () => {
-  logger.info(`Server running at http://localhost:${env.port}/`);
+const oidc = new ExpressOIDC({
+  issuer: env.oicd.ISSUER,
+  client_id: env.oicd.CLIENT_ID,
+  client_secret: env.oicd.CLIENT_SECRET,
+  appBaseUrl: env.oicd.APP_BASE_URL,
+  scope: "openid profile email",
+});
+
+app.use(oidc.router as any);
+app.get("/profile", oidc.ensureAuthenticated() as any, (req, res) => {
+  res.json(req.userContext);
+});
+
+app.use(`/`, oidc.ensureAuthenticated() as any, listingRouter);
+
+oidc.on("ready", () => {
+  app.listen(env.app.PORT, () => logger.info(`Server running at http://${env.app.HOST}:${env.app.PORT}/`));
+});
+
+oidc.on("error", (err) => {
+  console.error("OIDC error:", err);
 });

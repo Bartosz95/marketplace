@@ -37,13 +37,13 @@ export interface ListingsRepository {
   
 }
 
-export const listingsRepository = (envDB: any, logger: Logger): ListingsRepository => {
+export const listingsRepository = (env: any, logger: Logger): ListingsRepository => {
   const pool  = new Pool({
-    host: envDB.DB_HOST,
-    port: envDB.DB_PORT,
-    user: envDB.DB_USER,
-    password: envDB.DB_PASSWORD,
-    database: envDB.DB_NAME,
+    host: env.HOST,
+    port: env.PORT,
+    user: env.USER,
+    password: env.PASSWORD,
+    database: env.NAME,
   });
 
   const createListing = async (listing: Listing) => {

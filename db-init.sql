@@ -1,11 +1,11 @@
 
 CREATE USER defaut_user WITH PASSWORD 'password';
-CREATE DATABASE store OWNER defaut_user;
-GRANT ALL PRIVILEGES ON DATABASE store TO defaut_user;
+CREATE DATABASE maretplace OWNER defaut_user;
+GRANT ALL PRIVILEGES ON DATABASE maretplace TO defaut_user;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-\connect store;
+\connect maretplace;
 
 CREATE SCHEMA event_store AUTHORIZATION defaut_user;
 
