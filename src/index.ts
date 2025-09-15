@@ -5,8 +5,7 @@ import { Logger } from "./libs/winston";
 import { ExpressOIDC } from "@okta/oidc-middleware";
 import { listingsRouter } from "./listings/listingsRouter";
 import { listingsRepository } from "./listings/listingsRepository";
-import OktaJwtVerifier from "@okta/jwt-verifier";
-import { listings } from "./domain/listings";
+import { Listings } from "./domain/listings";
 
 const envSchema = z.object({
   app: z.object({
@@ -55,17 +54,11 @@ const env = envSchema.parse({
 const logger = Logger(env.app.LOG_LEVEL);
 
 const repository = listingsRepository(logger, env.db);
-const listingsDomain = listings(repository, logger);
+const listingsDomain = Listings(repository, logger);
 const listingRouter = listingsRouter(listingsDomain, logger);
 
 const app = express();
 app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log(req.body);
-  next();
-});
-
 app.use(
   session({
     secret: env.oicd.SESSION,
@@ -91,7 +84,7 @@ app.use(`/`, listingRouter);
 
 oidc.on("ready", () => {
   app.listen(env.app.PORT, () =>
-    console.log(`Server running at http://${env.app.HOST}:${env.app.PORT}/`)
+    logger.info(`Server running at http://${env.app.HOST}:${env.app.PORT}/`)
   );
 });
 

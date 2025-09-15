@@ -15,7 +15,7 @@ export interface Listings {
   deleteListing: (listing_id: UUID) => Promise<void>;
 }
 
-export const listings = (
+export const Listings = (
   repository: ListingsRepository,
   logger: Logger
 ): Listings => {
@@ -28,19 +28,15 @@ export const listings = (
     returnDeleted = false
   ): Promise<Listing[]> => {
     const listingsEvents = await repository.getEvents(limit, returnDeleted);
-    console.log(listingsEvents);
     return buildListingsFromEvents(listingsEvents);
   };
 
   const getListing = async (listingID: UUID) => {
     const listingEvents = await repository.getEventsByID(listingID);
-    console.log(listingEvents);
     return buildListingFromEvents(listingEvents);
   };
 
   const updateListing = async (listingID: UUID, data: Listing) => {
-    const listingEvents = await repository.getEventsByID(listingID);
-    const listing = buildListingFromEvents(listingEvents);
     await repository.insertEventByID(
       listingID,
       EventType.LISTING_UPDATED,
@@ -70,7 +66,6 @@ export const listings = (
   };
 
   const buildListingFromEvents = (events: Event[]): Listing => {
-    console.log(events);
     const createdEvent = events.find(
       (event) => event.event_type === EventType.LISTING_CREATED
     );
