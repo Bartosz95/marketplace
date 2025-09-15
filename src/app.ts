@@ -89,5 +89,5 @@ oidc.on("ready", () => {
 });
 
 oidc.on("error", (err) => {
-  console.error("OIDC error:", err);
+  logger.error("OIDC error:", err);
 });
