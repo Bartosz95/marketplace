@@ -79,11 +79,17 @@ export const Listings = (
     for (const event of events.sort((a, b) => a.version - b.version)) {
       switch (event.event_type) {
         case EventType.LISTING_UPDATED:
-          listing = { ...listing, ...event.data, status: event.event_type };
+          listing = { 
+            ...listing, 
+            ...event.data, 
+            status: event.event_type, 
+            version: event.version 
+          };
           break;
         case EventType.LISTING_PURCHASED:
         case EventType.LISTING_DELETED:
           listing.status = event.event_type;
+          listing.version = event.version;
           break;
       }
     }

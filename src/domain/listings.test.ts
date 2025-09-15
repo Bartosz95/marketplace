@@ -15,7 +15,7 @@ const LocalRepository = (inMemoryDB: Event[]) => {
       version: 1,
       created_at: new Date().toISOString(),
       event_type,
-      data,
+      data: { ...data, version: 1 },
       metadata: {},
     };
     inMemoryDB.push(event);
@@ -28,13 +28,15 @@ const LocalRepository = (inMemoryDB: Event[]) => {
     event_type: EventType,
     data?: any
   ) => {
+    const version =
+      inMemoryDB.filter((e) => e.listing_id === listing_id).length + 1;
     const event: Event = {
       position_id: inMemoryDB.length + 1,
       listing_id: listing_id || (crypto.randomUUID() as UUID),
-      version: inMemoryDB.filter((e) => e.listing_id === listing_id).length + 1,
+      version,
       created_at: new Date().toISOString(),
       event_type,
-      data,
+      data: { ...data, version },
       metadata: {},
     };
     inMemoryDB.push(event);
@@ -58,16 +60,16 @@ describe("listing", () => {
   beforeEach(() => {
     inMemoryDB.length = 0;
   });
-  describe("create", () => {
-    test("call create > create new listing", async () => {
+  describe("createListing", () => {
+    test("when call > create new listing", async () => {
       await listings.createListing({
         title: "Test",
         description: "Test description",
         price: 100,
       });
-      const result = await repository.getEvents();
-      expect(result).toHaveLength(1);
-      expect(result).toEqual(
+
+      expect(inMemoryDB).toHaveLength(1);
+      expect(inMemoryDB).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             data: expect.objectContaining({
@@ -80,7 +82,7 @@ describe("listing", () => {
       );
     });
 
-    test("call create 2 times > repository has length 2 and listings have different ids", async () => {
+    test("when call 2 times > repository has length 2 and listings have different ids", async () => {
       await listings.createListing({
         title: "listing 1",
         description: "Test description",
@@ -91,43 +93,198 @@ describe("listing", () => {
         description: "Test description",
         price: 100,
       });
-      const result = await repository.getEvents();
-      expect(result).toHaveLength(2);
-      expect(result[0].listing_id).not.toEqual(result[1].listing_id);
+      expect(inMemoryDB).toHaveLength(2);
+      expect(inMemoryDB[0].listing_id).not.toEqual(inMemoryDB[1].listing_id);
     });
   });
 
-  describe("update", () => {
-    test("call update > create new event for the same listing id", async () => {
-      await listings.createListing({
-        title: "Before update",
-        description: "Test description",
-        price: 100,
+  describe("getListing", () => {
+    test("when call > build listing from events", async () => {
+      const listing_id = crypto.randomUUID() as UUID;
+      inMemoryDB.push({
+        position_id: 1,
+        listing_id,
+        version: 1,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_CREATED,
+        data: {
+          title: "Shoes",
+          description: "Test description",
+          price: 100,
+        },
+        metadata: {},
       });
-      const events = await repository.getEvents();
-      const listing_id = events[0].listing_id;
-      await listings.updateListing(listing_id, {
-        title: "After update",
+      inMemoryDB.push({
+        position_id: 2,
+        listing_id,
+        version: 2,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_UPDATED,
+        data: {
+          title: "Kicks",
+          description: "Test description",
+          price: 200,
+        },
+        metadata: {},
+      });
+      inMemoryDB.push({
+        position_id: 1,
+        listing_id: crypto.randomUUID() as UUID,
+        version: 1,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_CREATED,
+        data: {
+          title: "Another listing",
+          description: "Test description",
+          price: 10,
+        },
+        metadata: {},
+      });
+
+      const result = await listings.getListing(listing_id);
+      expect(result).toEqual({
+        listing_id,
+        version: 2,
+        status: EventType.LISTING_UPDATED,
+        title: "Kicks",
         description: "Test description",
         price: 200,
       });
-      const result = await repository.getEventsByID(listing_id);
-      expect(result).toHaveLength(2);
-      expect(result[0].listing_id).toEqual(listing_id);
-      expect(result[1].listing_id).toEqual(listing_id);
-      expect(result).toEqual(
+    });
+  });
+
+  describe("updateListing", () => {
+    test("when call > create new event for the same listing", async () => {
+      const listing_id = crypto.randomUUID() as UUID;
+      const event: Event = {
+        position_id: 1,
+        listing_id,
+        version: 1,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_CREATED,
+        data: {
+          title: "Shoes",
+          description: "Test description",
+          price: 100,
+        },
+        metadata: {},
+      };
+      inMemoryDB.push(event);
+
+      await listings.updateListing(listing_id, {
+        title: "Kicks",
+        description: "Test description",
+        price: 200,
+      });
+
+      expect(inMemoryDB).toHaveLength(2);
+      expect(inMemoryDB[0].listing_id).toEqual(listing_id);
+      expect(inMemoryDB[1].listing_id).toEqual(listing_id);
+      expect(inMemoryDB).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             event_type: EventType.LISTING_UPDATED,
             version: 2,
             data: expect.objectContaining({
-              title: "After update",
+              title: "Kicks",
               description: "Test description",
               price: 200,
             }),
           }),
         ])
       );
+      await expect(listings.getListing(listing_id)).resolves.toEqual({
+        listing_id,
+        version: 2,
+        status: EventType.LISTING_UPDATED,
+        title: "Kicks",
+        description: "Test description",
+        price: 200,
+      });
+    });
+  });
+
+  describe("purchaseListing", () => {
+    test("when call > set listing state as purchases", async () => {
+      const listing_id = crypto.randomUUID() as UUID;
+      const event: Event = {
+        position_id: 1,
+        listing_id,
+        version: 1,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_CREATED,
+        data: {
+          title: "Shoes",
+          description: "Test description",
+          price: 100,
+        },
+        metadata: {},
+      };
+      inMemoryDB.push(event);
+
+      await listings.purchaseListing(listing_id);
+
+      await expect(inMemoryDB).toHaveLength(2);
+      expect(inMemoryDB[0].listing_id).toEqual(listing_id);
+      expect(inMemoryDB[1].listing_id).toEqual(listing_id);
+      console.log(inMemoryDB);
+      expect(inMemoryDB).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event_type: EventType.LISTING_PURCHASED,
+          }),
+        ])
+      );
+      await expect(listings.getListing(listing_id)).resolves.toEqual({
+        listing_id,
+        version: 2,
+        status: EventType.LISTING_PURCHASED,
+        title: "Shoes",
+        description: "Test description",
+        price: 100,
+      });
+    });
+  });
+
+  describe("deleteListing", () => {
+    test("when call > set listing state as deleted", async () => {
+      const listing_id = crypto.randomUUID() as UUID;
+      const event: Event = {
+        position_id: 1,
+        listing_id,
+        version: 1,
+        created_at: "2025-09-15T10:29:11.699Z",
+        event_type: EventType.LISTING_CREATED,
+        data: {
+          title: "Shoes",
+          description: "Test description",
+          price: 100,
+        },
+        metadata: {},
+      };
+      inMemoryDB.push(event);
+
+      await listings.purchaseListing(listing_id);
+
+      await expect(inMemoryDB).toHaveLength(2);
+      expect(inMemoryDB[0].listing_id).toEqual(listing_id);
+      expect(inMemoryDB[1].listing_id).toEqual(listing_id);
+      console.log(inMemoryDB);
+      expect(inMemoryDB).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event_type: EventType.LISTING_PURCHASED,
+          }),
+        ])
+      );
+      await expect(listings.getListing(listing_id)).resolves.toEqual({
+        listing_id,
+        version: 2,
+        status: EventType.LISTING_PURCHASED,
+        title: "Shoes",
+        description: "Test description",
+        price: 100,
+      });
     });
   });
 });
