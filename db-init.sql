@@ -1,23 +1,22 @@
 
-CREATE USER defaut_user WITH PASSWORD 'password';
-CREATE DATABASE maretplace OWNER defaut_user;
-GRANT ALL PRIVILEGES ON DATABASE maretplace TO defaut_user;
+CREATE USER default_user WITH PASSWORD 'password';
+CREATE DATABASE marketplace OWNER default_user;
+GRANT ALL PRIVILEGES ON DATABASE marketplace TO default_user;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-\connect maretplace;
+\connect marketplace;
 
-CREATE SCHEMA event_store AUTHORIZATION defaut_user;
+CREATE SCHEMA event_store AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS event_store.events (
-  event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  listing_id UUID DEFAULT gen_random_uuid(),
-  position_id SERIAL,
-  version INT NOT NULL DEFAULT 1,
+  position_id SERIAL PRIMARY KEY,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  listing_id UUID DEFAULT gen_random_uuid(),
+  version INT NOT NULL DEFAULT 1,
   event_type VARCHAR(100) NOT NULL,
-  data JSONB NOT NULL,
-  metadata JSONB NOT NULL
+  data JSONB,
+  metadata JSONB 
 );
 
-ALTER TABLE event_store.events OWNER TO defaut_user;
+ALTER TABLE event_store.events OWNER TO default_user;

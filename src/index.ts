@@ -4,22 +4,23 @@ import z from "zod";
 import { Logger } from "./libs/winston";
 import { ExpressOIDC } from "@okta/oidc-middleware";
 import { listingsRouter } from "./listings/listingsRouter";
-
 import { listingsRepository } from "./listings/listingsRepository";
+import OktaJwtVerifier from "@okta/jwt-verifier";
+import { listings } from "./domain/listings";
 
 const envSchema = z.object({
   app: z.object({
-    PORT: z.string().optional(),
+    PORT: z.coerce.number().optional(),
     HOST: z.string().optional(),
     LOG_LEVEL: z.string(),
   }),
   db: z.object({
-    HOST: z.string().optional(),
-    PORT: z.string().optional(),
-    USER: z.string().optional(),
-    PASSWORD: z.string().optional(),
-    NAME: z.string().optional(),
-    }),
+    host: z.string().optional(),
+    port: z.coerce.number().optional(),
+    user: z.string().optional(),
+    password: z.string().optional(),
+    database: z.string().optional(),
+  }),
   oicd: z.object({
     SESSION: z.string(),
     ISSUER: z.string(),
@@ -36,11 +37,11 @@ const env = envSchema.parse({
     LOG_LEVEL: process.env.APP_LOG_LEVEL || "info",
   },
   db: {
-    HOST: process.env.DB_HOST || "localhost",
-    PORT: process.env.DB_PORT  || "5432",
-    USER: process.env.DB_USER,
-    PASSWORD: process.env.DB_PASSWORD,
-    NAME: process.env.DB_NAME,
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || "5432",
+    user: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD || "password",
+    database: process.env.DB_NAME || "marketplace",
   },
   oicd: {
     SESSION: process.env.AUTH_SESSION_SECRET,
@@ -48,16 +49,23 @@ const env = envSchema.parse({
     CLIENT_ID: process.env.AUTH_CLIENT_ID,
     CLIENT_SECRET: process.env.AUTH_CLIENT_SECRET,
     APP_BASE_URL: process.env.AUTH_APP_BASE_URL,
-  }
+  },
 });
 
-console.log(env);
 const logger = Logger(env.app.LOG_LEVEL);
-const repository = listingsRepository(env.db, logger);
-const listingRouter = listingsRouter(repository, logger);
+
+const repository = listingsRepository(logger, env.db);
+const listingsDomain = listings(repository, logger);
+const listingRouter = listingsRouter(listingsDomain, logger);
 
 const app = express();
 app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log(req.body);
+  next();
+});
+
 app.use(
   session({
     secret: env.oicd.SESSION,
@@ -79,10 +87,12 @@ app.get("/profile", oidc.ensureAuthenticated() as any, (req, res) => {
   res.json(req.userContext);
 });
 
-app.use(`/`, oidc.ensureAuthenticated() as any, listingRouter);
+app.use(`/`, listingRouter);
 
 oidc.on("ready", () => {
-  app.listen(env.app.PORT, () => logger.info(`Server running at http://${env.app.HOST}:${env.app.PORT}/`));
+  app.listen(env.app.PORT, () =>
+    console.log(`Server running at http://${env.app.HOST}:${env.app.PORT}/`)
+  );
 });
 
 oidc.on("error", (err) => {
