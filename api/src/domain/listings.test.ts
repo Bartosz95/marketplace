@@ -20,7 +20,7 @@ const LocalRepository = (inMemoryDB: Event[]) => {
     };
     inMemoryDB.push(event);
   };
-  const getEvents = async (limit: number, returnDeleted: boolean) => {
+  const getEventsForLastNListings = async (limit: number, returnDeleted: boolean) => {
     return inMemoryDB;
   };
   const insertEventByID = async (
@@ -47,7 +47,7 @@ const LocalRepository = (inMemoryDB: Event[]) => {
 
   return {
     insertEvent,
-    getEvents,
+    getEventsForLastNListings,
     insertEventByID,
     getEventsByID,
   } as ListingsRepository;

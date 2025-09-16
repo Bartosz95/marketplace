@@ -27,7 +27,7 @@ export const Listings = (
     limit = 10,
     returnDeleted = false
   ): Promise<Listing[]> => {
-    const listingsEvents = await repository.getEvents(limit, returnDeleted);
+    const listingsEvents = await repository.getEventsForLastNListings(limit, returnDeleted);
     return buildListingsFromEvents(listingsEvents);
   };
 

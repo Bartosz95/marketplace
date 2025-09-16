@@ -5,7 +5,10 @@ import { EventType, Event } from "../types";
 
 export interface ListingsRepository {
   insertEvent: (event_type: EventType, data: any) => Promise<void>;
-  getEvents: (limit?: number, returnDeleted?: boolean) => Promise<Event[]>;
+  getEventsForLastNListings: (
+    limit?: number,
+    returnDeleted?: boolean
+  ) => Promise<Event[]>;
   insertEventByID: (
     listing_id: UUID,
     eventType: EventType,
@@ -36,7 +39,7 @@ export const listingsRepository = (logger: Logger, env: any) => {
     }
   };
 
-  const getEvents = async (
+  const getEventsForLastNListings = async (
     limit = 10,
     returnDeleted = false
   ): Promise<Event[]> => {
@@ -107,7 +110,7 @@ export const listingsRepository = (logger: Logger, env: any) => {
 
   return {
     insertEvent,
-    getEvents,
+    getEventsForLastNListings,
     insertEventByID,
     getEventsByID,
   };
