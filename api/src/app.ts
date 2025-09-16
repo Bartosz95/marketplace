@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import z from "zod";
 import { Logger } from "./libs/winston";
 import { auth } from "express-oauth2-jwt-bearer";
@@ -52,6 +53,7 @@ const listingRouter = listingsRouter(listingsDomain, logger);
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: "*" }));
 
 const jwtCheck = auth({
   audience: env.auth.audience,

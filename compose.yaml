@@ -1,12 +1,14 @@
 services:
   app:
     build:
-      context: .
+      context: api
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - api/.env
+    environment:
+      - DB_HOST=db
     depends_on:
       - db
   db:
