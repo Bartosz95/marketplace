@@ -1,57 +1,50 @@
 import express from "express";
-import session from "express-session";
 import z from "zod";
 import { Logger } from "./libs/winston";
-import { ExpressOIDC } from "@okta/oidc-middleware";
+import { auth } from "express-oauth2-jwt-bearer";
 import { listingsRouter } from "./listings/listingsRouter";
 import { listingsRepository } from "./listings/listingsRepository";
 import { Listings } from "./domain/listings";
 
 const envSchema = z.object({
   app: z.object({
-    PORT: z.coerce.number().optional(),
-    HOST: z.string().optional(),
-    LOG_LEVEL: z.string(),
+    port: z.coerce.number(),
+    host: z.string(),
+    logLevel: z.string(),
   }),
   db: z.object({
-    host: z.string().optional(),
-    port: z.coerce.number().optional(),
-    user: z.string().optional(),
-    password: z.string().optional(),
-    database: z.string().optional(),
+    host: z.string(),
+    port: z.coerce.number(),
+    user: z.string(),
+    password: z.string(),
+    database: z.string(),
   }),
-  oicd: z.object({
-    SESSION: z.string(),
-    ISSUER: z.string(),
-    CLIENT_ID: z.string(),
-    CLIENT_SECRET: z.string(),
-    APP_BASE_URL: z.string(),
+  auth: z.object({
+    audience: z.string(),
+    issuerBaseURL: z.string(),
   }),
 });
 
 const env = envSchema.parse({
   app: {
-    PORT: process.env.APP_PORT || "3000",
-    HOST: process.env.APP_HOST || "localhost",
-    LOG_LEVEL: process.env.APP_LOG_LEVEL || "info",
+    port: process.env.APP_PORT,
+    host: process.env.APP_HOST,
+    logLevel: process.env.APP_LOG_LEVEL,
   },
   db: {
-    host: process.env.DB_HOST || "localhost",
-    port: process.env.DB_PORT || "5432",
-    user: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASSWORD || "password",
-    database: process.env.DB_NAME || "marketplace",
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   },
-  oicd: {
-    SESSION: process.env.AUTH_SESSION_SECRET,
-    ISSUER: process.env.AUTH_ISSUER,
-    CLIENT_ID: process.env.AUTH_CLIENT_ID,
-    CLIENT_SECRET: process.env.AUTH_CLIENT_SECRET,
-    APP_BASE_URL: process.env.AUTH_APP_BASE_URL,
+  auth: {
+    audience: process.env.AUTH_AUDIENCE,
+    issuerBaseURL: process.env.AUTH_ISSUER_BASE_URL,
   },
 });
 
-const logger = Logger(env.app.LOG_LEVEL);
+const logger = Logger(env.app.logLevel);
 
 const repository = listingsRepository(logger, env.db);
 const listingsDomain = Listings(repository, logger);
@@ -59,35 +52,17 @@ const listingRouter = listingsRouter(listingsDomain, logger);
 
 const app = express();
 app.use(express.json());
-app.use(
-  session({
-    secret: env.oicd.SESSION,
-    resave: true,
-    saveUninitialized: false,
-  })
+
+const jwtCheck = auth({
+  audience: env.auth.audience,
+  issuerBaseURL: env.auth.issuerBaseURL,
+  tokenSigningAlg: "RS256",
+});
+
+app.use(jwtCheck);
+
+app.use(`/`, jwtCheck, listingRouter);
+
+app.listen(env.app.port, () =>
+  logger.info(`Server running at http://${env.app.host}:${env.app.port}/`)
 );
-
-const oidc = new ExpressOIDC({
-  issuer: env.oicd.ISSUER,
-  client_id: env.oicd.CLIENT_ID,
-  client_secret: env.oicd.CLIENT_SECRET,
-  appBaseUrl: env.oicd.APP_BASE_URL,
-  scope: "openid profile email",
-});
-
-app.use(oidc.router as any);
-app.get("/profile", oidc.ensureAuthenticated() as any, (req, res) => {
-  res.json(req.userContext);
-});
-
-app.use(`/`, listingRouter);
-
-oidc.on("ready", () => {
-  app.listen(env.app.PORT, () =>
-    logger.info(`Server running at http://${env.app.HOST}:${env.app.PORT}/`)
-  );
-});
-
-oidc.on("error", (err) => {
-  logger.error("OIDC error:", err);
-});
