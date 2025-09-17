@@ -1,5 +1,5 @@
 services:
-  app:
+  api:
     build:
       context: api
       dockerfile: Dockerfile
@@ -9,6 +9,18 @@ services:
       - api/.env
     environment:
       - DB_HOST=db
+      - APP_NAME=listings-api
+    depends_on:
+      - db
+  listings-state-pm:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    env_file:
+      - api/.env
+    environment:
+      - DB_HOST=db
+      - APP_NAME=listings-state-pm
     depends_on:
       - db
   db:
