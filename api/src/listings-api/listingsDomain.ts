@@ -6,7 +6,7 @@ import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { CreateListingReqBody, UpdateListingReqBody } from "./listingsRouter";
 
 export interface Listings {
-  createListing: (listing: CreateListingReqBody) => Promise<void>;
+  createListing: (listing: CreateListingReqBody) => Promise<UUID>;
   getListing: (listing_id: UUID) => Promise<Listing>;
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
   updateListing: (
@@ -23,7 +23,10 @@ export const Listings = (
   logger: Logger
 ): Listings => {
   const createListing = async (data: CreateListingReqBody) => {
-    await eventSourceRepository.insertEvent(EventType.LISTING_CREATED, data);
+    return await eventSourceRepository.insertEvent(EventType.LISTING_CREATED, {
+      ...data,
+      status: EventType.LISTING_CREATED,
+    });
   };
 
   const getListing = async (listingId: UUID): Promise<Listing> => {
@@ -59,14 +62,16 @@ export const Listings = (
     }
     await eventSourceRepository.insertEventByID(
       listingId,
-      EventType.LISTING_PURCHASED
+      EventType.LISTING_PURCHASED,
+      {}
     );
   };
 
   const deleteListing = async (listingId: UUID) => {
     await eventSourceRepository.insertEventByID(
       listingId,
-      EventType.LISTING_DELETED
+      EventType.LISTING_DELETED,
+      {}
     );
   };
 

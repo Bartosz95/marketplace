@@ -1,21 +1,22 @@
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { Event, EventType } from "../types";
+import { Event, EventType, Listing } from "../types";
 
 export const ListingStateProcessManager = (
   repository: ListingsStateRepository
 ): ((event: Event) => void) => {
   return (event: Event) => {
-    const { eventType, listingId, data, createdAt } = event;
+    const { eventType, listingId, createdAt, data } = event;
 
     switch (eventType) {
       case EventType.LISTING_CREATED:
         repository.createListing({
-          ...data,
+          ...data as Listing,
+          listingId,
           status: EventType.LISTING_CREATED,
         });
         return;
       case EventType.LISTING_UPDATED:
-        repository.updateListing(listingId, data, createdAt);
+        repository.updateListing(listingId, data as Listing, createdAt);
         return;
       case EventType.LISTING_DELETED:
       case EventType.LISTING_PURCHASED:

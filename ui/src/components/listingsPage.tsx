@@ -8,19 +8,20 @@ function ListingsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const TOKEN = process.env.NEXT_PUBLIC__TOKEN;
-      console.log(process.env);
-      const response = await fetch(`http://localhost:3000/listings`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${TOKEN}`,
-        },
-      });
+      const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${TOKEN}`,
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result);
       setListings(result);
     };
     fetchData();

@@ -8,14 +8,15 @@ export enum EventType {
 }
 
 export interface Listing {
-  listingId?: UUID;
-  modifiedAt?: Date;
+  listingId: UUID;
   status: EventType;
   title: string;
   description: string;
   price: number;
-  imageUrls: string[];
+  imagesUrls: string[];
 }
+
+export type EventData = {} | Listing;
 
 export interface Event {
   position: number;
@@ -23,6 +24,6 @@ export interface Event {
   version: number;
   createdAt: Date;
   eventType: EventType;
-  data: Listing;
+  data: EventData;
   metadata: any;
 }

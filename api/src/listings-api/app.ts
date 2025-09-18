@@ -8,6 +8,7 @@ import { Listings } from "./listingsDomain";
 import { listingsRouter } from "./listingsRouter";
 import { auth } from "express-oauth2-jwt-bearer";
 import { Logger } from "../libs/logger";
+import { imagesRouter } from "./imagesRouter";
 
 export default () => {
   const envSchema = z.object({
@@ -59,9 +60,16 @@ export default () => {
   );
   const listingRouter = listingsRouter(listingsDomain, logger);
 
+  const imageRouter = imagesRouter();
+
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: "50mb" })); // Example: setting limit to 50MB for JSON payloads
+  app.use(express.urlencoded({ limit: "50mb", extended: true })); // Example: setting limit to 50MB for URL-encoded payloads
   app.use(cors({ origin: "*" }));
+
+
+
+
 
   // const jwtCheck = auth({
   //   audience: env.auth.audience,
@@ -71,7 +79,8 @@ export default () => {
 
   // app.use(jwtCheck);
 
-  app.use(`/`, listingRouter);
+  app.use(`/listings`, listingRouter);
+  app.use(`/images`, imageRouter);
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     logger.error(err.stack);

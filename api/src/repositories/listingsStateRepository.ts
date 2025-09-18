@@ -10,7 +10,7 @@ export interface ListingStateTableRow {
   title: string;
   description: string;
   price: number;
-  imageUrls: string[];
+  images_urls: string[];
 }
 
 export interface ListingsStateRepository {
@@ -19,7 +19,7 @@ export interface ListingsStateRepository {
   createListing: (listing: Listing) => Promise<void>;
   updateListing: (
     listingId: UUID,
-    listing: Listing,
+    data: Listing,
     modifiedAt: Date
   ) => Promise<void>;
   updateListingStatus: (
@@ -83,15 +83,16 @@ export const ListingsStateRepository = (
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.listings (status, title, description, price, images_urls) 
-        VALUES ($1, $2, $3, $4, $5);
+        `INSERT INTO states.listings (listing_id, status, title, description, price, images_urls) 
+        VALUES ($1, $2, $3, $4, $5, $6);
         `,
         [
+          listing.listingId,
           EventType.LISTING_CREATED,
           listing.title,
           listing.description,
           listing.price,
-          listing.imageUrls,
+          listing.imagesUrls,
         ]
       );
     } catch (error) {
@@ -107,19 +108,20 @@ export const ListingsStateRepository = (
     modifiedAt: Date
   ) => {
     const dbClient = await pool.connect();
+    const { title, description, price, imagesUrls } = listing;
     try {
       await dbClient.query(
         `UPDATE states.listings 
-        SET  status = $1,  modified_at = $2, title = $3, description  = $4 , price = $5, images_urls  = $6
+        SET  status = $1, modified_at = $2, title = $3, description  = $4, price = $5, images_urls = $6
         WHERE listing_id = $7;
         `,
         [
           EventType.LISTING_UPDATED,
           modifiedAt,
-          listing.title,
-          listing.description,
-          listing.price,
-          listing.imageUrls,
+          title,
+          description,
+          price,
+          imagesUrls,
           listingId,
         ]
       );
@@ -153,12 +155,11 @@ export const ListingsStateRepository = (
 
   const mapListing = (row: ListingStateTableRow): Listing => ({
     listingId: row.listing_id as UUID,
-    modifiedAt: new Date(row.modified_at),
     status: row.status as EventType,
     title: row.title,
     description: row.description,
     price: Number(row.price),
-    imageUrls: row.imageUrls as string[],
+    imagesUrls: row.images_urls as string[],
   });
 
   return {
