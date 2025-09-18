@@ -1,5 +1,5 @@
-import { ListingsPage } from "@/components/listingsPage";
-import "bootstrap/dist/css/bootstrap.css";
+import ListingsPage from "@/components/ListingsPage";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function main() {
   return (

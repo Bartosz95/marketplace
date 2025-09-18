@@ -22,7 +22,7 @@ function Listing({
   version,
 }: ListingProps) {
   return (
-    <Card style={{ width: "18rem;" }}>
+    <Card style={{ width: "18rem" }}>
       <Card.Body>
         <Card.Img
           variant="top"

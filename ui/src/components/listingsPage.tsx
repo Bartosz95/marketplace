@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import Listing, { ListingProps } from "./listing";
+import MarketplaceNavBar from "@/components/MarketplaceNavBar";
+import Listing, { ListingProps } from "@/components/Listing";
 
-export const ListingsPage = () => {
+function ListingsPage() {
   const [listings, setListings] = useState<ListingProps[]>([]);
 
   useEffect(() => {
@@ -25,11 +26,16 @@ export const ListingsPage = () => {
     fetchData();
   }, []);
 
+  const listingsView = listings.map((l) => (
+    <Listing {...l} key={l.listingId} />
+  ));
+
   return (
     <>
-      {listings.map((l) => (
-        <Listing {...l} key={l.listingId} />
-      ))}
+      <MarketplaceNavBar />
+      {listingsView}
     </>
   );
-};
+}
+
+export default ListingsPage;
