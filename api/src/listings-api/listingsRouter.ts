@@ -4,23 +4,32 @@ import z from "zod";
 import { UUID } from "crypto";
 import { Listings } from "./listingsDomain";
 
-const listingIdSchema = z.uuid();
+const listingIdSchema = z.string().uuid();
 
-const ListingReqBodySchema = z.object({
+const createListingReqBodySchema = z.object({
   title: z.string().min(1),
   description: z.string().min(0),
   price: z.number().min(0),
   imageUrls: z.array(z.url()),
 });
 
-export type ListingDetails = z.infer<typeof ListingReqBodySchema>;
+const updateListingReqBodySchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().min(0).optional(),
+  price: z.number().min(0).optional(),
+  imageUrls: z.array(z.url()).optional(),
+});
+
+export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;
+
+export type UpdateListingReqBody = z.infer<typeof updateListingReqBodySchema>;
 
 export const listingsRouter = (listings: Listings, logger: Logger) => {
   const router = Router();
 
   router.post("/listings", async (req, res) => {
-    const data = await ListingReqBodySchema.parse(req.body);
-    listings.createListing(data);
+    const data = await createListingReqBodySchema.parse(req.body);
+    await listings.createListing(data);
     res.status(200).send();
   });
 
@@ -35,10 +44,10 @@ export const listingsRouter = (listings: Listings, logger: Logger) => {
     res.status(200).send(listing);
   });
 
-  router.patch("/listings/:listingsID", async (req, res) => {
+  router.patch("/listings/:listingsID", async (req, res, next) => {
     const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
-    const data = await ListingReqBodySchema.parse(req.body);
-    listings.updateListing(listingId, data);
+    const data = await updateListingReqBodySchema.parse(req.body);
+    await listings.updateListing(listingId, data);
     res.status(200).send();
   });
 
@@ -52,7 +61,7 @@ export const listingsRouter = (listings: Listings, logger: Logger) => {
     const listingId = (await listingIdSchema.parse(
       req.params.listingsID
     )) as UUID;
-    listings.deleteListing(listingId);
+    await listings.deleteListing(listingId);
     res.status(200).send();
   });
 

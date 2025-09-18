@@ -31,7 +31,6 @@ export const BookmarkRepository = (
       );
       return results.rowCount === 0 ? 0 : results.rows[0].bookmark;
     } catch (error) {
-      logger.error("Error fetching bookmark:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -49,7 +48,6 @@ export const BookmarkRepository = (
         [process_name, value]
       );
     } catch (error) {
-      logger.error("Error seting bookmark:", error);
       throw error;
     } finally {
       dbClient.release();

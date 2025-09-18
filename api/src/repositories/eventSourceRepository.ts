@@ -1,7 +1,7 @@
 import { Logger } from "winston";
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
-import { EventType, Event, Listing } from "../types";
+import { EventType, Event } from "../types";
 
 interface EventSourceTableRow {
   position: number;
@@ -41,7 +41,6 @@ export const EventSourceRepository = (
         [event_type, data]
       );
     } catch (error) {
-      logger.error("Error inserting event:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -67,7 +66,7 @@ export const EventSourceRepository = (
         [listingID, version.rows[0].max + 1, eventType, data]
       );
     } catch (error) {
-      logger.error("Error inserting event by id:", error);
+      throw error;
     } finally {
       dbClient.release();
     }
@@ -84,7 +83,6 @@ export const EventSourceRepository = (
       const events = results.rows.map(mapEvent);
       return events;
     } catch (error) {
-      logger.error("Error inserting event:", error);
       throw error;
     } finally {
       dbClient.release();

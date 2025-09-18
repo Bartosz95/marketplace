@@ -63,22 +63,22 @@ export default () => {
   app.use(express.json());
   app.use(cors({ origin: "*" }));
 
-  const jwtCheck = auth({
-    audience: env.auth.audience,
-    issuerBaseURL: env.auth.issuerBaseURL,
-    tokenSigningAlg: "RS256",
+  // const jwtCheck = auth({
+  //   audience: env.auth.audience,
+  //   issuerBaseURL: env.auth.issuerBaseURL,
+  //   tokenSigningAlg: "RS256",
+  // });
+
+  // app.use(jwtCheck);
+
+  app.use(`/`, listingRouter);
+
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    logger.error(err.stack);
+    res.status(err.status || 500).send();
   });
-
-  app.use(jwtCheck);
-
-  app.use(`/`, jwtCheck, listingRouter);
 
   app.listen(env.app.port, () =>
     logger.info(`Server running at http://${env.app.host}:${env.app.port}/`)
   );
-
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.error(err.stack);
-    res.status(500).send("Something broke!");
-  });
 };

@@ -1,15 +1,18 @@
 import { UUID } from "crypto";
 import { Logger } from "winston";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { EventType, Listing, Event } from "../types";
+import { EventType, Listing } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { ListingDetails } from "./listingsRouter";
+import { CreateListingReqBody, UpdateListingReqBody } from "./listingsRouter";
 
 export interface Listings {
-  createListing: (listing: ListingDetails) => Promise<void>;
+  createListing: (listing: CreateListingReqBody) => Promise<void>;
   getListing: (listing_id: UUID) => Promise<Listing>;
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
-  updateListing: (listing_id: UUID, data: ListingDetails) => Promise<void>;
+  updateListing: (
+    listing_id: UUID,
+    data: UpdateListingReqBody
+  ) => Promise<void>;
   purchaseListing: (listing_id: UUID) => Promise<void>;
   deleteListing: (listing_id: UUID) => Promise<void>;
 }
@@ -19,12 +22,12 @@ export const Listings = (
   eventSourceRepository: EventSourceRepository,
   logger: Logger
 ): Listings => {
-  const createListing = async (data: ListingDetails) => {
+  const createListing = async (data: CreateListingReqBody) => {
     await eventSourceRepository.insertEvent(EventType.LISTING_CREATED, data);
   };
 
-  const getListing = async (listing_id: UUID): Promise<Listing> => {
-    const listing = await listingsStateRepository.getListingById(listing_id);
+  const getListing = async (listingId: UUID): Promise<Listing> => {
+    const listing = await listingsStateRepository.getListingById(listingId);
     return listing;
   };
 
@@ -33,7 +36,12 @@ export const Listings = (
     return listings;
   };
 
-  const updateListing = async (listingId: UUID, data: ListingDetails) => {
+  const updateListing = async (
+    listingId: UUID,
+    listingDetails: UpdateListingReqBody
+  ) => {
+    const listing = await listingsStateRepository.getListingById(listingId);
+    const data = { ...listing, ...listingDetails };
     await eventSourceRepository.insertEventByID(
       listingId,
       EventType.LISTING_UPDATED,
@@ -44,12 +52,10 @@ export const Listings = (
   const purchaseListing = async (listingId: UUID) => {
     const listing = await listingsStateRepository.getListingById(listingId);
     if (listing.status === EventType.LISTING_DELETED) {
-      logger.error(`Attempt to purchase deleted listing`);
-      return;
+      throw new Error(`Attempt to purchase deleted listing: ${listingId}`);
     }
     if (listing.status === EventType.LISTING_PURCHASED) {
-      logger.error(`Attempt to purchase purchased listing`);
-      return;
+      throw new Error(`Attempt to purchase purchased listing: ${listingId}`);
     }
     await eventSourceRepository.insertEventByID(
       listingId,

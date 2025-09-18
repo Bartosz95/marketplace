@@ -54,7 +54,6 @@ export const ListingsStateRepository = (
 
       return listings;
     } catch (error) {
-      logger.error("Error fetching listings:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -69,9 +68,11 @@ export const ListingsStateRepository = (
         [listingId]
       );
 
-      return result.rows.length !== 0 && result.rows[0].map(mapListing);
+      if (result.rows.length === 0) {
+        throw new Error(`Listing not found: Listingid: ${listingId}`);
+      }
+      return mapListing(result.rows[0]);
     } catch (error) {
-      logger.error("Error fetching listings:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -94,7 +95,6 @@ export const ListingsStateRepository = (
         ]
       );
     } catch (error) {
-      logger.error("Error fetching listings:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -124,7 +124,6 @@ export const ListingsStateRepository = (
         ]
       );
     } catch (error) {
-      logger.error("Error fetching listings:", error);
       throw error;
     } finally {
       dbClient.release();
@@ -146,7 +145,6 @@ export const ListingsStateRepository = (
         [status, modifiedAt, listingId]
       );
     } catch (error) {
-      logger.error("Error fetching listings:", error);
       throw error;
     } finally {
       dbClient.release();
