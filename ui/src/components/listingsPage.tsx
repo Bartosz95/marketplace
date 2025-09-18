@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Listing, ListingProps } from "./listing";
+import Listing, { ListingProps } from "./listing";
 
 export const ListingsPage = () => {
   const [listings, setListings] = useState<ListingProps[]>([]);
@@ -28,7 +28,7 @@ export const ListingsPage = () => {
   return (
     <>
       {listings.map((l) => (
-        <Listing {...l} />
+        <Listing {...l} key={l.listingId} />
       ))}
     </>
   );
