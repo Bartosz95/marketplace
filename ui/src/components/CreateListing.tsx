@@ -1,24 +1,19 @@
-import { ChangeEventHandler, useState } from "react";
+import { useState } from "react";
 import { validate as isValidUUID } from "uuid";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { UUID } from "crypto";
+import { ListingDetails } from "./types";
+import { Carousel } from "react-bootstrap";
 
-interface ExampleProps {
+interface CreateListingProps {
   show: boolean;
   handleClose: () => void;
 }
 
-interface ListingDetails {
-  title: string;
-  description: string;
-  price: number;
-  imagesUrls: string[];
-}
-
-function Example({ show, handleClose }: ExampleProps) {
+function CreateListing({ show, handleClose }: CreateListingProps) {
   const [listingDetails, setListingDetails] = useState<ListingDetails>({
     title: "",
     description: "",
@@ -26,11 +21,9 @@ function Example({ show, handleClose }: ExampleProps) {
     imagesUrls: [],
   });
   const [images, setImages] = useState<File[] | null>(null);
-  const [previewImage, setPreviewImage] = useState<string[] | null>(null);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      // Convert FileList to an array
       const filesArray = Array.from(event.target.files);
       setImages(filesArray);
       setListingDetails((prev) => {
@@ -39,7 +32,6 @@ function Example({ show, handleClose }: ExampleProps) {
           imagesUrls: filesArray.map((file) => file.name),
         };
       });
-      setPreviewImage(filesArray.map((file) => URL.createObjectURL(file)));
     }
   };
 
@@ -105,68 +97,73 @@ function Example({ show, handleClose }: ExampleProps) {
     handleClose();
   };
 
+  const imagesPreview =
+    images &&
+    images.map((image) => (
+      <Carousel.Item key={image.name}>
+        <Image src={URL.createObjectURL(image)} fluid />
+      </Carousel.Item>
+    ));
+
   return (
-    <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false}>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      backdrop="static"
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
       <Modal.Header closeButton>
-        <Modal.Title>Create new listing</Modal.Title>
+        <Modal.Title>Create listing</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
+          {imagesPreview}
+        </Carousel>
         <Form>
-          <Form.Control
-            type="text"
-            name="title"
-            placeholder="Title"
-            onChange={setDetails}
-            className="mb-3"
-            required
-          />
-          <Form.Control
-            type="number"
-            name="price"
-            placeholder="Price"
-            onChange={setDetails}
-            className="mb-3"
-            required
-          />
-          <Form.Control
-            type="text"
-            name="description"
-            placeholder="Description"
-            onChange={setDetails}
-            className="mb-3"
-            required
-          />
-
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
               type="file"
               accept="image/*"
               onChange={uploadImages}
+              className="mb-3"
               multiple
             />
+            <Form.Control
+              type="text"
+              name="title"
+              placeholder="Title"
+              onChange={setDetails}
+              className="mb-3"
+              required
+            />
+            <Form.Control
+              type="number"
+              name="price"
+              placeholder="Price"
+              onChange={setDetails}
+              className="mb-3"
+              required
+            />
+            <Form.Control
+              type="text"
+              name="description"
+              placeholder="Description"
+              onChange={setDetails}
+              className="mb-3"
+              required
+            />
           </Form.Group>
-          {images &&
-            images.map((img, idx) => (
-              <Image
-                key={idx}
-                src={URL.createObjectURL(img)}
-                alt={`preview-${idx}`}
-                width={100}
-                style={{ borderRadius: "8px" }}
-              />
-            ))}
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Cancel
-        </Button>
         <Button variant="primary" onClick={createListing}>
-          Add
+          Create
         </Button>
       </Modal.Footer>
     </Modal>
   );
 }
 
-export default Example;
+export default CreateListing;

@@ -141,7 +141,7 @@ export const ListingsStateRepository = (
     try {
       await dbClient.query(
         `UPDATE states.listings 
-        SET status = $1, modified_at = $2,
+        SET status = $1, modified_at = $2
         WHERE listing_id = $3;
         `,
         [status, modifiedAt, listingId]
