@@ -1,13 +1,21 @@
 import { UUID } from "crypto";
 import { Logger } from "winston";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { EventType, Listing } from "../types";
+import {
+  EventType,
+  Listing,
+  ListingCreatedEvent,
+  ListingCreatedEventData,
+  ListingDeletedEvent,
+  ListingPurchasedEvent,
+  ListingUpdatedEvent,
+} from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { CreateListingReqBody, UpdateListingReqBody } from "./listingsRouter";
 
 export interface Listings {
   createListing: (listing: CreateListingReqBody) => Promise<UUID>;
-  getListing: (listing_id: UUID) => Promise<Listing>;
+  getListing: (listing_id: UUID) => Promise<Listing | null>;
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
   updateListing: (
     listing_id: UUID,
@@ -23,13 +31,23 @@ export const Listings = (
   logger: Logger
 ): Listings => {
   const createListing = async (data: CreateListingReqBody) => {
-    return await eventSourceRepository.insertEvent(EventType.LISTING_CREATED, {
-      ...data,
-      status: EventType.LISTING_CREATED,
-    });
+    const listingCreateEventData: ListingCreatedEvent = {
+      listingId: crypto.randomUUID(), // will be replaced in db
+      eventType: EventType.LISTING_CREATED,
+      data: {
+        title: data.title,
+        description: data.description,
+        price: data.price,
+      },
+      position: 1,
+      version: 1,
+      createdAt: new Date(),
+      metadata: {},
+    };
+    return await eventSourceRepository.insertEvent(listingCreateEventData);
   };
 
-  const getListing = async (listingId: UUID): Promise<Listing> => {
+  const getListing = async (listingId: UUID): Promise<Listing | null> => {
     const listing = await listingsStateRepository.getListingById(listingId);
     return listing;
   };
@@ -41,38 +59,44 @@ export const Listings = (
 
   const updateListing = async (
     listingId: UUID,
-    listingDetails: UpdateListingReqBody
+    updatedDetails: UpdateListingReqBody
   ) => {
-    const listing = await listingsStateRepository.getListingById(listingId);
-    const data = { ...listing, ...listingDetails };
-    await eventSourceRepository.insertEventByID(
+    const listingUpdatedEvent: ListingUpdatedEvent = {
       listingId,
-      EventType.LISTING_UPDATED,
-      data
-    );
+      eventType: EventType.LISTING_UPDATED,
+      data: updatedDetails,
+      position: 0,
+      version: 0,
+      createdAt: new Date(),
+      metadata: undefined,
+    };
+    await eventSourceRepository.insertEvent(listingUpdatedEvent);
   };
 
   const purchaseListing = async (listingId: UUID) => {
-    const listing = await listingsStateRepository.getListingById(listingId);
-    if (listing.status === EventType.LISTING_DELETED) {
-      throw new Error(`Attempt to purchase deleted listing: ${listingId}`);
-    }
-    if (listing.status === EventType.LISTING_PURCHASED) {
-      throw new Error(`Attempt to purchase purchased listing: ${listingId}`);
-    }
-    await eventSourceRepository.insertEventByID(
+    const listingPurchased: ListingPurchasedEvent = {
       listingId,
-      EventType.LISTING_PURCHASED,
-      {}
-    );
+      eventType: EventType.LISTING_PURCHASED,
+      data: {},
+      position: 0,
+      version: 0,
+      createdAt: new Date(),
+      metadata: {},
+    };
+    await eventSourceRepository.insertEvent(listingPurchased);
   };
 
   const deleteListing = async (listingId: UUID) => {
-    await eventSourceRepository.insertEventByID(
+    const listingDeleted: ListingDeletedEvent = {
       listingId,
-      EventType.LISTING_DELETED,
-      {}
-    );
+      eventType: EventType.LISTING_DELETED,
+      data: {},
+      position: 0,
+      version: 0,
+      createdAt: new Date(),
+      metadata: {},
+    };
+    await eventSourceRepository.insertEvent(listingDeleted);
   };
 
   return {

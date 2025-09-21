@@ -3,7 +3,7 @@ import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
-import { ListingStateProcessManager } from "./listingStateProcess";
+import { ListingStateProcessManager } from "./listingsStateProcess";
 
 export default () => {
   const envSchema = z.object({
@@ -37,9 +37,9 @@ export default () => {
   });
 
   const logger = Logger(env.app.logLevel);
-  const bookmarkRepository = BookmarkRepository(logger, env.db, env.app.name);
-  const eventSourceRepository = EventSourceRepository(logger, env.db);
-  const listingsStateRepository = ListingsStateRepository(logger, env.db);
+  const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
+  const eventSourceRepository = EventSourceRepository(env.db);
+  const listingsStateRepository = ListingsStateRepository(env.db);
   const processManager = ListingStateProcessManager(listingsStateRepository);
 
   const delay = (timeout: number) =>
@@ -54,7 +54,7 @@ export default () => {
         logger.info(`Processing: ${events.length}`);
         for (const event of events) {
           const eventPossition = event.position;
-          processManager(event);
+          await processManager(event);
           await bookmarkRepository.setBookmark(eventPossition);
         }
       } catch (error) {

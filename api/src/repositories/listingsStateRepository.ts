@@ -1,7 +1,7 @@
 import { Logger } from "winston";
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
-import { EventType, Listing } from "../types";
+import { EventType, Listing, ListingStatus } from "../types";
 
 export interface ListingStateTableRow {
   listing_id: string;
@@ -15,24 +15,12 @@ export interface ListingStateTableRow {
 
 export interface ListingsStateRepository {
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
-  getListingById: (listingId: UUID) => Promise<Listing>;
+  getListingById: (listingId: UUID) => Promise<Listing | null>;
   createListing: (listing: Listing) => Promise<void>;
-  updateListing: (
-    listingId: UUID,
-    data: Listing,
-    modifiedAt: Date
-  ) => Promise<void>;
-  updateListingStatus: (
-    listingId: UUID,
-    status: EventType,
-    modifiedAt: Date
-  ) => Promise<void>;
+  updateListing: (listing: Listing) => Promise<void>;
 }
 
-export const ListingsStateRepository = (
-  logger: Logger,
-  env: any
-): ListingsStateRepository => {
+export const ListingsStateRepository = (env: any): ListingsStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,
   };
@@ -60,7 +48,7 @@ export const ListingsStateRepository = (
     }
   };
 
-  const getListingById = async (listingId: UUID): Promise<Listing> => {
+  const getListingById = async (listingId: UUID): Promise<Listing | null> => {
     const dbClient = await pool.connect();
     try {
       const result = await dbClient.query(
@@ -69,7 +57,7 @@ export const ListingsStateRepository = (
       );
 
       if (result.rows.length === 0) {
-        throw new Error(`Listing not found: Listingid: ${listingId}`);
+        return null;
       }
       return mapListing(result.rows[0]);
     } catch (error) {
@@ -102,13 +90,10 @@ export const ListingsStateRepository = (
     }
   };
 
-  const updateListing = async (
-    listingId: UUID,
-    listing: Listing,
-    modifiedAt: Date
-  ) => {
+  const updateListing = async (listing: Listing) => {
     const dbClient = await pool.connect();
-    const { title, description, price, imagesUrls } = listing;
+    const { listingId, title, description, price, imagesUrls, modifiedAt } =
+      listing;
     try {
       await dbClient.query(
         `UPDATE states.listings 
@@ -132,30 +117,10 @@ export const ListingsStateRepository = (
     }
   };
 
-  const updateListingStatus = async (
-    listingId: UUID,
-    status: EventType,
-    modifiedAt: Date
-  ) => {
-    const dbClient = await pool.connect();
-    try {
-      await dbClient.query(
-        `UPDATE states.listings 
-        SET status = $1, modified_at = $2
-        WHERE listing_id = $3;
-        `,
-        [status, modifiedAt, listingId]
-      );
-    } catch (error) {
-      throw error;
-    } finally {
-      dbClient.release();
-    }
-  };
-
   const mapListing = (row: ListingStateTableRow): Listing => ({
     listingId: row.listing_id as UUID,
-    status: row.status as EventType,
+    modifiedAt: new Date(row.modified_at),
+    status: row.status as ListingStatus,
     title: row.title,
     description: row.description,
     price: Number(row.price),
@@ -167,6 +132,5 @@ export const ListingsStateRepository = (
     getListingById,
     createListing,
     updateListing,
-    updateListingStatus,
   };
 };

@@ -11,19 +11,18 @@ function Listing(listingProps: ListingProps) {
   const [showListingView, setShowListingView] = useState(false);
   const handleClose = () => setShowListingView(false);
   const handleShow = () => setShowListingView(true);
+  const image =
+    imagesUrls.length > 0
+      ? `${process.env.NEXT_PUBLIC_IMAGES_URL}/${imagesUrls[0]}`
+      : ``;
 
   return (
     <>
-      <Card style={{ width: "18rem" }}>
+      <Card style={{ width: "18rem" }} className="mt-3">
         <Card.Body>
-          <Card.Img
-            variant="top"
-            className="width: 20%"
-            src={`http://localhost:3000/images/${listingId}/${imagesUrls[0]}`}
-          />
+          <Card.Img variant="top" src={image} />
           <Card.Title>{title}</Card.Title>
-          <Card.Subtitle>Price: {price}</Card.Subtitle>
-          <Card.Text className="card-text">{description}</Card.Text>
+          <Card.Text>Price: {price}</Card.Text>
           <Button onClick={handleShow}>View</Button>
         </Card.Body>
       </Card>

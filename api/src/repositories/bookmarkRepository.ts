@@ -12,7 +12,6 @@ export interface BookmarkRepository {
 }
 
 export const BookmarkRepository = (
-  logger: Logger,
   env: any,
   process_name: string
 ): BookmarkRepository => {

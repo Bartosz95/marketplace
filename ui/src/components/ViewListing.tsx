@@ -19,7 +19,7 @@ function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
 
   const images = imagesUrls.map((image) => (
     <Carousel.Item key={image}>
-      <Image src={`http://localhost:3000/images/${listingId}/${image}`} fluid />
+      <Image src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`} fluid />
     </Carousel.Item>
   ));
 

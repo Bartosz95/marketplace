@@ -4,10 +4,15 @@ import z from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { EventSourceRepository } from "../repositories/eventSourceRepository";
+import {
+  EventType,
+  ImagesUploadedEvent,
+} from "../types";
 
 const listingIdSchema = z.uuid();
 
-export const imagesRouter = () => {
+export const imagesRouter = (eventSourceRepository: EventSourceRepository) => {
   const router = Router();
 
   router.use(urlencoded({ limit: "50mb", extended: true }));
@@ -15,7 +20,7 @@ export const imagesRouter = () => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       const listingId = listingIdSchema.parse(req.params.listingId);
-      const uploadPath = path.join(__dirname, "uploads", listingId); // Example dynamic path
+      const uploadPath = path.join(__dirname, "uploads", listingId);
       fs.mkdirSync(uploadPath, { recursive: true });
       cb(null, uploadPath);
     },
@@ -26,8 +31,21 @@ export const imagesRouter = () => {
   const upload = multer({ storage });
 
   router.post("/:listingId", upload.array("images", 10), async (req, res) => {
-    // const images = req.body.images;
-    // await imagesRepository.saveImages(listingId, images);
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const files = req.files as Express.Multer.File[];
+    const imagesUrls = files.map((file) =>
+      path.join(listingId, file.originalname)
+    );
+    const event: ImagesUploadedEvent = {
+      eventType: EventType.IMAGES_UPLOADED,
+      listingId,
+      data: { imagesUrls },
+      position: 0,
+      version: 0,
+      createdAt: new Date(),
+      metadata: {},
+    };
+    eventSourceRepository.insertEvent(event);
     res.status(200).send();
   });
 

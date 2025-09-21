@@ -1,5 +1,11 @@
 import { UUID } from "crypto";
 
+export interface CreateListingRequestBody {
+  title: string;
+  description: string;
+  price: number;
+}
+
 export interface ListingDetails {
   title: string;
   description: string;

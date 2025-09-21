@@ -1,16 +1,14 @@
 import express from "express";
-import { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import z from "zod";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { Listings } from "./listingsDomain";
-import { listingsRouter } from "./listingsRouter";
 import { auth } from "express-oauth2-jwt-bearer";
 import { Logger } from "../libs/logger";
+import { imagesRouter } from "./imagesRouter";
 import { ErrorHandler } from "../libs/errorHandler";
-import { RequestLogger } from "../libs/requestLogger";
 import { Authorization } from "../libs/authorization";
+import { RequestLogger } from "../libs/requestLogger";
 
 export default () => {
   const envSchema = z.object({
@@ -18,7 +16,7 @@ export default () => {
       port: z.coerce.number(),
       host: z.string(),
       logLevel: z.string(),
-      environment: z.string().optional(),
+      environment: z.string(),
     }),
     db: z.object({
       host: z.string(),
@@ -60,22 +58,21 @@ export default () => {
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const listingsDomain = Listings(
-    listingsStateRepository,
-    eventSourceRepository,
-    logger
-  );
-  const listingRouter = listingsRouter(listingsDomain, logger);
+
+  const imageRouter = imagesRouter(eventSourceRepository);
 
   const app = express();
-  app.use(express.json());
-  app.use(cors({ origin: "*" }));
+
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
   app.use(requestLogger);
+  app.use(cors({ origin: "*" }));
+
   if (env.app.environment === `production`) {
     app.use(authorization);
   }
 
-  app.use(`/listings`, listingRouter);
+  app.use(`/images`, imageRouter);
 
   app.use(errorHandler);
 

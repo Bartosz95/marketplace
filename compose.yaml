@@ -1,5 +1,5 @@
 services:
-  api:
+  listings-api:
     build:
       context: api
       dockerfile: Dockerfile
@@ -10,6 +10,7 @@ services:
     environment:
       - DB_HOST=db
       - APP_NAME=listings-api
+      - APP_PORT=3000
     depends_on:
       - db
   listings-state-pm:
@@ -21,6 +22,20 @@ services:
     environment:
       - DB_HOST=db
       - APP_NAME=listings-state-pm
+    depends_on:
+      - db
+  images-api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    env_file:
+      - api/.env
+    environment:
+      - DB_HOST=db
+      - APP_NAME=images-api
+      - APP_PORT=3002
     depends_on:
       - db
   db:

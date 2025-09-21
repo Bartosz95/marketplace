@@ -10,14 +10,12 @@ const createListingReqBodySchema = z.object({
   title: z.string().min(1),
   description: z.string().min(0),
   price: z.coerce.number().min(0),
-  imagesUrls: z.array(z.string()),
 });
 
 const updateListingReqBodySchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(0).optional(),
   price: z.coerce.number().min(0).optional(),
-  imageUrls: z.array(z.string()).optional(),
 });
 
 export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;

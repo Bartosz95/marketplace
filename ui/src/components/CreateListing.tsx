@@ -5,7 +5,7 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { UUID } from "crypto";
-import { ListingDetails } from "./types";
+import { CreateListingRequestBody } from "./types";
 import { Carousel } from "react-bootstrap";
 
 interface CreateListingProps {
@@ -14,11 +14,10 @@ interface CreateListingProps {
 }
 
 function CreateListing({ show, handleClose }: CreateListingProps) {
-  const [listingDetails, setListingDetails] = useState<ListingDetails>({
+  const [listing, setListing] = useState<CreateListingRequestBody>({
     title: "",
     description: "",
     price: 0,
-    imagesUrls: [],
   });
   const [images, setImages] = useState<File[] | null>(null);
 
@@ -26,18 +25,12 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
       setImages(filesArray);
-      setListingDetails((prev) => {
-        return {
-          ...prev,
-          imagesUrls: filesArray.map((file) => file.name),
-        };
-      });
     }
   };
 
   const setDetails = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setListingDetails((prev) => {
+    setListing((prev) => {
       return {
         ...prev,
         [name]: value,
@@ -53,7 +46,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${TOKEN}`,
       },
-      body: JSON.stringify(listingDetails),
+      body: JSON.stringify(listing),
     };
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/listings`,
@@ -84,10 +77,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
         },
         body: formData,
       };
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/images/${listingId}`,
-        options
-      );
+      await fetch(`http://localhost:3002/images/${listingId}`, options);
     }
   };
 
