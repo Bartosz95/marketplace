@@ -87,13 +87,15 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     handleClose();
   };
 
-  const imagesPreview =
-    images &&
-    images.map((image) => (
-      <Carousel.Item key={image.name}>
-        <Image src={URL.createObjectURL(image)} fluid />
-      </Carousel.Item>
-    ));
+  const imagesPreview = images && (
+    <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
+      {images.map((image) => (
+        <Carousel.Item key={image.name}>
+          <Image src={URL.createObjectURL(image)} fluid />
+        </Carousel.Item>
+      ))}
+    </Carousel>
+  );
 
   return (
     <Modal
@@ -108,9 +110,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
         <Modal.Title>Create listing</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-          {imagesPreview}
-        </Carousel>
+        {imagesPreview}
         <Form>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
