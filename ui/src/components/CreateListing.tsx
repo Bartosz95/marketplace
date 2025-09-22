@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { validate as isValidUUID } from "uuid";
 import Form from "react-bootstrap/Form";
@@ -5,8 +6,9 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { UUID } from "crypto";
-import { CreateListingRequestBody } from "./types";
+import { CreateListingRequestBody } from "@/components/types";
 import { Carousel } from "react-bootstrap";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface CreateListingProps {
   show: boolean;
@@ -20,6 +22,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     price: 0,
   });
   const [images, setImages] = useState<File[] | null>(null);
+  const { getAccessTokenSilently } = useAuth0();
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -38,13 +41,12 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     });
   };
 
-  const sendListingDetails = async (): Promise<UUID> => {
-    const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
+  const sendListingDetails = async (token: string): Promise<UUID> => {
     const options = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(listing),
     };
@@ -63,7 +65,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     return listingId;
   };
 
-  const sendImages = async (listingId: UUID) => {
+  const sendImages = async (token: string, listingId: UUID) => {
     if (images && images?.length > 0) {
       const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
       const formData = new FormData();
@@ -82,8 +84,13 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
   };
 
   const createListing = async () => {
-    const listingId = await sendListingDetails();
-    await sendImages(listingId);
+    const token = await getAccessTokenSilently({
+      authorizationParams: {
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      },
+    });
+    const listingId = await sendListingDetails(token);
+    await sendImages(token, listingId);
     handleClose();
   };
 

@@ -1,12 +1,7 @@
-import ListingsPage from "@/components/ListingsPage";
+'use client';
+import MainPage from "@/pages/MainPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-export default function main() {
-  return (
-    <html>
-      <body>
-        <ListingsPage />
-      </body>
-    </html>
-  );
+export default function Page() {
+  return <MainPage />;
 }

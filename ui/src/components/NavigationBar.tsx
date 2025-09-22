@@ -1,9 +1,11 @@
-import { Button, Container, Form, Nav, Navbar } from "react-bootstrap";
+"use client";
+import { Button, Form, Nav, Navbar } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect, useState } from "react";
-import CreateListing from "./CreateListing";
+import CreateListing from "@/components/CreateListing";
+import Login from "@/components/LoginButton";
 
-function MarketplaceNavBar() {
+function NavigationBar() {
   const [show, setShow] = useState(false);
 
   const [theme, setTheme] = useState("light"); // Initial theme
@@ -29,6 +31,7 @@ function MarketplaceNavBar() {
       <Navbar.Brand>Marketplace</Navbar.Brand>
       <Button onClick={handleShow}>Create listing</Button>
       <CreateListing show={show} handleClose={handleClose} />
+
       <Nav className="ms-auto me-3">
         <Form>
           <Form.Check
@@ -40,8 +43,9 @@ function MarketplaceNavBar() {
           />
         </Form>
       </Nav>
+      <Login />
     </Navbar>
   );
 }
 
-export default MarketplaceNavBar;
+export default NavigationBar;

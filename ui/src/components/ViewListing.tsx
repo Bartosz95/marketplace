@@ -1,12 +1,9 @@
-import { ChangeEventHandler, useState } from "react";
-import { validate as isValidUUID } from "uuid";
-import Form from "react-bootstrap/Form";
+"use client";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { UUID } from "crypto";
-import { Card, Carousel } from "react-bootstrap";
-import { ListingDetails, ListingProps } from "./types";
+import { Carousel } from "react-bootstrap";
+import { ListingProps } from "./types";
 
 interface ViewListingProps {
   show: boolean;

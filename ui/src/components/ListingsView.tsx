@@ -3,23 +3,28 @@ import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { ListingProps } from "./types";
-import MarketplaceNavBar from "@/components/MarketplaceNavBar";
 import Listing from "@/components/Listing";
 import { Container } from "react-bootstrap";
+import { useAuth0 } from "@auth0/auth0-react";
 
-function ListingsPage() {
+function ListingsView() {
   const [listings, setListings] = useState<ListingProps[]>([]);
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     const fetchData = async () => {
-      const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+        },
+      });
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/listings`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -33,7 +38,7 @@ function ListingsPage() {
     fetchData();
   }, []);
 
-  const listingsView = (
+  return (
     <Container>
       <Row key={1}>
         {listings.map((listing, idx) => (
@@ -44,13 +49,9 @@ function ListingsPage() {
       </Row>
     </Container>
   );
-
-  return (
-    <>
-      <MarketplaceNavBar />
-      {listingsView}
-    </>
-  );
 }
 
-export default ListingsPage;
+export default ListingsView;
+// export default withAuthenticationRequired(ListingsView, {
+//   onRedirecting: () => <div>Loading...</div>,
+// });

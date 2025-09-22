@@ -1,12 +1,12 @@
-import { UUID } from "crypto";
+"use client";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
-import ViewListing from "./ViewListing";
-import { ListingProps } from "./types";
+import ViewListing from "@/components/ViewListing";
+import { ListingProps } from "@/components/types";
 import { useState } from "react";
 
 function Listing(listingProps: ListingProps) {
-  const { description, imagesUrls, listingId, price, title } = listingProps;
+  const { imagesUrls, price, title } = listingProps;
 
   const [showListingView, setShowListingView] = useState(false);
   const handleClose = () => setShowListingView(false);

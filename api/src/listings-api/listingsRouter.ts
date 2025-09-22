@@ -26,6 +26,7 @@ export const listingsRouter = (listings: Listings, logger: Logger) => {
   const router = Router();
 
   router.post("/", async (req, res) => {
+    const userId = req?.auth?.payload?.sub;
     const data = await createListingReqBodySchema.parse(req.body);
     const listingId = await listings.createListing(data);
     res.status(200).send({ listingId: listingId });

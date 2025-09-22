@@ -16,7 +16,7 @@ export default () => {
       port: z.coerce.number(),
       host: z.string(),
       logLevel: z.string(),
-      environment: z.string(),
+      nodeEnv: z.string(),
     }),
     db: z.object({
       host: z.string(),
@@ -36,7 +36,7 @@ export default () => {
       port: process.env.APP_PORT,
       host: process.env.APP_HOST,
       logLevel: process.env.APP_LOG_LEVEL,
-      environment: process.env.APP_ENVIRONMENT,
+      nodeEnv: process.env.NODE_ENV,
     },
     db: {
       host: process.env.DB_HOST,
@@ -68,7 +68,7 @@ export default () => {
   app.use(requestLogger);
   app.use(cors({ origin: "*" }));
 
-  if (env.app.environment === `production`) {
+  if (env.app.nodeEnv === `production`) {
     app.use(authorization);
   }
 

@@ -1,12 +1,10 @@
 import express from "express";
-import { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import z from "zod";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Listings } from "./listingsDomain";
 import { listingsRouter } from "./listingsRouter";
-import { auth } from "express-oauth2-jwt-bearer";
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
@@ -18,7 +16,7 @@ export default () => {
       port: z.coerce.number(),
       host: z.string(),
       logLevel: z.string(),
-      environment: z.string().optional(),
+      nodeEnv: z.string().optional(),
     }),
     db: z.object({
       host: z.string(),
@@ -38,7 +36,7 @@ export default () => {
       port: process.env.APP_PORT,
       host: process.env.APP_HOST,
       logLevel: process.env.APP_LOG_LEVEL,
-      environment: process.env.APP_ENVIRONMENT,
+      nodeEnv: process.env.NODE_ENV,
     },
     db: {
       host: process.env.DB_HOST,
@@ -71,7 +69,7 @@ export default () => {
   app.use(express.json());
   app.use(cors({ origin: "*" }));
   app.use(requestLogger);
-  if (env.app.environment === `production`) {
+  if (env.app.nodeEnv === `production`) {
     app.use(authorization);
   }
 
