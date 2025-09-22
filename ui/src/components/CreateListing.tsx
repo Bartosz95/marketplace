@@ -67,7 +67,6 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
 
   const sendImages = async (token: string, listingId: UUID) => {
     if (images && images?.length > 0) {
-      const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
       const formData = new FormData();
       for (const image of images) {
         formData.append(`images`, image);
@@ -75,7 +74,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
       const options = {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       };

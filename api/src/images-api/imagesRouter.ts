@@ -5,10 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import {
-  EventType,
-  ImagesUploadedEvent,
-} from "../types";
+import { EventType, ImagesUploadedEvent } from "../types";
 
 const listingIdSchema = z.uuid();
 
@@ -49,7 +46,7 @@ export const imagesRouter = (eventSourceRepository: EventSourceRepository) => {
     res.status(200).send();
   });
 
-  router.use("/", express.static(path.join(__dirname, "uploads")));
+  router.use(`/`, express.static(path.join(__dirname, "uploads")));
 
   return router;
 };

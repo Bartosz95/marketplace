@@ -4,6 +4,7 @@ import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { ListingProps } from "./types";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface ViewListingProps {
   show: boolean;
@@ -13,6 +14,7 @@ interface ViewListingProps {
 
 function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
   const { title, description, price, imagesUrls, listingId } = listingProps;
+  const { getAccessTokenSilently } = useAuth0();
 
   const images = imagesUrls.map((image) => (
     <Carousel.Item key={image}>
@@ -21,12 +23,16 @@ function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
   ));
 
   const handleBuy = async (): Promise<void> => {
-    const TOKEN = process.env.NEXT_PUBLIC_TOKEN;
+        const token = await getAccessTokenSilently({
+      authorizationParams: {
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      },
+    });
     const options = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${TOKEN}`,
+        Authorization: `Bearer ${token}`,
       },
     };
     const response = await fetch(
