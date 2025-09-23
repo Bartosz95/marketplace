@@ -11,7 +11,10 @@ import {
   ListingUpdatedEvent,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { CreateListingReqBody, UpdateListingReqBody } from "./listingsRouter";
+import {
+  CreateListingReqBody,
+  UpdateListingReqBody,
+} from "./listingsWriteRouter";
 
 export interface Listings {
   createListing: (listing: CreateListingReqBody) => Promise<UUID>;

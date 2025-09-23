@@ -4,7 +4,8 @@ import z from "zod";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Listings } from "./listingsDomain";
-import { listingsRouter } from "./listingsRouter";
+import { ListingsReadRouter } from "./listingsReadRouter";
+import { ListingsWriteRouter } from "./listingsWriteRouter";
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
@@ -63,7 +64,8 @@ export default () => {
     eventSourceRepository,
     logger
   );
-  const listingRouter = listingsRouter(listingsDomain, logger);
+  const listingReadRouter = ListingsReadRouter(listingsDomain);
+  const listingWriteRouter = ListingsWriteRouter(listingsDomain);
 
   const app = express();
   app.use(express.json());
@@ -73,7 +75,8 @@ export default () => {
     app.use(authorization);
   }
 
-  app.use(`/listings`, listingRouter);
+  app.use(`/listings`, listingReadRouter);
+  app.use(`/listings`, listingWriteRouter);
 
   app.use(errorHandler);
 

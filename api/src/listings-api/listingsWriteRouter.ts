@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { Logger } from "winston";
 import z from "zod";
 import { UUID } from "crypto";
 import { Listings } from "./listingsDomain";
@@ -22,7 +21,7 @@ export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;
 
 export type UpdateListingReqBody = z.infer<typeof updateListingReqBodySchema>;
 
-export const listingsRouter = (listings: Listings, logger: Logger) => {
+export const ListingsWriteRouter = (listings: Listings) => {
   const router = Router();
 
   router.post("/", async (req, res) => {
@@ -30,17 +29,6 @@ export const listingsRouter = (listings: Listings, logger: Logger) => {
     const data = await createListingReqBodySchema.parse(req.body);
     const listingId = await listings.createListing(data);
     res.status(200).send({ listingId: listingId });
-  });
-
-  router.get("/", async (req, res) => {
-    const data = await listings.getListings();
-    res.status(200).send(data);
-  });
-
-  router.get("/:listingsID", async (req, res) => {
-    const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
-    const listing = await listings.getListing(listingId);
-    res.status(200).send(listing);
   });
 
   router.patch("/:listingsID", async (req, res, next) => {
