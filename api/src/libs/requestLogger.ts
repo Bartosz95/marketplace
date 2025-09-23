@@ -3,12 +3,12 @@ import { Logger } from "winston";
 
 export const RequestLogger =
   (logger: Logger) => (req: Request, res: Response, next: NextFunction) => {
-    logger.info("Request path:");
-    console.log(req.path);
-    logger.info(JSON.stringify(req.path));
-    logger.info("Request params:");
+    logger.info("----- Request -----");
+    logger.info(req.method);
+    logger.info(req.path);
+    logger.info("params:");
     logger.info(JSON.stringify(req.params));
-    logger.info(`Request body:`);
+    logger.info(`body:`);
     console.log(req.body);
     next();
   };

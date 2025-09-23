@@ -5,6 +5,7 @@ import { EventType, Listing, ListingStatus } from "../types";
 
 export interface ListingStateTableRow {
   listing_id: string;
+  owner_id: string;
   modified_at: string;
   status: string;
   title: string;
@@ -71,11 +72,12 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.listings (listing_id, status, title, description, price, images_urls) 
-        VALUES ($1, $2, $3, $4, $5, $6);
+        `INSERT INTO states.listings (listing_id, owner_id, status, title, description, price, images_urls) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7);
         `,
         [
           listing.listingId,
+          listing.ownerId,
           EventType.LISTING_CREATED,
           listing.title,
           listing.description,
@@ -121,6 +123,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     listingId: row.listing_id as UUID,
     modifiedAt: new Date(row.modified_at),
     status: row.status as ListingStatus,
+    ownerId: row.owner_id,
     title: row.title,
     description: row.description,
     price: Number(row.price),

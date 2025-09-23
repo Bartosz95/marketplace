@@ -16,11 +16,12 @@ import {
   UpdateListingReqBody,
 } from "./listingsWriteRouter";
 
-export interface Listings {
-  createListing: (listing: CreateListingReqBody) => Promise<UUID>;
+export interface ListingsDomain {
+  createListing: (ownerId: string, data: CreateListingReqBody) => Promise<UUID>;
   getListing: (listing_id: UUID) => Promise<Listing | null>;
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
   updateListing: (
+    userId: string,
     listing_id: UUID,
     data: UpdateListingReqBody
   ) => Promise<void>;
@@ -28,16 +29,17 @@ export interface Listings {
   deleteListing: (listing_id: UUID) => Promise<void>;
 }
 
-export const Listings = (
+export const ListingsDomain = (
   listingsStateRepository: ListingsStateRepository,
   eventSourceRepository: EventSourceRepository,
   logger: Logger
-): Listings => {
-  const createListing = async (data: CreateListingReqBody) => {
+): ListingsDomain => {
+  const createListing = async (ownerId: string, data: CreateListingReqBody) => {
     const listingCreateEventData: ListingCreatedEvent = {
       listingId: crypto.randomUUID(), // will be replaced in db
       eventType: EventType.LISTING_CREATED,
       data: {
+        ownerId,
         title: data.title,
         description: data.description,
         price: data.price,
@@ -61,9 +63,11 @@ export const Listings = (
   };
 
   const updateListing = async (
+    userId: string,
     listingId: UUID,
     updatedDetails: UpdateListingReqBody
   ) => {
+    
     const listingUpdatedEvent: ListingUpdatedEvent = {
       listingId,
       eventType: EventType.LISTING_UPDATED,

@@ -3,7 +3,7 @@ import cors from "cors";
 import z from "zod";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { Listings } from "./listingsDomain";
+import { ListingsDomain } from "./listingsDomain";
 import { ListingsReadRouter } from "./listingsReadRouter";
 import { ListingsWriteRouter } from "./listingsWriteRouter";
 import { Logger } from "../libs/logger";
@@ -59,7 +59,7 @@ export default () => {
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const listingsDomain = Listings(
+  const listingsDomain = ListingsDomain(
     listingsStateRepository,
     eventSourceRepository,
     logger

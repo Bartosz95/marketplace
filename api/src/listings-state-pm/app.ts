@@ -3,7 +3,7 @@ import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
-import { ListingStateProcessManager } from "./listingsStateProcess";
+import { ListingStateProcessManager } from "./listingStateProcessManager";
 
 export default () => {
   const envSchema = z.object({
@@ -49,7 +49,7 @@ export default () => {
     while (true) {
       try {
         const bookmarkPosition = await bookmarkRepository.getBookmark();
-        const events = await eventSourceRepository.getEvents(bookmarkPosition);
+        const events = await eventSourceRepository.getEventsFromPosition(bookmarkPosition);
         if (events.length === 0) continue;
         logger.info(`Processing: ${events.length}`);
         for (const event of events) {

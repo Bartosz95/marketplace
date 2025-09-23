@@ -1,7 +1,7 @@
 import { Router } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { Listings } from "./listingsDomain";
+import { ListingsDomain } from "./listingsDomain";
 
 export const listingIdSchema = z.uuid();
 
@@ -21,26 +21,27 @@ export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;
 
 export type UpdateListingReqBody = z.infer<typeof updateListingReqBodySchema>;
 
-export const ListingsWriteRouter = (listings: Listings) => {
+export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   const router = Router();
 
   router.post("/", async (req, res) => {
-    const userId = req?.auth?.payload?.sub;
+    const userId = req?.auth?.payload?.sub || "random";
     const data = await createListingReqBodySchema.parse(req.body);
-    const listingId = await listings.createListing(data);
+    const listingId = await listingsDomain.createListing(userId, data);
     res.status(200).send({ listingId: listingId });
   });
 
   router.patch("/:listingsID", async (req, res, next) => {
+    const userId = req?.auth?.payload?.sub || "random";
     const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
     const data = await updateListingReqBodySchema.parse(req.body);
-    await listings.updateListing(listingId, data);
+    await listingsDomain.updateListing(userId, listingId, data);
     res.status(200).send();
   });
 
   router.post("/:listingsID", async (req, res) => {
     const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
-    await listings.purchaseListing(listingId);
+    await listingsDomain.purchaseListing(listingId);
     res.status(200).send();
   });
 
@@ -48,7 +49,7 @@ export const ListingsWriteRouter = (listings: Listings) => {
     const listingId = (await listingIdSchema.parse(
       req.params.listingsID
     )) as UUID;
-    await listings.deleteListing(listingId);
+    await listingsDomain.deleteListing(listingId);
     res.status(200).send();
   });
 

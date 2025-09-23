@@ -16,6 +16,7 @@ export type ListingStatus =
 
 export interface Listing {
   listingId: UUID;
+  ownerId: string;
   status: ListingStatus;
   modifiedAt: Date;
   title: string;
@@ -38,6 +39,7 @@ export interface ListingCreatedEvent extends EventBaseInfo {
 }
 
 export interface ListingCreatedEventData {
+  ownerId: string;
   title: string;
   description: string;
   price: number;

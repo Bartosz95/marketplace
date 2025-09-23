@@ -52,6 +52,3 @@ function ListingsView() {
 }
 
 export default ListingsView;
-// export default withAuthenticationRequired(ListingsView, {
-//   onRedirecting: () => <div>Loading...</div>,
-// });

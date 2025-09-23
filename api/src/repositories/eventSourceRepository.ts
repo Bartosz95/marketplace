@@ -5,7 +5,7 @@ import { EventType, Event } from "../types";
 
 export interface EventSourceRepository {
   insertEvent: (event: Event) => Promise<UUID>;
-  getEvents: (position: number) => Promise<Event[]>;
+  getEventsFromPosition: (position: number) => Promise<Event[]>;
 }
 
 export const EventSourceRepository = (env: any): EventSourceRepository => {
@@ -43,7 +43,7 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
     }
   };
 
-  const getEvents = async (position: number): Promise<Event[]> => {
+  const getEventsFromPosition = async (position: number): Promise<Event[]> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
@@ -71,6 +71,6 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
   });
   return {
     insertEvent,
-    getEvents,
+    getEventsFromPosition,
   };
 };
