@@ -8,7 +8,7 @@ import Login from "@/components/LoginButton";
 function NavigationBar() {
   const [show, setShow] = useState(false);
 
-  const [theme, setTheme] = useState("light"); // Initial theme
+  const [theme, setTheme] = useState("light");
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
@@ -28,8 +28,11 @@ function NavigationBar() {
       expand="lg"
       className="bg-body-tertiary"
     >
-      <Navbar.Brand>Marketplace</Navbar.Brand>
-      <Button onClick={handleShow}>Create listing</Button>
+      <Navbar.Brand className="ms-3">Marketplace</Navbar.Brand>
+      <Button onClick={handleShow}>
+        <i className="bi bi-plus-lg me-1" />
+        Create listing
+      </Button>
       <CreateListing show={show} handleClose={handleClose} />
 
       <Nav className="ms-auto me-3">
