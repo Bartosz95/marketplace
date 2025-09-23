@@ -36,6 +36,3 @@ function Listing(listingProps: ListingProps) {
 }
 
 export default Listing;
-function setShow(arg0: boolean) {
-  throw new Error("Function not implemented.");
-}

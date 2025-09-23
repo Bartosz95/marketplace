@@ -1,5 +1,6 @@
 "use client";
 import { Button, Form, Nav, Navbar } from "react-bootstrap";
+import { LinkContainer } from "react-router-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect, useState } from "react";
 import CreateListing from "@/components/CreateListing";
@@ -28,12 +29,17 @@ function NavigationBar() {
       expand="lg"
       className="bg-body-tertiary"
     >
-      <Navbar.Brand className="ms-3">Marketplace</Navbar.Brand>
+      <Navbar.Brand href="/" className="ms-3">
+        Marketplace
+      </Navbar.Brand>
       <Button onClick={handleShow}>
         <i className="bi bi-plus-lg me-1" />
         Create listing
       </Button>
       <CreateListing show={show} handleClose={handleClose} />
+      <LinkContainer to="/my" className="ms-3">
+        <Nav.Link>My Listings</Nav.Link>
+      </LinkContainer>
 
       <Nav className="ms-auto me-3">
         <Form>

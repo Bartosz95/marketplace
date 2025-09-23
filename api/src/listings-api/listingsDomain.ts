@@ -5,7 +5,6 @@ import {
   EventType,
   Listing,
   ListingCreatedEvent,
-  ListingCreatedEventData,
   ListingDeletedEvent,
   ListingPurchasedEvent,
   ListingUpdatedEvent,
@@ -19,7 +18,11 @@ import {
 export interface ListingsDomain {
   createListing: (ownerId: string, data: CreateListingReqBody) => Promise<UUID>;
   getListing: (listing_id: UUID) => Promise<Listing | null>;
-  getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
+  getListings: (
+    limit?: number,
+    offset?: number,
+    ownerId?: string
+  ) => Promise<Listing[]>;
   updateListing: (
     userId: string,
     listing_id: UUID,
@@ -57,7 +60,19 @@ export const ListingsDomain = (
     return listing;
   };
 
-  const getListings = async (limit = 10, offset = 0): Promise<Listing[]> => {
+  const getListings = async (
+    limit = 10,
+    offset = 0,
+    ownerId?: string
+  ): Promise<Listing[]> => {
+    if (ownerId) {
+      const listings = await listingsStateRepository.getListingsByOwnerId(
+        ownerId,
+        limit,
+        offset
+      );
+      return listings;
+    }
     const listings = await listingsStateRepository.getListings(limit, offset);
     return listings;
   };
@@ -67,7 +82,6 @@ export const ListingsDomain = (
     listingId: UUID,
     updatedDetails: UpdateListingReqBody
   ) => {
-    
     const listingUpdatedEvent: ListingUpdatedEvent = {
       listingId,
       eventType: EventType.LISTING_UPDATED,

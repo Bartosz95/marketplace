@@ -2,14 +2,15 @@
 import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { ListingProps } from "./types";
+import { ListingProps } from "@/components/types";
 import Listing from "@/components/Listing";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
 
-function ListingsView() {
+function MyListings() {
   const [listings, setListings] = useState<ListingProps[]>([]);
   const { getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -18,9 +19,11 @@ function ListingsView() {
           audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
         },
       });
-
+      const params = new URLSearchParams();
+      if (user && user.sub ) params.append("ownerid", user.sub);
+      console.log(`${process.env.NEXT_PUBLIC_API_URL}/listings?${params.toString()}`)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/listings?${params.toString()}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -51,4 +54,4 @@ function ListingsView() {
   );
 }
 
-export default ListingsView;
+export default MyListings;

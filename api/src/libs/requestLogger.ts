@@ -8,7 +8,9 @@ export const RequestLogger =
     logger.info(req.path);
     logger.info("params:");
     logger.info(JSON.stringify(req.params));
+    logger.info("query:");
+    logger.info(JSON.stringify(req.query));
     logger.info(`body:`);
-    console.log(req.body);
+    logger.info(req.body);
     next();
   };

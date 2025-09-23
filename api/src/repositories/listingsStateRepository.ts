@@ -17,6 +17,11 @@ export interface ListingStateTableRow {
 export interface ListingsStateRepository {
   getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
   getListingById: (listingId: UUID) => Promise<Listing | null>;
+  getListingsByOwnerId: (
+    ownerId: string,
+    limit?: number,
+    offset?: number
+  ) => Promise<Listing[]>;
   createListing: (listing: Listing) => Promise<void>;
   updateListing: (listing: Listing) => Promise<void>;
 }
@@ -38,7 +43,6 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [limit, offset]
       );
-
       const listings: Listing[] = results.rows.map(mapListing);
 
       return listings;
@@ -61,6 +65,30 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         return null;
       }
       return mapListing(result.rows[0]);
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const getListingsByOwnerId = async (
+    ownerId: string,
+    limit = 10,
+    offset = 0
+  ): Promise<Listing[]> => {
+    const dbClient = await pool.connect();
+    try {
+      const results = await dbClient.query(
+        `SELECT * FROM states.listings
+        WHERE owner_id = $1
+        ORDER BY modified_at DESC
+        LIMIT $2 OFFSET $3;
+        `,
+        [ownerId, limit, offset]
+      );
+      const listings: Listing[] = results.rows.map(mapListing);
+      return listings;
     } catch (error) {
       throw error;
     } finally {
@@ -133,6 +161,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
   return {
     getListings,
     getListingById,
+    getListingsByOwnerId,
     createListing,
     updateListing,
   };
