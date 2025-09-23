@@ -17,3 +17,9 @@ export interface ListingProps extends ListingDetails {
   listingId: UUID;
   status: string;
 }
+
+export enum FilterBy {
+  All = "ALL",
+  Sold = "SOLD",
+  Deleted = "DELETED",
+}

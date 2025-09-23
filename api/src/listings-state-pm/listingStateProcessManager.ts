@@ -7,7 +7,7 @@ export const ListingStateProcessManager =
     if (eventType === EventType.LISTING_CREATED) {
       const listingCreatedState: Listing = {
         listingId,
-        ownerId: event.data.ownerId,
+        userId: event.data.userId,
         modifiedAt: createdAt,
         status: EventType.LISTING_CREATED,
         title: event.data.title,
@@ -34,7 +34,7 @@ export const ListingStateProcessManager =
           listingId,
           modifiedAt: createdAt,
           status: EventType.LISTING_UPDATED,
-          ownerId: previousState.ownerId,
+          userId: previousState.userId,
           title: event.data.title || previousState.title,
           description: event.data.description || previousState.description,
           price: event.data.price || previousState.price,

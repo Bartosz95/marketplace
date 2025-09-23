@@ -1,11 +1,11 @@
 import { Logger } from "winston";
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
-import { EventType, Listing, ListingStatus } from "../types";
+import { EventType, FilterBy, Listing, ListingStatus } from "../types";
 
 export interface ListingStateTableRow {
   listing_id: string;
-  owner_id: string;
+  user_id: string;
   modified_at: string;
   status: string;
   title: string;
@@ -15,12 +15,17 @@ export interface ListingStateTableRow {
 }
 
 export interface ListingsStateRepository {
-  getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
+  getListings: (
+    statuses: EventType[],
+    limit: number,
+    offset: number
+  ) => Promise<Listing[]>;
   getListingById: (listingId: UUID) => Promise<Listing | null>;
-  getListingsByOwnerId: (
-    ownerId: string,
-    limit?: number,
-    offset?: number
+  getListingsByUserId: (
+    userId: string,
+    statuses: EventType[],
+    limit: number,
+    offset: number
   ) => Promise<Listing[]>;
   createListing: (listing: Listing) => Promise<void>;
   updateListing: (listing: Listing) => Promise<void>;
@@ -33,20 +38,27 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
 
   const pool = new Pool(dbConfig);
 
-  const getListings = async (limit = 10, offset = 0): Promise<Listing[]> => {
+  const getListings = async (
+    statuses: EventType[],
+    limit = 10,
+    offset = 0
+  ): Promise<Listing[]> => {
     const dbClient = await pool.connect();
     try {
+      console.log(statuses);
       const results = await dbClient.query(
         `SELECT * FROM states.listings
+        WHERE status = ANY($1::text[])
         ORDER BY modified_at DESC
-        LIMIT $1 OFFSET $2;
+        LIMIT $2 OFFSET $3;
         `,
-        [limit, offset]
+        [statuses, limit, offset]
       );
       const listings: Listing[] = results.rows.map(mapListing);
 
       return listings;
     } catch (error) {
+      console.log(error);
       throw error;
     } finally {
       dbClient.release();
@@ -57,7 +69,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     const dbClient = await pool.connect();
     try {
       const result = await dbClient.query(
-        "SELECT * FROM states.listings WHERE listing_id = $1 limit 1",
+        `SELECT * FROM states.listings WHERE listing_id = $1 limit 1`,
         [listingId]
       );
 
@@ -72,24 +84,27 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
-  const getListingsByOwnerId = async (
-    ownerId: string,
-    limit = 10,
-    offset = 0
+  const getListingsByUserId = async (
+    userId: string,
+    statuses: EventType[],
+    limit: number,
+    offset: number
   ): Promise<Listing[]> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
         `SELECT * FROM states.listings
-        WHERE owner_id = $1
+        WHERE user_id = $1
+        AND status = ANY($2::text[])
         ORDER BY modified_at DESC
-        LIMIT $2 OFFSET $3;
+        LIMIT $3 OFFSET $4;
         `,
-        [ownerId, limit, offset]
+        [userId, statuses, limit, offset]
       );
       const listings: Listing[] = results.rows.map(mapListing);
       return listings;
     } catch (error) {
+      console.log(error);
       throw error;
     } finally {
       dbClient.release();
@@ -100,12 +115,12 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.listings (listing_id, owner_id, status, title, description, price, images_urls) 
+        `INSERT INTO states.listings (listing_id, user_id, status, title, description, price, images_urls) 
         VALUES ($1, $2, $3, $4, $5, $6, $7);
         `,
         [
           listing.listingId,
-          listing.ownerId,
+          listing.userId,
           EventType.LISTING_CREATED,
           listing.title,
           listing.description,
@@ -151,7 +166,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     listingId: row.listing_id as UUID,
     modifiedAt: new Date(row.modified_at),
     status: row.status as ListingStatus,
-    ownerId: row.owner_id,
+    userId: row.user_id,
     title: row.title,
     description: row.description,
     price: Number(row.price),
@@ -161,7 +176,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
   return {
     getListings,
     getListingById,
-    getListingsByOwnerId,
+    getListingsByUserId,
     createListing,
     updateListing,
   };

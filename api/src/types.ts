@@ -16,7 +16,7 @@ export type ListingStatus =
 
 export interface Listing {
   listingId: UUID;
-  ownerId: string;
+  userId: string;
   status: ListingStatus;
   modifiedAt: Date;
   title: string;
@@ -39,7 +39,7 @@ export interface ListingCreatedEvent extends EventBaseInfo {
 }
 
 export interface ListingCreatedEventData {
-  ownerId: string;
+  userId: string;
   title: string;
   description: string;
   price: number;
@@ -81,3 +81,9 @@ export type Event =
   | ListingPurchasedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent;
+
+export enum FilterBy {
+  All = "ALL",
+  Sold = "SOLD",
+  Deleted = "DELETED",
+}

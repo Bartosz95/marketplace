@@ -25,7 +25,7 @@ CREATE SCHEMA states AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS states.listings (
   listing_id  UUID PRIMARY KEY,
-  owner_id    TEXT,
+  user_id     TEXT,
   modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status      TEXT NOT NULL,
   title       TEXT NOT NULL,

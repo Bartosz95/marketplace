@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import {
   EventType,
+  FilterBy,
   Listing,
   ListingCreatedEvent,
   ListingDeletedEvent,
@@ -16,12 +17,13 @@ import {
 } from "./listingsWriteRouter";
 
 export interface ListingsDomain {
-  createListing: (ownerId: string, data: CreateListingReqBody) => Promise<UUID>;
-  getListing: (listing_id: UUID) => Promise<Listing | null>;
-  getListings: (
+  createListing: (userId: string, data: CreateListingReqBody) => Promise<UUID>;
+  getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
+  getUserListings: (
+    userId: string,
+    filter: FilterBy,
     limit?: number,
-    offset?: number,
-    ownerId?: string
+    offset?: number
   ) => Promise<Listing[]>;
   updateListing: (
     userId: string,
@@ -37,12 +39,12 @@ export const ListingsDomain = (
   eventSourceRepository: EventSourceRepository,
   logger: Logger
 ): ListingsDomain => {
-  const createListing = async (ownerId: string, data: CreateListingReqBody) => {
+  const createListing = async (userId: string, data: CreateListingReqBody) => {
     const listingCreateEventData: ListingCreatedEvent = {
       listingId: crypto.randomUUID(), // will be replaced in db
       eventType: EventType.LISTING_CREATED,
       data: {
-        ownerId,
+        userId,
         title: data.title,
         description: data.description,
         price: data.price,
@@ -55,25 +57,47 @@ export const ListingsDomain = (
     return await eventSourceRepository.insertEvent(listingCreateEventData);
   };
 
-  const getListing = async (listingId: UUID): Promise<Listing | null> => {
-    const listing = await listingsStateRepository.getListingById(listingId);
-    return listing;
+  const getListings = async (limit = 10, offset = 0): Promise<Listing[]> => {
+    const statuses: EventType[] = [
+      EventType.LISTING_CREATED,
+      EventType.LISTING_UPDATED,
+    ];
+    const listings = await listingsStateRepository.getListings(
+      statuses,
+      limit,
+      offset
+    );
+    return listings;
   };
 
-  const getListings = async (
+  const getUserListings = async (
+    userId: string,
+    filter: FilterBy,
     limit = 10,
-    offset = 0,
-    ownerId?: string
+    offset = 0
   ): Promise<Listing[]> => {
-    if (ownerId) {
-      const listings = await listingsStateRepository.getListingsByOwnerId(
-        ownerId,
-        limit,
-        offset
-      );
-      return listings;
+    let statuses: EventType[] = [];
+    switch (filter) {
+      case FilterBy.All:
+        statuses.push(EventType.LISTING_CREATED);
+        statuses.push(EventType.LISTING_UPDATED);
+        statuses.push(EventType.LISTING_PURCHASED);
+        statuses.push(EventType.LISTING_DELETED);
+        break;
+      case FilterBy.Sold:
+        statuses.push(EventType.LISTING_PURCHASED);
+        break;
+      case FilterBy.Deleted:
+        statuses.push(EventType.LISTING_DELETED);
+        break;
     }
-    const listings = await listingsStateRepository.getListings(limit, offset);
+
+    const listings = await listingsStateRepository.getListingsByUserId(
+      userId,
+      statuses,
+      limit,
+      offset
+    );
     return listings;
   };
 
@@ -123,7 +147,7 @@ export const ListingsDomain = (
   return {
     createListing,
     getListings,
-    getListing,
+    getUserListings,
     updateListing,
     purchaseListing,
     deleteListing,
