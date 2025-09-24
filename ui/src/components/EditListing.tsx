@@ -27,7 +27,7 @@ function EditListing({
       (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
     ),
   });
-  const [images, setImages] = useState<File[] | null>(null);
+  const [images, setImages] = useState<File[]>([]);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -51,10 +51,6 @@ function EditListing({
   };
 
   const sendEditListing = async () => {
-    if (images === null) {
-      console.log("No images");
-      return;
-    }
     await sendRequest(listing, images);
     handleClose();
   };

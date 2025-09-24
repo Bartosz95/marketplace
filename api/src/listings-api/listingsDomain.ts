@@ -90,11 +90,28 @@ export const ListingsDomain = (
         `Cannot update listing ${listingId} because is ${currentState.status}`
       );
 
-    await eventSourceRepository.insertEventByStreamId(
-      listingId,
-      EventType.LISTING_UPDATED,
-      data
-    );
+    switch (data.status) {
+      case EventType.LISTING_ARCHIVED:
+        await eventSourceRepository.insertEventByStreamId(
+          listingId,
+          EventType.LISTING_ARCHIVED,
+          {}
+        );
+        break;
+      case EventType.LISTING_UPDATED:
+        await eventSourceRepository.insertEventByStreamId(
+          listingId,
+          EventType.LISTING_UPDATED,
+          {}
+        );
+        break;
+      default:
+        await eventSourceRepository.insertEventByStreamId(
+          listingId,
+          EventType.LISTING_UPDATED,
+          data
+        );
+    }
   };
 
   const purchaseListing = async (listingId: UUID) => {

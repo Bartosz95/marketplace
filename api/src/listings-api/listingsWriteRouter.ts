@@ -2,8 +2,10 @@ import { Router } from "express";
 import z from "zod";
 import { UUID } from "crypto";
 import { ListingsDomain } from "./listingsDomain";
+import { EventType } from "../types";
 
 export const listingIdSchema = z.uuid();
+const userIdSchema = z.string();
 
 const createListingReqBodySchema = z.object({
   title: z.string().min(1),
@@ -16,6 +18,7 @@ const updateListingReqBodySchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(0).optional(),
   price: z.coerce.number().min(0).optional(),
+  status: z.enum(EventType).optional(),
 });
 
 export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;
@@ -26,29 +29,31 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   const router = Router();
 
   router.post("/", async (req, res) => {
-    const userId = req?.auth?.payload?.sub || "random";
+    const userId = userIdSchema.parse(req?.auth?.payload?.sub);
     const data = await createListingReqBodySchema.parse(req.body);
     const listingId = await listingsDomain.createListing(userId, data);
     res.status(200).send({ listingId: listingId });
   });
 
-  router.patch("/:listingsID", async (req, res, next) => {
-    const userId = req?.auth?.payload?.sub || "random";
-    const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
+  router.patch("/:listingsId", async (req, res, next) => {
+    const userId = userIdSchema.parse(req?.auth?.payload?.sub);
+    const listingId = listingIdSchema.parse(req.params.listingsId) as UUID;
     const data = await updateListingReqBodySchema.parse(req.body);
     await listingsDomain.updateListing(userId, listingId, data);
     res.status(200).send();
   });
 
-  router.post("/:listingsID", async (req, res) => {
-    const listingId = listingIdSchema.parse(req.params.listingsID) as UUID;
+  router.post("/:listingsId", async (req, res) => {
+    const userId = userIdSchema.parse(req?.auth?.payload?.sub);
+    const listingId = listingIdSchema.parse(req.params.listingsId) as UUID;
     await listingsDomain.purchaseListing(listingId);
     res.status(200).send();
   });
 
-  router.delete("/:listingsID", async (req, res) => {
+  router.delete("/:listingsId", async (req, res) => {
+    const userId = userIdSchema.parse(req?.auth?.payload?.sub);
     const listingId = (await listingIdSchema.parse(
-      req.params.listingsID
+      req.params.listingsId
     )) as UUID;
     await listingsDomain.deleteListing(listingId);
     res.status(200).send();

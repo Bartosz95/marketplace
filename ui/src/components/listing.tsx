@@ -2,7 +2,7 @@
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ViewListing from "@/components/ViewListing";
-import { ListingProps } from "@/components/types";
+import { EventType, ListingProps } from "@/components/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Dropdown } from "react-bootstrap";
@@ -16,15 +16,17 @@ interface ListingModalInterface {
   ) => Promise<void>;
   sendArchiveListingRequest: (listingProps: ListingProps) => Promise<void>;
   sendDeleteListingRequest: (listingProps: ListingProps) => Promise<void>;
+  sendRestoreListingRequest: (listingProps: ListingProps) => Promise<void>;
 }
 
 function Listing({
   listingProps,
   sendUpdateListingRequest,
   sendArchiveListingRequest,
+  sendRestoreListingRequest,
   sendDeleteListingRequest,
 }: ListingModalInterface) {
-  const { userId, title, price, imagesUrls } = listingProps;
+  const { userId, title, price, imagesUrls, status } = listingProps;
   const { user } = useAuth0();
 
   const [showListingView, setShowListingView] = useState(false);
@@ -43,7 +45,10 @@ function Listing({
 
   const archiveListing = async () => {
     await sendArchiveListingRequest(listingProps);
-    console.log("archive");
+  };
+
+  const restoreListing = async () => {
+    await sendRestoreListingRequest(listingProps);
   };
 
   const deleteListing = async () => {
@@ -57,7 +62,11 @@ function Listing({
       <Dropdown.Menu>
         <Dropdown.Item onClick={handleShowView}>View</Dropdown.Item>
         <Dropdown.Item onClick={handleShowEdit}>Edit</Dropdown.Item>
-        <Dropdown.Item onClick={archiveListing}>Archive</Dropdown.Item>
+        {status === EventType.LISTING_ARCHIVED ? (
+          <Dropdown.Item onClick={restoreListing}>Restore</Dropdown.Item>
+        ) : (
+          <Dropdown.Item onClick={archiveListing}>Archive</Dropdown.Item>
+        )}
         <Dropdown.Item onClick={deleteListing}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>

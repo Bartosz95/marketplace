@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { FilterBy, ListingProps } from "@/components/types";
+import { FilterBy, ListingProps, EventType } from "@/components/types";
 import Listing from "@/components/Listing";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -16,40 +16,45 @@ function ListingsView() {
   const { getAccessTokenSilently } = useAuth0();
 
   const getListings = async (token: string) => {
-    console.log("token");
-    console.log(token);
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      setListings(result);
+    } catch (error) {
+      console.log(error);
     }
-    const result = await response.json();
-    setListings(result);
   };
 
   const getUserListings = async (filterBy: FilterBy) => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/user/${filterBy}}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings/user/${filterBy}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      setListings(result);
+    } catch (error) {
+      console.log(error);
     }
-    const result = await response.json();
-    console.log(result);
-    setListings(result);
   };
 
   const sendImages = async (images: File[], listingId: UUID) => {
@@ -65,10 +70,14 @@ function ListingsView() {
         },
         body: formData,
       };
-      await fetch(
-        `${process.env.NEXT_PUBLIC_IMAGES_URL}/${listingId}`,
-        options
-      );
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_IMAGES_URL}/${listingId}`,
+          options
+        );
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
@@ -91,18 +100,22 @@ function ListingsView() {
       },
       body: JSON.stringify(data),
     };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+        options
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const listingId = result.listingId;
+      if (!listingId || !validate(listingId))
+        throw new Error("Creating listing failed");
+      await sendImages(images, listingId);
+    } catch (error) {
+      console.log(error);
     }
-    const result = await response.json();
-    const listingId = result.listingId;
-    if (!listingId || !validate(listingId))
-      throw new Error("Creating listing failed");
-    await sendImages(images, listingId);
   };
 
   const sendUpdateListingRequest = async (
@@ -125,51 +138,91 @@ function ListingsView() {
       },
       body: JSON.stringify(data),
     };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/:${listingId}`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+        options
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      if (images.length > 0) {
+        await sendImages(images, listingId);
+      }
+    } catch (error) {
+      console.log(error);
     }
-    await sendImages(images, listingId);
   };
 
   const sendDeleteListingRequest = async (listingProps: ListingProps) => {
     const { listingId } = listingProps;
-    if (!listingId) throw new Error("Cannot get listingId");
-    const options = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/:${listingId}`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      if (!listingId) throw new Error("Cannot get listingId");
+      const options = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+        options
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const sendArchiveListingRequest = async (listingProps: ListingProps) => {
-    const { listingId } = listingProps;
-    if (!listingId) throw new Error("Cannot get listingId");
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/:${listingId}`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const { listingId } = listingProps;
+      if (!listingId) throw new Error("Cannot get listingId");
+      const data = { status: EventType.LISTING_ARCHIVED };
+      const options = {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      };
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+        options
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const sendRestoreListingRequest = async (listingProps: ListingProps) => {
+    try {
+      const { listingId } = listingProps;
+      if (!listingId) throw new Error("Cannot get listingId");
+      const data = { status: EventType.LISTING_UPDATED };
+      const options = {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      };
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+        options
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -194,6 +247,7 @@ function ListingsView() {
             listingProps={listing}
             sendUpdateListingRequest={sendUpdateListingRequest}
             sendArchiveListingRequest={sendArchiveListingRequest}
+            sendRestoreListingRequest={sendRestoreListingRequest}
             sendDeleteListingRequest={sendDeleteListingRequest}
             key={listing.listingId}
           />

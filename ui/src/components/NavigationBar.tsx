@@ -30,6 +30,10 @@ function NavigationBar(props: NavigationBarProps) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  const handleGetUserActiveListing = async () => {
+    await getUserListings(FilterBy.Active);
+  };
+
   return (
     <Navbar
       bg={theme === "dark" ? "dark" : "light"}
@@ -56,7 +60,7 @@ function NavigationBar(props: NavigationBarProps) {
       />
 
       <NavDropdown title="My Listings" id="basic-nav-dropdown">
-        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Active)}>
+        <NavDropdown.Item onClick={handleGetUserActiveListing}>
           Active
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Sold)}>
