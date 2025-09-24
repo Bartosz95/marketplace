@@ -2,12 +2,19 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect, useState } from "react";
-import CreateListing from "@/components/CreateListing";
 import Login from "@/components/LoginButton";
-import { FilterBy } from "./types";
+import { FilterBy, ListingProps } from "./types";
+import EditListing from "./EditListing";
 
-function NavigationBar(props: any) {
-  const { filterListing } = props;
+interface NavigationBarProps {
+  getUserListings: (filterBy: FilterBy) => void;
+  sendCreateListingRequest: (
+    listingProps: ListingProps,
+    images: File[]
+  ) => Promise<void>;
+}
+function NavigationBar(props: NavigationBarProps) {
+  const { getUserListings, sendCreateListingRequest } = props;
   const [show, setShow] = useState(false);
 
   const [theme, setTheme] = useState("light");
@@ -36,19 +43,29 @@ function NavigationBar(props: any) {
         <i className="bi bi-plus-lg me-1" />
         Create listing
       </Button>
-      <CreateListing show={show} handleClose={handleClose} />
+      <EditListing
+        show={show}
+        handleClose={handleClose}
+        listingProps={{
+          title: "",
+          price: 0,
+          description: "",
+          imagesUrls: [],
+        }}
+        sendRequest={sendCreateListingRequest}
+      />
 
       <NavDropdown title="My Listings" id="basic-nav-dropdown">
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.Active)}>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Active)}>
           Active
         </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.Sold)}>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Sold)}>
           Sold
         </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.Archived)}>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Archived)}>
           Archived
         </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.All)}>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.All)}>
           All
         </NavDropdown.Item>
       </NavDropdown>

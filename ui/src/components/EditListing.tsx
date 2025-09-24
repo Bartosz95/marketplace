@@ -1,33 +1,42 @@
 "use client";
 import { useState } from "react";
-import { validate as isValidUUID } from "uuid";
+
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { UUID } from "crypto";
-import { CreateListingRequestBody } from "@/components/types";
+import { ListingProps } from "@/components/types";
 import { Carousel } from "react-bootstrap";
-import { useAuth0 } from "@auth0/auth0-react";
 
-interface CreateListingProps {
+export interface EditListingProps {
+  listingProps: ListingProps;
   show: boolean;
   handleClose: () => void;
+  sendRequest: (listingProps: ListingProps, images: File[]) => Promise<void>;
 }
 
-function CreateListing({ show, handleClose }: CreateListingProps) {
-  const [listing, setListing] = useState<CreateListingRequestBody>({
-    title: "",
-    description: "",
-    price: 0,
+function EditListing({
+  show,
+  handleClose,
+  listingProps,
+  sendRequest,
+}: EditListingProps) {
+  const [listing, setListing] = useState<ListingProps>({
+    ...listingProps,
+    imagesUrls: listingProps.imagesUrls.map(
+      (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
+    ),
   });
   const [images, setImages] = useState<File[] | null>(null);
-  const { getAccessTokenSilently } = useAuth0();
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
       setImages(filesArray);
+      setListing({
+        ...listing,
+        imagesUrls: filesArray.map((image) => URL.createObjectURL(image)),
+      });
     }
   };
 
@@ -41,66 +50,20 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
     });
   };
 
-  const sendListingDetails = async (token: string): Promise<UUID> => {
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(listing),
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const sendEditListing = async () => {
+    if (images === null) {
+      console.log("No images");
+      return;
     }
-    const result = await response.json();
-    const listingId = result.listingId;
-    if (!listingId || !isValidUUID(listingId))
-      throw new Error("Creating listing failed");
-
-    return listingId;
-  };
-
-  const sendImages = async (token: string, listingId: UUID) => {
-    if (images && images?.length > 0) {
-      const formData = new FormData();
-      for (const image of images) {
-        formData.append(`images`, image);
-      }
-      const options = {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      };
-      await fetch(
-        `${process.env.NEXT_PUBLIC_IMAGES_URL}/${listingId}`,
-        options
-      );
-    }
-  };
-
-  const createListing = async () => {
-    const token = await getAccessTokenSilently({
-      authorizationParams: {
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      },
-    });
-    const listingId = await sendListingDetails(token);
-    await sendImages(token, listingId);
+    await sendRequest(listing, images);
     handleClose();
   };
 
-  const imagesPreview = images && (
+  const imagesPreview = (
     <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-      {images.map((image) => (
-        <Carousel.Item key={image.name}>
-          <Image src={URL.createObjectURL(image)} fluid />
+      {listing.imagesUrls.map((imageUrl) => (
+        <Carousel.Item key={imageUrl}>
+          <Image src={imageUrl} fluid />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -116,7 +79,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
       centered
     >
       <Modal.Header closeButton>
-        <Modal.Title>Create listing</Modal.Title>
+        <Modal.Title>Enter listing details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {imagesPreview}
@@ -136,6 +99,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
               onChange={setDetails}
               className="mb-3"
               required
+              value={listing.title}
             />
             <Form.Control
               type="number"
@@ -143,6 +107,7 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
               placeholder="Price"
               onChange={setDetails}
               className="mb-3"
+              value={listing.price}
               required
             />
             <Form.Control
@@ -151,13 +116,14 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
               placeholder="Description"
               onChange={setDetails}
               className="mb-3"
+              value={listing.description}
               required
             />
           </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="primary" onClick={createListing}>
+        <Button variant="primary" onClick={sendEditListing}>
           Create
         </Button>
       </Modal.Footer>
@@ -165,4 +131,4 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
   );
 }
 
-export default CreateListing;
+export default EditListing;

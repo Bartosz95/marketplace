@@ -6,14 +6,34 @@ import { ListingProps } from "@/components/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Dropdown } from "react-bootstrap";
+import EditListing from "./EditListing";
 
-function Listing(listingProps: ListingProps) {
-  const { imagesUrls, price, title, userId, listingId } = listingProps;
-  const { user, getAccessTokenSilently } = useAuth0();
+interface ListingModalInterface {
+  listingProps: ListingProps;
+  sendUpdateListingRequest: (
+    listingProps: ListingProps,
+    images: File[]
+  ) => Promise<void>;
+  sendArchiveListingRequest: (listingProps: ListingProps) => Promise<void>;
+  sendDeleteListingRequest: (listingProps: ListingProps) => Promise<void>;
+}
+
+function Listing({
+  listingProps,
+  sendUpdateListingRequest,
+  sendArchiveListingRequest,
+  sendDeleteListingRequest,
+}: ListingModalInterface) {
+  const { userId, title, price, imagesUrls } = listingProps;
+  const { user } = useAuth0();
 
   const [showListingView, setShowListingView] = useState(false);
-  const handleClose = () => setShowListingView(false);
-  const handleShow = () => setShowListingView(true);
+  const handleCloseView = () => setShowListingView(false);
+  const handleShowView = () => setShowListingView(true);
+
+  const [showListingEdit, setShowListingEdit] = useState(false);
+  const handleCloseEdit = () => setShowListingEdit(false);
+  const handleShowEdit = () => setShowListingEdit(true);
   const image =
     imagesUrls.length > 0
       ? `${process.env.NEXT_PUBLIC_IMAGES_URL}/${imagesUrls[0]}`
@@ -21,34 +41,13 @@ function Listing(listingProps: ListingProps) {
 
   const isUserListing = user?.sub === userId;
 
-  const editListing = () => {
-    console.log("edit");
+  const archiveListing = async () => {
+    await sendArchiveListingRequest(listingProps);
+    console.log("archive");
   };
 
   const deleteListing = async () => {
-    const token = await getAccessTokenSilently({
-      authorizationParams: {
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      },
-    });
-    const options = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-  };
-
-  const archiveListing = () => {
-    console.log("archive");
+    await sendDeleteListingRequest(listingProps);
   };
 
   const modifyListing = (
@@ -56,8 +55,8 @@ function Listing(listingProps: ListingProps) {
       <Dropdown.Toggle id="dropdown-basic">Modify</Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item onClick={handleShow}>View</Dropdown.Item>
-        <Dropdown.Item onClick={editListing}>Edit</Dropdown.Item>
+        <Dropdown.Item onClick={handleShowView}>View</Dropdown.Item>
+        <Dropdown.Item onClick={handleShowEdit}>Edit</Dropdown.Item>
         <Dropdown.Item onClick={archiveListing}>Archive</Dropdown.Item>
         <Dropdown.Item onClick={deleteListing}>Delete</Dropdown.Item>
       </Dropdown.Menu>
@@ -75,14 +74,20 @@ function Listing(listingProps: ListingProps) {
           {isUserListing ? (
             modifyListing
           ) : (
-            <Button onClick={handleShow}>View</Button>
+            <Button onClick={handleShowView}>View</Button>
           )}
         </Card.Body>
       </Card>
       <ViewListing
         show={showListingView}
-        handleClose={handleClose}
+        handleClose={handleCloseView}
         listingProps={listingProps}
+      />
+      <EditListing
+        show={showListingEdit}
+        handleClose={handleCloseEdit}
+        listingProps={listingProps}
+        sendRequest={sendUpdateListingRequest}
       />
     </>
   );

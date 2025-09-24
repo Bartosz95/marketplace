@@ -9,6 +9,7 @@ const createListingReqBodySchema = z.object({
   title: z.string().min(1),
   description: z.string().min(0),
   price: z.coerce.number().min(0),
+  imagesUrls: z.array(z.string()),
 });
 
 const updateListingReqBodySchema = z.object({
