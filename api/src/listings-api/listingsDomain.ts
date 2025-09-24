@@ -4,11 +4,10 @@ import { ListingsStateRepository } from "../repositories/listingsStateRepository
 import {
   EventType,
   FilterBy,
-  Listing,
-  ListingCreatedEvent,
-  ListingDeletedEvent,
-  ListingPurchasedEvent,
-  ListingUpdatedEvent,
+  ImagesUploadedEventData,
+  ListingArchivedEvent,
+  ListingCreatedEventData,
+  ListingState,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import {
@@ -18,19 +17,25 @@ import {
 
 export interface ListingsDomain {
   createListing: (userId: string, data: CreateListingReqBody) => Promise<UUID>;
-  getListings: (limit?: number, offset?: number) => Promise<Listing[]>;
-  getUserListings: (
-    userId: string,
-    filter: FilterBy,
-    limit?: number,
-    offset?: number
-  ) => Promise<Listing[]>;
+  updateImages: (
+    streamId: UUID,
+    data: ImagesUploadedEventData
+  ) => Promise<void>;
   updateListing: (
     userId: string,
     listing_id: UUID,
     data: UpdateListingReqBody
   ) => Promise<void>;
+  getListings: (limit?: number, offset?: number) => Promise<ListingState[]>;
+  getUserListings: (
+    userId: string,
+    filter: FilterBy,
+    limit?: number,
+    offset?: number
+  ) => Promise<ListingState[]>;
+
   purchaseListing: (listing_id: UUID) => Promise<void>;
+  archiveListing: (listing_id: UUID) => Promise<void>;
   deleteListing: (listing_id: UUID) => Promise<void>;
 }
 
@@ -40,24 +45,86 @@ export const ListingsDomain = (
   logger: Logger
 ): ListingsDomain => {
   const createListing = async (userId: string, data: CreateListingReqBody) => {
-    const listingCreateEventData: ListingCreatedEvent = {
-      listingId: crypto.randomUUID(), // will be replaced in db
-      eventType: EventType.LISTING_CREATED,
-      data: {
-        userId,
-        title: data.title,
-        description: data.description,
-        price: data.price,
-      },
-      position: 1,
-      version: 1,
-      createdAt: new Date(),
-      metadata: {},
+    const { title, description, price } = data;
+    const eventData: ListingCreatedEventData = {
+      userId,
+      title,
+      description,
+      price,
+      imagesUrls: [],
     };
-    return await eventSourceRepository.insertEvent(listingCreateEventData);
+
+    const listingId = await eventSourceRepository.insertEvent(
+      EventType.LISTING_CREATED,
+      eventData
+    );
+    return listingId;
   };
 
-  const getListings = async (limit = 10, offset = 0): Promise<Listing[]> => {
+  const updateImages = async (
+    listingId: UUID,
+    data: ImagesUploadedEventData
+  ) => {
+    await eventSourceRepository.insertEventByStreamId(
+      listingId,
+      EventType.IMAGES_UPLOADED,
+      data
+    );
+  };
+
+  const updateListing = async (
+    userId: string,
+    listingId: UUID,
+    data: UpdateListingReqBody
+  ) => {
+    const currentState = await listingsStateRepository.getListingById(
+      listingId
+    );
+    if (userId !== currentState.userId)
+      throw new Error(`User ${userId} try modify not his listing ${listingId}`);
+    if (
+      currentState.status === EventType.LISTING_DELETED ||
+      currentState.status === EventType.LISTING_PURCHASED
+    )
+      throw new Error(
+        `Cannot update listing ${listingId} because is ${currentState.status}`
+      );
+
+    await eventSourceRepository.insertEventByStreamId(
+      listingId,
+      EventType.LISTING_UPDATED,
+      data
+    );
+  };
+
+  const purchaseListing = async (listingId: UUID) => {
+    await eventSourceRepository.insertEventByStreamId(
+      listingId,
+      EventType.LISTING_PURCHASED,
+      {}
+    );
+  };
+
+  const deleteListing = async (listingId: UUID) => {
+    await eventSourceRepository.insertEventByStreamId(
+      listingId,
+      EventType.LISTING_DELETED,
+      {}
+    );
+  };
+
+  const archiveListing = async (listingId: UUID) => {
+    await eventSourceRepository.insertEventByStreamId(
+      listingId,
+      EventType.LISTING_ARCHIVED,
+      {}
+    );
+  };
+
+  const getListings = async (
+    limit = 10,
+    offset = 0
+  ): Promise<ListingState[]> => {
     const statuses: EventType[] = [
       EventType.LISTING_CREATED,
       EventType.LISTING_UPDATED,
@@ -75,20 +142,24 @@ export const ListingsDomain = (
     filter: FilterBy,
     limit = 10,
     offset = 0
-  ): Promise<Listing[]> => {
+  ): Promise<ListingState[]> => {
     let statuses: EventType[] = [];
     switch (filter) {
-      case FilterBy.All:
+      case FilterBy.Active:
         statuses.push(EventType.LISTING_CREATED);
         statuses.push(EventType.LISTING_UPDATED);
-        statuses.push(EventType.LISTING_PURCHASED);
-        statuses.push(EventType.LISTING_DELETED);
         break;
       case FilterBy.Sold:
         statuses.push(EventType.LISTING_PURCHASED);
         break;
-      case FilterBy.Deleted:
-        statuses.push(EventType.LISTING_DELETED);
+      case FilterBy.Archived:
+        statuses.push(EventType.LISTING_ARCHIVED);
+        break;
+      case FilterBy.All:
+        statuses.push(EventType.LISTING_CREATED);
+        statuses.push(EventType.LISTING_UPDATED);
+        statuses.push(EventType.LISTING_PURCHASED);
+        statuses.push(EventType.LISTING_ARCHIVED);
         break;
     }
 
@@ -101,55 +172,14 @@ export const ListingsDomain = (
     return listings;
   };
 
-  const updateListing = async (
-    userId: string,
-    listingId: UUID,
-    updatedDetails: UpdateListingReqBody
-  ) => {
-    const listingUpdatedEvent: ListingUpdatedEvent = {
-      listingId,
-      eventType: EventType.LISTING_UPDATED,
-      data: updatedDetails,
-      position: 0,
-      version: 0,
-      createdAt: new Date(),
-      metadata: undefined,
-    };
-    await eventSourceRepository.insertEvent(listingUpdatedEvent);
-  };
-
-  const purchaseListing = async (listingId: UUID) => {
-    const listingPurchased: ListingPurchasedEvent = {
-      listingId,
-      eventType: EventType.LISTING_PURCHASED,
-      data: {},
-      position: 0,
-      version: 0,
-      createdAt: new Date(),
-      metadata: {},
-    };
-    await eventSourceRepository.insertEvent(listingPurchased);
-  };
-
-  const deleteListing = async (listingId: UUID) => {
-    const listingDeleted: ListingDeletedEvent = {
-      listingId,
-      eventType: EventType.LISTING_DELETED,
-      data: {},
-      position: 0,
-      version: 0,
-      createdAt: new Date(),
-      metadata: {},
-    };
-    await eventSourceRepository.insertEvent(listingDeleted);
-  };
-
   return {
     createListing,
+    updateImages,
     getListings,
     getUserListings,
     updateListing,
     purchaseListing,
+    archiveListing,
     deleteListing,
   };
 };

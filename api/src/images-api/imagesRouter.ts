@@ -4,12 +4,12 @@ import z from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { EventType, ImagesUploadedEvent } from "../types";
+import { ListingsDomain } from "../listings-api/listingsDomain";
+import { ImagesUploadedEventData } from "../types";
 
 const listingIdSchema = z.uuid();
 
-export const imagesRouter = (eventSourceRepository: EventSourceRepository) => {
+export const imagesRouter = (listingDomain: ListingsDomain) => {
   const router = Router();
 
   router.use(urlencoded({ limit: "50mb", extended: true }));
@@ -33,16 +33,10 @@ export const imagesRouter = (eventSourceRepository: EventSourceRepository) => {
     const imagesUrls = files.map((file) =>
       path.join(listingId, file.originalname)
     );
-    const event: ImagesUploadedEvent = {
-      eventType: EventType.IMAGES_UPLOADED,
-      listingId,
-      data: { imagesUrls },
-      position: 0,
-      version: 0,
-      createdAt: new Date(),
-      metadata: {},
+    const eventData: ImagesUploadedEventData = {
+      imagesUrls,
     };
-    eventSourceRepository.insertEvent(event);
+    listingDomain.updateImages(listingId, eventData);
     res.status(200).send();
   });
 

@@ -11,6 +11,6 @@ export const RequestLogger =
     logger.info("query:");
     logger.info(JSON.stringify(req.query));
     logger.info(`body:`);
-    logger.info(req.body);
+    logger.info(JSON.stringify(req.body));
     next();
   };

@@ -3,8 +3,9 @@ import { UUID } from "crypto";
 export enum EventType {
   LISTING_CREATED = "LISTING_CREATED",
   LISTING_UPDATED = "LISTING_UPDATED",
-  LISTING_DELETED = "LISTING_DELETED",
   LISTING_PURCHASED = "LISTING_PURCHASED",
+  LISTING_ARCHIVED = "LISTING_ARCHIVED",
+  LISTING_DELETED = "LISTING_DELETED",
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
 }
 
@@ -12,13 +13,27 @@ export type ListingStatus =
   | EventType.LISTING_CREATED
   | EventType.LISTING_UPDATED
   | EventType.LISTING_PURCHASED
+  | EventType.LISTING_ARCHIVED
   | EventType.LISTING_DELETED;
 
-export interface Listing {
+export interface ListingStateTableRow {
+  listing_id: string;
+  user_id: string;
+  modified_at: string;
+  status: string;
+  version: number;
+  title: string;
+  description: string;
+  price: number;
+  images_urls: string[];
+}
+
+export interface ListingState {
   listingId: UUID;
   userId: string;
-  status: ListingStatus;
   modifiedAt: Date;
+  status: ListingStatus;
+  version: number;
   title: string;
   description: string;
   price: number;
@@ -26,7 +41,7 @@ export interface Listing {
 }
 
 interface EventBaseInfo {
-  listingId: UUID;
+  streamId: UUID;
   position: number;
   version: number;
   createdAt: Date;
@@ -43,6 +58,7 @@ export interface ListingCreatedEventData {
   title: string;
   description: string;
   price: number;
+  imagesUrls: string[];
 }
 
 export interface ListingUpdatedEvent extends EventBaseInfo {
@@ -58,11 +74,18 @@ export interface ListingUpdatedEventData {
 
 export interface ListingPurchasedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_PURCHASED;
-  data: {};
+  data: ListingPurchasedEventData;
 }
+
+export interface ListingPurchasedEventData {}
 
 export interface ListingDeletedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_DELETED;
+  data: {};
+}
+
+export interface ListingArchivedEvent extends EventBaseInfo {
+  eventType: EventType.LISTING_ARCHIVED;
   data: {};
 }
 
@@ -75,15 +98,24 @@ export interface ImagesUploadedEventData {
   imagesUrls: string[];
 }
 
+export type EventData =
+  | {}
+  | ListingCreatedEventData
+  | ImagesUploadedEventData
+  | ListingUpdatedEventData
+  | ListingPurchasedEventData;
+
 export type Event =
   | ListingCreatedEvent
   | ListingUpdatedEvent
   | ListingPurchasedEvent
+  | ListingArchivedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent;
 
 export enum FilterBy {
-  All = "ALL",
+  Active = "ACTIVE",
   Sold = "SOLD",
-  Deleted = "DELETED",
+  Archived = "ARCHIVED",
+  All = "ALL",
 }

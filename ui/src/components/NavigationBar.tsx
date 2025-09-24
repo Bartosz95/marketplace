@@ -39,14 +39,17 @@ function NavigationBar(props: any) {
       <CreateListing show={show} handleClose={handleClose} />
 
       <NavDropdown title="My Listings" id="basic-nav-dropdown">
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.All)}>
-          All
+        <NavDropdown.Item onClick={() => filterListing(FilterBy.Active)}>
+          Active
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => filterListing(FilterBy.Sold)}>
           Sold
         </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => filterListing(FilterBy.Deleted)}>
-          Deleted
+        <NavDropdown.Item onClick={() => filterListing(FilterBy.Archived)}>
+          Archived
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => filterListing(FilterBy.All)}>
+          All
         </NavDropdown.Item>
       </NavDropdown>
 

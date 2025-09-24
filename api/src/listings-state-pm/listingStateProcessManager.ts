@@ -1,15 +1,16 @@
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { Event, EventType, Listing } from "../types";
+import { Event, EventType, ListingState } from "../types";
 
 export const ListingStateProcessManager =
   (listingStateRepository: ListingsStateRepository) => async (event: Event) => {
-    const { eventType, listingId, createdAt } = event;
+    const { eventType, streamId, createdAt } = event;
     if (eventType === EventType.LISTING_CREATED) {
-      const listingCreatedState: Listing = {
-        listingId,
+      const listingCreatedState: ListingState = {
+        listingId: streamId,
         userId: event.data.userId,
         modifiedAt: createdAt,
         status: EventType.LISTING_CREATED,
+        version: 1,
         title: event.data.title,
         description: event.data.description,
         price: event.data.price,
@@ -18,22 +19,15 @@ export const ListingStateProcessManager =
       await listingStateRepository.createListing(listingCreatedState);
       return;
     }
-    const previousState = await listingStateRepository.getListingById(
-      listingId
-    );
-    if (
-      previousState === null ||
-      (previousState.status !== EventType.LISTING_CREATED &&
-        previousState.status !== EventType.LISTING_UPDATED)
-    )
-      throw new Error(`Cannot update a state of Listing`);
+    const previousState = await listingStateRepository.getListingById(streamId);
 
     switch (eventType) {
       case EventType.LISTING_UPDATED:
-        const listingUpdatedState: Listing = {
-          listingId,
+        const listingUpdatedState: ListingState = {
+          listingId: streamId,
           modifiedAt: createdAt,
           status: EventType.LISTING_UPDATED,
+          version: previousState.version + 1,
           userId: previousState.userId,
           title: event.data.title || previousState.title,
           description: event.data.description || previousState.description,
@@ -42,20 +36,19 @@ export const ListingStateProcessManager =
         };
         await listingStateRepository.updateListing(listingUpdatedState);
         return;
-      case EventType.LISTING_DELETED:
       case EventType.LISTING_PURCHASED:
-        const updatedState: Listing = {
+      case EventType.LISTING_ARCHIVED:
+      case EventType.LISTING_DELETED:
+        const updatedState: ListingState = {
           ...previousState,
-          listingId,
           status: eventType,
         };
         await listingStateRepository.updateListing(updatedState);
         break;
       case EventType.IMAGES_UPLOADED:
         const imagesUrls = event.data.imagesUrls;
-        const imagesUploaded: Listing = {
+        const imagesUploaded: ListingState = {
           ...previousState,
-          listingId,
           imagesUrls,
         };
         await listingStateRepository.updateListing(imagesUploaded);

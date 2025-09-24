@@ -78,7 +78,10 @@ function CreateListing({ show, handleClose }: CreateListingProps) {
         },
         body: formData,
       };
-      await fetch(`http://localhost:3002/images/${listingId}`, options);
+      await fetch(
+        `${process.env.NEXT_PUBLIC_IMAGES_URL}/${listingId}`,
+        options
+      );
     }
   };
 

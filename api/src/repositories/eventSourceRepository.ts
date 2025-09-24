@@ -1,10 +1,22 @@
-import { Logger } from "winston";
 import { UUID } from "crypto";
-import { Pool, PoolConfig } from "pg";
-import { EventType, Event } from "../types";
+import { Pool, PoolClient, PoolConfig } from "pg";
+import {
+  EventType,
+  Event,
+  ListingCreatedEventData,
+  ImagesUploadedEventData,
+  ListingUpdatedEventData,
+  ListingPurchasedEventData,
+  EventData,
+} from "../types";
 
 export interface EventSourceRepository {
-  insertEvent: (event: Event) => Promise<UUID>;
+  insertEvent: (eventType: EventType, eventData: EventData) => Promise<UUID>;
+  insertEventByStreamId: (
+    streamId: UUID,
+    eventType: EventType,
+    eventData: EventData
+  ) => Promise<void>;
   getEventsFromPosition: (position: number) => Promise<Event[]>;
 }
 
@@ -15,27 +27,40 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
 
   const pool = new Pool(dbConfig);
 
-  const insertEvent = async (event: Event) => {
-    const { eventType, listingId, data } = event;
+  const insertEvent = async (eventType: EventType, data: EventData) => {
     const dbClient = await pool.connect();
     try {
-      const versionResult = await dbClient.query(
-        "SELECT MAX(version) FROM event_store.events WHERE listing_id = $1",
-        [listingId]
+      const result = await dbClient.query(
+        "INSERT INTO event_store.events (event_type, data) VALUES ($1, $2) RETURNING stream_id;",
+        [eventType, data]
       );
-      const version = versionResult.rows[0].max;
-      if (!version) {
-        const result = await dbClient.query(
-          "INSERT INTO event_store.events (event_type, data) VALUES ($1, $2) RETURNING listing_id;",
-          [eventType, data]
-        );
-        return result.rows[0] && (result.rows[0].listing_id as UUID);
-      } else {
-        await dbClient.query(
-          "INSERT INTO event_store.events (listing_id, version, event_type, data) VALUES ($1, $2, $3, $4)",
-          [listingId, version + 1, eventType, data]
-        );
-      }
+      const { stream_id } = result.rows[0];
+      return stream_id;
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const insertEventByStreamId = async (
+    streamId: UUID,
+    eventType: EventType,
+    data: EventData
+  ) => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query(
+        `WITH max_version AS (
+          SELECT COALESCE(MAX(version), 0) AS v 
+          FROM event_store.events 
+          WHERE stream_id = $1
+          )
+        INSERT INTO event_store.events (stream_id, event_type, data, version)
+        SELECT $1, $2, $3, v + 1
+        FROM max_version`,
+        [streamId, eventType, data]
+      );
     } catch (error) {
       throw error;
     } finally {
@@ -62,7 +87,7 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
 
   const mapEvent = (row: any): Event => ({
     position: row.position,
-    listingId: row.listing_id,
+    streamId: row.stream_id,
     version: row.version,
     createdAt: row.created_at,
     eventType: row.event_type,
@@ -71,6 +96,7 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
   });
   return {
     insertEvent,
+    insertEventByStreamId,
     getEventsFromPosition,
   };
 };

@@ -23,7 +23,7 @@ function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
   ));
 
   const handleBuy = async (): Promise<void> => {
-        const token = await getAccessTokenSilently({
+    const token = await getAccessTokenSilently({
       authorizationParams: {
         audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
       },

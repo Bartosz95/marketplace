@@ -1,34 +1,27 @@
-import { Logger } from "winston";
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
-import { EventType, FilterBy, Listing, ListingStatus } from "../types";
-
-export interface ListingStateTableRow {
-  listing_id: string;
-  user_id: string;
-  modified_at: string;
-  status: string;
-  title: string;
-  description: string;
-  price: number;
-  images_urls: string[];
-}
+import {
+  EventType,
+  ListingState,
+  ListingStateTableRow,
+  ListingStatus,
+} from "../types";
 
 export interface ListingsStateRepository {
   getListings: (
     statuses: EventType[],
     limit: number,
     offset: number
-  ) => Promise<Listing[]>;
-  getListingById: (listingId: UUID) => Promise<Listing | null>;
+  ) => Promise<ListingState[]>;
+  getListingById: (listingId: UUID) => Promise<ListingState>;
   getListingsByUserId: (
     userId: string,
     statuses: EventType[],
     limit: number,
     offset: number
-  ) => Promise<Listing[]>;
-  createListing: (listing: Listing) => Promise<void>;
-  updateListing: (listing: Listing) => Promise<void>;
+  ) => Promise<ListingState[]>;
+  createListing: (listing: ListingState) => Promise<void>;
+  updateListing: (listing: ListingState) => Promise<void>;
 }
 
 export const ListingsStateRepository = (env: any): ListingsStateRepository => {
@@ -42,10 +35,9 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     statuses: EventType[],
     limit = 10,
     offset = 0
-  ): Promise<Listing[]> => {
+  ): Promise<ListingState[]> => {
     const dbClient = await pool.connect();
     try {
-      console.log(statuses);
       const results = await dbClient.query(
         `SELECT * FROM states.listings
         WHERE status = ANY($1::text[])
@@ -54,18 +46,17 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [statuses, limit, offset]
       );
-      const listings: Listing[] = results.rows.map(mapListing);
+      const listings: ListingState[] = results.rows.map(mapListing);
 
       return listings;
     } catch (error) {
-      console.log(error);
       throw error;
     } finally {
       dbClient.release();
     }
   };
 
-  const getListingById = async (listingId: UUID): Promise<Listing | null> => {
+  const getListingById = async (listingId: UUID): Promise<ListingState> => {
     const dbClient = await pool.connect();
     try {
       const result = await dbClient.query(
@@ -74,7 +65,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
       );
 
       if (result.rows.length === 0) {
-        return null;
+        throw new Error(`Listing ${listingId} does not exists`);
       }
       return mapListing(result.rows[0]);
     } catch (error) {
@@ -89,7 +80,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     statuses: EventType[],
     limit: number,
     offset: number
-  ): Promise<Listing[]> => {
+  ): Promise<ListingState[]> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
@@ -101,27 +92,27 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [userId, statuses, limit, offset]
       );
-      const listings: Listing[] = results.rows.map(mapListing);
+      const listings: ListingState[] = results.rows.map(mapListing);
       return listings;
     } catch (error) {
-      console.log(error);
       throw error;
     } finally {
       dbClient.release();
     }
   };
 
-  const createListing = async (listing: Listing): Promise<void> => {
+  const createListing = async (listing: ListingState): Promise<void> => {
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.listings (listing_id, user_id, status, title, description, price, images_urls) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7);
+        `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
         `,
         [
           listing.listingId,
           listing.userId,
-          EventType.LISTING_CREATED,
+          listing.status,
+          listing.version,
           listing.title,
           listing.description,
           listing.price,
@@ -135,25 +126,24 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
-  const updateListing = async (listing: Listing) => {
+  const updateListing = async (listing: ListingState) => {
     const dbClient = await pool.connect();
-    const { listingId, title, description, price, imagesUrls, modifiedAt } =
-      listing;
+    const {
+      status,
+      listingId,
+      title,
+      description,
+      price,
+      imagesUrls,
+      modifiedAt,
+    } = listing;
     try {
       await dbClient.query(
         `UPDATE states.listings 
         SET  status = $1, modified_at = $2, title = $3, description  = $4, price = $5, images_urls = $6
         WHERE listing_id = $7;
         `,
-        [
-          EventType.LISTING_UPDATED,
-          modifiedAt,
-          title,
-          description,
-          price,
-          imagesUrls,
-          listingId,
-        ]
+        [status, modifiedAt, title, description, price, imagesUrls, listingId]
       );
     } catch (error) {
       throw error;
@@ -162,10 +152,11 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
-  const mapListing = (row: ListingStateTableRow): Listing => ({
+  const mapListing = (row: ListingStateTableRow): ListingState => ({
     listingId: row.listing_id as UUID,
     modifiedAt: new Date(row.modified_at),
     status: row.status as ListingStatus,
+    version: row.version,
     userId: row.user_id,
     title: row.title,
     description: row.description,

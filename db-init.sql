@@ -10,10 +10,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA event_store AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS event_store.events (
-  position   SERIAL PRIMARY KEY,
+  stream_id   UUID DEFAULT gen_random_uuid(),
+  position    SERIAL PRIMARY KEY,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  listing_id  UUID DEFAULT gen_random_uuid(),
-  version     INT NOT NULL DEFAULT 1,
+  version     INT DEFAULT 1,
   event_type  TEXT NOT NULL,
   data        JSONB,
   metadata    JSONB 
@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS states.listings (
   user_id     TEXT,
   modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status      TEXT NOT NULL,
+  version     INTEGER NOT NULL,
   title       TEXT NOT NULL,
   description TEXT NOT NULL,
   price       INTEGER NOT NULL,

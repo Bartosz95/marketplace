@@ -7,6 +7,8 @@ import { imagesRouter } from "./imagesRouter";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
 import path from "path";
+import { ListingsDomain } from "../listings-api/listingsDomain";
+import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 
 export default () => {
   const envSchema = z.object({
@@ -53,8 +55,10 @@ export default () => {
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
 
+  const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const imageRouter = imagesRouter(eventSourceRepository);
+  const listingDomain = ListingsDomain(listingsStateRepository, eventSourceRepository, logger)
+  const imageRouter = imagesRouter(listingDomain);
 
   const app = express();
   app.use(express.json({ limit: "50mb" }));

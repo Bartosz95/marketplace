@@ -15,11 +15,13 @@ export interface ListingDetails {
 
 export interface ListingProps extends ListingDetails {
   listingId: UUID;
+  userId: string;
   status: string;
 }
 
 export enum FilterBy {
-  All = "ALL",
+  Active = "ACTIVE",
   Sold = "SOLD",
-  Deleted = "DELETED",
+  Archived = "ARCHIVED",
+  All = "ALL",
 }
