@@ -58,13 +58,16 @@ function NavigationBar(props: NavigationBarProps) {
 
       <NavDropdown title="Filter By" id="basic-nav-dropdown">
         <NavDropdown.Item onClick={() => getListings()}>
-          All Listings
+          All Active Listings
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Active)}>
           Your Active
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Sold)}>
           Your Sold
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Purchased)}>
+          Your Purchased
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Archived)}>
           Your Archived

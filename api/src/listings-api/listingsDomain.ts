@@ -34,9 +34,9 @@ export interface ListingsDomain {
     offset?: number
   ) => Promise<ListingState[]>;
 
-  purchaseListing: (listing_id: UUID) => Promise<void>;
-  archiveListing: (listing_id: UUID) => Promise<void>;
-  deleteListing: (listing_id: UUID) => Promise<void>;
+  purchaseListing: (userId: string, listing_id: UUID) => Promise<void>;
+  archiveListing: (userId: string, listing_id: UUID) => Promise<void>;
+  deleteListing: (userId: string, listing_id: UUID) => Promise<void>;
 }
 
 export const ListingsDomain = (
@@ -80,6 +80,7 @@ export const ListingsDomain = (
     const currentState = await listingsStateRepository.getListingById(
       listingId
     );
+    if (!currentState) throw new Error(`currentState undefined`);
     if (userId !== currentState.userId)
       throw new Error(`User ${userId} try modify not his listing ${listingId}`);
     if (
@@ -114,15 +115,25 @@ export const ListingsDomain = (
     }
   };
 
-  const purchaseListing = async (listingId: UUID) => {
+  const purchaseListing = async (userId: string, listingId: UUID) => {
+    const listing = await listingsStateRepository.getListingById(listingId);
+    if (!listing) throw new Error(`listing undefined`);
+    if (userId !== listing.userId)
+      throw Error(`User ${userId} try to modify listing ${listingId}`);
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_PURCHASED,
-      {}
+      {
+        userId,
+      }
     );
   };
 
-  const deleteListing = async (listingId: UUID) => {
+  const deleteListing = async (userId: string, listingId: UUID) => {
+    const listing = await listingsStateRepository.getListingById(listingId);
+    if (!listing) throw new Error(`listing undefined`);
+    if (userId !== listing.userId)
+      throw Error(`User ${userId} try to modify listing ${listingId}`);
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_DELETED,
@@ -130,7 +141,11 @@ export const ListingsDomain = (
     );
   };
 
-  const archiveListing = async (listingId: UUID) => {
+  const archiveListing = async (userId: string, listingId: UUID) => {
+    const listing = await listingsStateRepository.getListingById(listingId);
+    if (!listing) throw new Error(`listing undefined`);
+    if (userId !== listing.userId)
+      throw Error(`User ${userId} try to modify listing ${listingId}`);
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_ARCHIVED,
@@ -167,6 +182,9 @@ export const ListingsDomain = (
         statuses.push(EventType.LISTING_UPDATED);
         break;
       case FilterBy.Sold:
+        statuses.push(EventType.LISTING_PURCHASED);
+        break;
+      case FilterBy.Purchased:
         statuses.push(EventType.LISTING_PURCHASED);
         break;
       case FilterBy.Archived:

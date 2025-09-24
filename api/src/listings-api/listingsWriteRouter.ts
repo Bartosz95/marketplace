@@ -46,7 +46,7 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   router.post("/:listingsId", async (req, res) => {
     const userId = userIdSchema.parse(req?.auth?.payload?.sub);
     const listingId = listingIdSchema.parse(req.params.listingsId) as UUID;
-    await listingsDomain.purchaseListing(listingId);
+    await listingsDomain.purchaseListing(userId, listingId);
     res.status(200).send();
   });
 
@@ -55,7 +55,7 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
     const listingId = (await listingIdSchema.parse(
       req.params.listingsId
     )) as UUID;
-    await listingsDomain.deleteListing(listingId);
+    await listingsDomain.deleteListing(userId, listingId);
     res.status(200).send();
   });
 

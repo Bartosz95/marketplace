@@ -29,6 +29,7 @@ export interface ListingProps {
 export enum FilterBy {
   Active = "ACTIVE",
   Sold = "SOLD",
+  Purchased = "PURCHASED",
   Archived = "ARCHIVED",
   All = "ALL",
 }

@@ -26,6 +26,7 @@ export interface ListingStateTableRow {
   description: string;
   price: number;
   images_urls: string[];
+  purchased_by?: string;
 }
 
 export interface ListingState {
@@ -38,6 +39,7 @@ export interface ListingState {
   description: string;
   price: number;
   imagesUrls: string[];
+  purchasedBy?: string;
 }
 
 interface EventBaseInfo {
@@ -77,7 +79,9 @@ export interface ListingPurchasedEvent extends EventBaseInfo {
   data: ListingPurchasedEventData;
 }
 
-export interface ListingPurchasedEventData {}
+export interface ListingPurchasedEventData {
+  userId: string
+}
 
 export interface ListingDeletedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_DELETED;
@@ -116,6 +120,7 @@ export type Event =
 export enum FilterBy {
   Active = "ACTIVE",
   Sold = "SOLD",
+  Purchased = "PURCHASED",
   Archived = "ARCHIVED",
   All = "ALL",
 }

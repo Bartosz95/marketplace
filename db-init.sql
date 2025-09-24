@@ -24,15 +24,16 @@ ALTER TABLE event_store.events OWNER TO default_user;
 CREATE SCHEMA states AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS states.listings (
-  listing_id  UUID PRIMARY KEY,
-  user_id     TEXT,
-  modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  status      TEXT NOT NULL,
-  version     INTEGER NOT NULL,
-  title       TEXT NOT NULL,
-  description TEXT NOT NULL,
-  price       INTEGER NOT NULL,
-  images_urls TEXT[] NOT NULL
+  listing_id    UUID PRIMARY KEY,
+  user_id       TEXT,
+  modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status        TEXT NOT NULL,
+  version       INTEGER NOT NULL,
+  title         TEXT NOT NULL,
+  description   TEXT NOT NULL,
+  price         INTEGER NOT NULL,
+  images_urls   TEXT[] NOT NULL,
+  purchased_by  TEXT
 );
 
 ALTER TABLE states.listings OWNER TO default_user;

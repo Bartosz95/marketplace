@@ -3,49 +3,49 @@ import { Event, EventType, ListingState } from "../types";
 
 export const ListingStateProcessManager =
   (listingStateRepository: ListingsStateRepository) => async (event: Event) => {
-    const { eventType, streamId, createdAt } = event;
-    if (eventType === EventType.LISTING_CREATED) {
-      const listingCreatedState: ListingState = {
-        listingId: streamId,
-        userId: event.data.userId,
-        modifiedAt: createdAt,
-        status: EventType.LISTING_CREATED,
-        version: 1,
-        title: event.data.title,
-        description: event.data.description,
-        price: event.data.price,
-        imagesUrls: [],
-      };
-      await listingStateRepository.createListing(listingCreatedState);
-      return;
-    }
+    const { eventType, streamId } = event;
     const previousState = await listingStateRepository.getListingById(streamId);
 
     switch (eventType) {
-      case EventType.LISTING_UPDATED:
-        const listingUpdatedState: ListingState = {
+      case EventType.LISTING_CREATED:
+        const created: ListingState = {
+          ...event.data,
           listingId: streamId,
-          modifiedAt: createdAt,
-          status: EventType.LISTING_UPDATED,
-          version: previousState.version + 1,
-          userId: previousState.userId,
-          title: event.data.title || previousState.title,
-          description: event.data.description || previousState.description,
-          price: event.data.price || previousState.price,
-          imagesUrls: previousState.imagesUrls,
+          status: EventType.LISTING_CREATED,
+          modifiedAt: event.createdAt,
+          version: event.version,
         };
-        await listingStateRepository.updateListing(listingUpdatedState);
-        return;
+        await listingStateRepository.updateListing(created);
+        break;
+      case EventType.LISTING_UPDATED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        const updated: ListingState = {
+          ...previousState,
+          ...event.data,
+          status: EventType.LISTING_UPDATED,
+        };
+        await listingStateRepository.updateListing(updated);
+        break;
       case EventType.LISTING_PURCHASED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        const purchased: ListingState = {
+          ...previousState,
+          status: EventType.LISTING_PURCHASED,
+          purchasedBy: event.data.userId,
+        };
+        await listingStateRepository.updateListing(purchased);
+        break;
       case EventType.LISTING_ARCHIVED:
       case EventType.LISTING_DELETED:
-        const updatedState: ListingState = {
+        if (!previousState) throw new Error(`previousState undefined`);
+        const archived: ListingState = {
           ...previousState,
           status: eventType,
         };
-        await listingStateRepository.updateListing(updatedState);
+        await listingStateRepository.updateListing(archived);
         break;
       case EventType.IMAGES_UPLOADED:
+        if (!previousState) throw new Error(`previousState undefined`);
         const imagesUrls = event.data.imagesUrls;
         const imagesUploaded: ListingState = {
           ...previousState,

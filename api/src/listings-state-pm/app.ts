@@ -49,7 +49,9 @@ export default () => {
     while (true) {
       try {
         const bookmarkPosition = await bookmarkRepository.getBookmark();
-        const events = await eventSourceRepository.getEventsFromPosition(bookmarkPosition);
+        const events = await eventSourceRepository.getEventsFromPosition(
+          bookmarkPosition
+        );
         if (events.length === 0) continue;
         logger.info(`Processing: ${events.length}`);
         for (const event of events) {
