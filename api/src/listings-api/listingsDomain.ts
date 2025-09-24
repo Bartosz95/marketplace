@@ -118,8 +118,8 @@ export const ListingsDomain = (
   const purchaseListing = async (userId: string, listingId: UUID) => {
     const listing = await listingsStateRepository.getListingById(listingId);
     if (!listing) throw new Error(`listing undefined`);
-    if (userId !== listing.userId)
-      throw Error(`User ${userId} try to modify listing ${listingId}`);
+    if (userId === listing.userId)
+      throw Error(`User ${userId} try to purchase its own item`);
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_PURCHASED,
@@ -154,7 +154,7 @@ export const ListingsDomain = (
   };
 
   const getListings = async (
-    limit = 10,
+    limit = 8,
     offset = 0
   ): Promise<ListingState[]> => {
     const statuses: EventType[] = [
@@ -172,19 +172,25 @@ export const ListingsDomain = (
   const getUserListings = async (
     userId: string,
     filter: FilterBy,
-    limit = 10,
+    limit = 8,
     offset = 0
   ): Promise<ListingState[]> => {
     let statuses: EventType[] = [];
+
     switch (filter) {
+      case FilterBy.Purchased:
+        const listings = await listingsStateRepository.getListingsByPurchasedBy(
+          userId,
+          [EventType.LISTING_PURCHASED],
+          limit,
+          offset
+        );
+        return listings;
       case FilterBy.Active:
         statuses.push(EventType.LISTING_CREATED);
         statuses.push(EventType.LISTING_UPDATED);
         break;
       case FilterBy.Sold:
-        statuses.push(EventType.LISTING_PURCHASED);
-        break;
-      case FilterBy.Purchased:
         statuses.push(EventType.LISTING_PURCHASED);
         break;
       case FilterBy.Archived:
@@ -197,7 +203,6 @@ export const ListingsDomain = (
         statuses.push(EventType.LISTING_ARCHIVED);
         break;
     }
-
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
       statuses,

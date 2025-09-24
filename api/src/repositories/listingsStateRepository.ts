@@ -20,6 +20,12 @@ export interface ListingsStateRepository {
     limit: number,
     offset: number
   ) => Promise<ListingState[]>;
+  getListingsByPurchasedBy: (
+    userId: string,
+    statuses: EventType[],
+    limit: number,
+    offset: number
+  ) => Promise<ListingState[]>;
   updateListing: (listing: ListingState) => Promise<void>;
 }
 
@@ -96,6 +102,32 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
+  const getListingsByPurchasedBy = async (
+    userId: string,
+    statuses: EventType[],
+    limit: number,
+    offset: number
+  ): Promise<ListingState[]> => {
+    const dbClient = await pool.connect();
+    try {
+      const results = await dbClient.query(
+        `SELECT * FROM states.listings
+        WHERE purchased_by = $1
+        AND status = ANY($2::text[])
+        ORDER BY modified_at DESC
+        LIMIT $3 OFFSET $4;
+        `,
+        [userId, statuses, limit, offset]
+      );
+      const listings: ListingState[] = results.rows.map(mapListing);
+      return listings;
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
   const updateListing = async (listing: ListingState): Promise<void> => {
     const dbClient = await pool.connect();
     try {
@@ -103,7 +135,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, modified_at) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (listing_id) DO UPDATE
-        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9;
+        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9, purchased_by= $10;
         `,
         [
           listing.listingId,
@@ -115,6 +147,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
           listing.price,
           listing.imagesUrls,
           listing.modifiedAt,
+          listing.purchasedBy,
         ]
       );
     } catch (error) {
@@ -140,6 +173,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     getListings,
     getListingById,
     getListingsByUserId,
+    getListingsByPurchasedBy,
     updateListing,
   };
 };

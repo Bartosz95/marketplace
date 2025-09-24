@@ -1,12 +1,11 @@
 import { Router } from "express";
 import z from "zod";
-import { UUID } from "crypto";
 import { ListingsDomain } from "./listingsDomain";
 import { FilterBy } from "../types";
 
 const getListingsQuerychema = z.object({
-  limit: z.number().optional(),
-  offset: z.number().optional(),
+  limit: z.coerce.number().optional(),
+  offset: z.coerce.number().optional(),
 });
 
 const filterSchema = z.enum(FilterBy);

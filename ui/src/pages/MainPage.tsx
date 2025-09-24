@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { FilterBy, ListingProps, EventType } from "@/components/types";
-import Listing from "@/components/Listing";
+import ListingCell from "@/components/ListingCell";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
 import NavigationBar from "@/components/NavigationBar";
@@ -17,8 +17,11 @@ function ListingsView() {
 
   const getListings = async () => {
     try {
+      const params = new URLSearchParams();
+      params.append("limit", "100");
+      params.append("offset", "0");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/listings?${params.toString()}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -113,6 +116,8 @@ function ListingsView() {
       if (!listingId || !validate(listingId))
         throw new Error("Creating listing failed");
       await sendImages(images, listingId);
+
+      await getListings();
     } catch (error) {
       console.log(error);
     }
@@ -201,6 +206,7 @@ function ListingsView() {
       console.log(error);
     }
   };
+
   const sendRestoreListingRequest = async (listingProps: ListingProps) => {
     try {
       const { listingId } = listingProps;
@@ -243,7 +249,7 @@ function ListingsView() {
     <Row key={1}>
       {listings.map((listing, idx) => (
         <Col key={idx} style={{ flex: "0 0 0" }}>
-          <Listing
+          <ListingCell
             listingProps={listing}
             sendUpdateListingRequest={sendUpdateListingRequest}
             sendArchiveListingRequest={sendArchiveListingRequest}

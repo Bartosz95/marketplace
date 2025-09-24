@@ -5,10 +5,10 @@ import ViewListing from "@/components/ViewListing";
 import { EventType, ListingProps } from "@/components/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Dropdown } from "react-bootstrap";
+import { Container, Dropdown } from "react-bootstrap";
 import EditListing from "./EditListing";
 
-interface ListingModalInterface {
+interface ListingCell {
   listingProps: ListingProps;
   sendUpdateListingRequest: (
     listingProps: ListingProps,
@@ -19,13 +19,13 @@ interface ListingModalInterface {
   sendRestoreListingRequest: (listingProps: ListingProps) => Promise<void>;
 }
 
-function Listing({
+function ListingCell({
   listingProps,
   sendUpdateListingRequest,
   sendArchiveListingRequest,
   sendRestoreListingRequest,
   sendDeleteListingRequest,
-}: ListingModalInterface) {
+}: ListingCell) {
   const { userId, title, price, imagesUrls, status } = listingProps;
   const { user } = useAuth0();
 
@@ -41,7 +41,8 @@ function Listing({
       ? `${process.env.NEXT_PUBLIC_IMAGES_URL}/${imagesUrls[0]}`
       : `${process.env.PUBLIC_URL}/no-image.png`;
 
-  const allowEdit = user?.sub === userId && status !== EventType.LISTING_PURCHASED;
+  const allowEdit =
+    user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
     await sendArchiveListingRequest(listingProps);
@@ -57,10 +58,11 @@ function Listing({
 
   const modifyListing = (
     <Dropdown>
-      <Dropdown.Toggle id="dropdown-basic">Modify</Dropdown.Toggle>
+      <Dropdown.Toggle style={{ width: "10rem" }} id="dropdown-basic">
+        Modify
+      </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item onClick={handleShowView}>View</Dropdown.Item>
         <Dropdown.Item onClick={handleShowEdit}>Edit</Dropdown.Item>
         {status === EventType.LISTING_ARCHIVED ? (
           <Dropdown.Item onClick={restoreListing}>Restore</Dropdown.Item>
@@ -79,12 +81,15 @@ function Listing({
           <Card.Img variant="top" src={image} />
           <Card.Title>{title}</Card.Title>
           <Card.Text>Price: {price}</Card.Text>
-
-          {allowEdit ? (
-            modifyListing
-          ) : (
-            <Button onClick={handleShowView}>View</Button>
-          )}
+          <Container className="d-flex justify-content-center">
+            {allowEdit ? (
+              modifyListing
+            ) : (
+              <Button style={{ width: "10rem" }} onClick={handleShowView}>
+                View
+              </Button>
+            )}
+          </Container>
         </Card.Body>
       </Card>
       <ViewListing
@@ -102,4 +107,4 @@ function Listing({
   );
 }
 
-export default Listing;
+export default ListingCell;
