@@ -7,6 +7,7 @@ import { FilterBy, ListingProps } from "./types";
 import EditListing from "./EditListing";
 
 interface NavigationBarProps {
+  getListings: () => void;
   getUserListings: (filterBy: FilterBy) => void;
   sendCreateListingRequest: (
     listingProps: ListingProps,
@@ -14,7 +15,7 @@ interface NavigationBarProps {
   ) => Promise<void>;
 }
 function NavigationBar(props: NavigationBarProps) {
-  const { getUserListings, sendCreateListingRequest } = props;
+  const { getListings, getUserListings, sendCreateListingRequest } = props;
   const [show, setShow] = useState(false);
 
   const [theme, setTheme] = useState("light");
@@ -29,10 +30,6 @@ function NavigationBar(props: NavigationBarProps) {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
-
-  const handleGetUserActiveListing = async () => {
-    await getUserListings(FilterBy.Active);
-  };
 
   return (
     <Navbar
@@ -59,18 +56,21 @@ function NavigationBar(props: NavigationBarProps) {
         sendRequest={sendCreateListingRequest}
       />
 
-      <NavDropdown title="My Listings" id="basic-nav-dropdown">
-        <NavDropdown.Item onClick={handleGetUserActiveListing}>
-          Active
+      <NavDropdown title="Filter By" id="basic-nav-dropdown">
+        <NavDropdown.Item onClick={() => getListings()}>
+          All Listings
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => getUserListings(FilterBy.Active)}>
+          Your Active
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Sold)}>
-          Sold
+          Your Sold
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.Archived)}>
-          Archived
+          Your Archived
         </NavDropdown.Item>
         <NavDropdown.Item onClick={() => getUserListings(FilterBy.All)}>
-          All
+          Your All
         </NavDropdown.Item>
       </NavDropdown>
 

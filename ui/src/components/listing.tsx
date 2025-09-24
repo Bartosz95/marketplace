@@ -41,7 +41,7 @@ function Listing({
       ? `${process.env.NEXT_PUBLIC_IMAGES_URL}/${imagesUrls[0]}`
       : `${process.env.PUBLIC_URL}/no-image.png`;
 
-  const isUserListing = user?.sub === userId;
+  const allowEdit = user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
     await sendArchiveListingRequest(listingProps);
@@ -80,7 +80,7 @@ function Listing({
           <Card.Title>{title}</Card.Title>
           <Card.Text>Price: {price}</Card.Text>
 
-          {isUserListing ? (
+          {allowEdit ? (
             modifyListing
           ) : (
             <Button onClick={handleShowView}>View</Button>

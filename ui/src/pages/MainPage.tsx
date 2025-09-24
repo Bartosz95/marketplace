@@ -15,7 +15,7 @@ function ListingsView() {
   const [token, setToken] = useState<string>();
   const { getAccessTokenSilently } = useAuth0();
 
-  const getListings = async (token: string) => {
+  const getListings = async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/listings`,
@@ -225,19 +225,19 @@ function ListingsView() {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    const initApp = async () => {
+  const initApp = async () => {
+    if (!token) {
       const t = await getAccessTokenSilently({
         authorizationParams: {
           audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
         },
       });
       setToken(t);
-      await getListings(t);
-    };
+    } else await getListings();
+  };
+  useEffect(() => {
     initApp();
-  }, []);
+  }, [token]);
 
   const Listings = (
     <Row key={1}>
@@ -259,6 +259,7 @@ function ListingsView() {
   return (
     <>
       <NavigationBar
+        getListings={getListings}
         getUserListings={getUserListings}
         sendCreateListingRequest={sendCreateListingRequest}
       />

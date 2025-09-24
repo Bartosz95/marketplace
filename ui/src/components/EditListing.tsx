@@ -120,7 +120,7 @@ function EditListing({
       </Modal.Body>
       <Modal.Footer>
         <Button variant="primary" onClick={sendEditListing}>
-          Create
+          Add
         </Button>
       </Modal.Footer>
     </Modal>
