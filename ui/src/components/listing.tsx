@@ -5,6 +5,7 @@ import ViewListing from "@/components/ViewListing";
 import { ListingProps } from "@/components/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Dropdown } from "react-bootstrap";
 
 function Listing(listingProps: ListingProps) {
   const { imagesUrls, price, title, userId, listingId } = listingProps;
@@ -19,6 +20,10 @@ function Listing(listingProps: ListingProps) {
       : `${process.env.PUBLIC_URL}/no-image.png`;
 
   const isUserListing = user?.sub === userId;
+
+  const editListing = () => {
+    console.log("edit");
+  };
 
   const deleteListing = async () => {
     const token = await getAccessTokenSilently({
@@ -42,9 +47,22 @@ function Listing(listingProps: ListingProps) {
     }
   };
 
-  const editListing = () => {
-    console.log("edit");
+  const archiveListing = () => {
+    console.log("archive");
   };
+
+  const modifyListing = (
+    <Dropdown>
+      <Dropdown.Toggle id="dropdown-basic">Modify</Dropdown.Toggle>
+
+      <Dropdown.Menu>
+        <Dropdown.Item onClick={handleShow}>View</Dropdown.Item>
+        <Dropdown.Item onClick={editListing}>Edit</Dropdown.Item>
+        <Dropdown.Item onClick={archiveListing}>Archive</Dropdown.Item>
+        <Dropdown.Item onClick={deleteListing}>Delete</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 
   return (
     <>
@@ -53,9 +71,12 @@ function Listing(listingProps: ListingProps) {
           <Card.Img variant="top" src={image} />
           <Card.Title>{title}</Card.Title>
           <Card.Text>Price: {price}</Card.Text>
-          <Button onClick={handleShow}>View</Button>
-          {isUserListing && <Button onClick={editListing}>Edit</Button>}
-          {isUserListing && <Button onClick={deleteListing}>Delete</Button>}
+
+          {isUserListing ? (
+            modifyListing
+          ) : (
+            <Button onClick={handleShow}>View</Button>
+          )}
         </Card.Body>
       </Card>
       <ViewListing
