@@ -1,25 +1,25 @@
 "use client";
 import { useState } from "react";
-
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { ListingProps } from "@/types";
+import { ListingProps, RequestAction } from "@/types";
 import { Carousel } from "react-bootstrap";
+import { SendApiRequest } from "@/pages/MainPage";
 
 export interface EditListingProps {
   listingProps: ListingProps;
   show: boolean;
   handleClose: () => void;
-  sendRequest: (listingProps: ListingProps, images: File[]) => Promise<void>;
+  sendApiRequest: SendApiRequest;
 }
 
 function EditListing({
   show,
   handleClose,
   listingProps,
-  sendRequest,
+  sendApiRequest,
 }: EditListingProps) {
   const [listing, setListing] = useState<ListingProps>({
     ...listingProps,
@@ -51,7 +51,7 @@ function EditListing({
   };
 
   const sendEditListing = async () => {
-    await sendRequest(listing, images);
+    await sendApiRequest(RequestAction.Update, listing, images);
     handleClose();
   };
 

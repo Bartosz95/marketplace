@@ -31,18 +31,8 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   router.post("/", async (req, res) => {
     const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
     const data = await createListingReqBodySchema.parse(req.body);
-    const listingId = await listingsDomain.createListing(userId, data);
+    const listingId = await listingsDomain.create(userId, data);
     res.status(200).send({ listingId: listingId });
-  });
-
-  router.patch("/:listingId", async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
-    const data = await updateListingReqBodySchema.parse(req.body);
-    await listingsDomain.updateListing(userId, listingId, data);
-    res.status(200).send();
   });
 
   router.post("/:listingId", async (req, res) => {
@@ -52,7 +42,17 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
       req.params.listingId
     )) as UUID;
 
-    await listingsDomain.purchaseListing(userId, listingId);
+    await listingsDomain.purchase(userId, listingId);
+    res.status(200).send();
+  });
+
+  router.patch("/:listingId", async (req, res) => {
+    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
+    const listingId = (await listingIdSchema.parse(
+      req.params.listingId
+    )) as UUID;
+    const data = await updateListingReqBodySchema.parse(req.body);
+    await listingsDomain.update(userId, listingId, data);
     res.status(200).send();
   });
 
@@ -62,6 +62,24 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
       req.params.listingId
     )) as UUID;
     await listingsDomain.deleteListing(userId, listingId);
+    res.status(200).send();
+  });
+
+  router.patch("/archive/:listingId", async (req, res) => {
+    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
+    const listingId = (await listingIdSchema.parse(
+      req.params.listingId
+    )) as UUID;
+    await listingsDomain.archive(userId, listingId);
+    res.status(200).send();
+  });
+
+  router.patch("/restore/:listingId", async (req, res) => {
+    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
+    const listingId = (await listingIdSchema.parse(
+      req.params.listingId
+    )) as UUID;
+    await listingsDomain.restore(userId, listingId);
     res.status(200).send();
   });
 

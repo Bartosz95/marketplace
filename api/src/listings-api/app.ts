@@ -63,7 +63,7 @@ export default () => {
   const eventSourceRepository = EventSourceRepository(env.db);
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
-    eventSourceRepository,
+    eventSourceRepository
   );
   const userListingsDomain = UserListingsDomain(listingsStateRepository);
 
@@ -75,13 +75,10 @@ export default () => {
   app.use(express.json());
   app.use(cors({ origin: "*" }));
   app.use(requestLogger);
-  if (env.app.nodeEnv === `production`) {
-    app.use(authorization);
-  }
 
   app.use(`/listings`, listingReadRouter);
-  app.use(`/listings`, listingWriteRouter);
-  app.use(`/listings/user`, userListingReadRouter);
+  app.use(`/listings`, authorization, listingWriteRouter);
+  app.use(`/listings/user`, authorization, userListingReadRouter);
 
   app.use(errorHandler);
 

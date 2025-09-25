@@ -3,24 +3,25 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { ListingProps } from "../types";
+import { ListingProps, RequestAction } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
+import { SendApiRequest } from "@/pages/MainPage";
 
 interface ViewListingProps {
   show: boolean;
   handleClose: () => void;
   listingProps: ListingProps;
-  sendPurchaseListingRequest: (ListingProps: ListingProps) => Promise<void>;
+  sendApiRequest: SendApiRequest;
 }
 
 function ViewListing({
   show,
   handleClose,
   listingProps,
-  sendPurchaseListingRequest,
+  sendApiRequest,
 }: ViewListingProps) {
   const { title, description, price, imagesUrls, listingId } = listingProps;
-  const { getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
 
   const images = imagesUrls.map((image) => (
     <Carousel.Item key={image}>
@@ -28,8 +29,8 @@ function ViewListing({
     </Carousel.Item>
   ));
 
-  const handleBuy = async () => {
-    await sendPurchaseListingRequest(listingProps);
+  const handlePurches = async () => {
+    await sendApiRequest(RequestAction.Purchase, listingProps);
     handleClose();
   };
 
@@ -54,13 +55,17 @@ function ViewListing({
         <p>{description}</p>
       </Modal.Body>
       <Modal.Footer>
-        <Button
-          variant="primary"
-          style={{ marginLeft: "3" }}
-          onClick={handleBuy}
-        >
-          Buy
-        </Button>
+        {isAuthenticated ? (
+          <Button
+            variant="primary"
+            style={{ marginLeft: "3" }}
+            onClick={handlePurches}
+          >
+            Buy
+          </Button>
+        ) : (
+          <Button onClick={() => loginWithRedirect()}>Log in to buy</Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

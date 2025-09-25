@@ -30,16 +30,16 @@ export enum FilterBy {
   All = "/",
   Active = "/user/active",
   Sold = "/user/sold",
-  Purchased = "user/purchased",
+  Purchased = "/user/purchased",
   Archived = "/user/archived",
   UserAll = "/user",
 }
 
-export enum CallApi {
-  All = "/",
-  Active = "/user/active",
-  Sold = "/user/sold",
-  Purchased = "user/purchased",
-  Archived = "/user/archived",
-  UserAll = "/user",
+export enum RequestAction {
+  Create = "CREATE",
+  Update = "UPDATE",
+  Purchase = "PURCHASE",
+  Archive = "ARCHIVE",
+  Restore = "RESTORE",
+  Delete = "DELETE",
 }

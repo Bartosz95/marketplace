@@ -13,4 +13,5 @@ export const Authorization = (env: AuthorizationEnvironments) =>
     audience: env.audience,
     issuerBaseURL: env.issuerBaseURL,
     tokenSigningAlg: "RS256",
+    authRequired: false,
   });

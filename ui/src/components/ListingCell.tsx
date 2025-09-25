@@ -2,31 +2,21 @@
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ViewListing from "@/components/ViewListing";
-import { EventType, ListingProps } from "@/types";
+import { EventType, ListingProps, RequestAction } from "@/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Container, Dropdown } from "react-bootstrap";
 import EditListing from "./EditListing";
+import { SendApiRequest } from "@/pages/MainPage";
 
 interface ListingCell {
   listingProps: ListingProps;
-  sendUpdateListingRequest: (
-    listingProps: ListingProps,
-    images: File[]
-  ) => Promise<void>;
-  sendArchiveListingRequest: (listingProps: ListingProps) => Promise<void>;
-  sendPurchaseListingRequest: (listingProps: ListingProps) => Promise<void>;
-  sendDeleteListingRequest: (listingProps: ListingProps) => Promise<void>;
-  sendRestoreListingRequest: (listingProps: ListingProps) => Promise<void>;
+  sendApiRequest: SendApiRequest;
 }
 
 function ListingCell({
   listingProps,
-  sendUpdateListingRequest,
-  sendArchiveListingRequest,
-  sendPurchaseListingRequest,
-  sendRestoreListingRequest,
-  sendDeleteListingRequest,
+  sendApiRequest,
 }: ListingCell) {
   const { userId, title, price, imagesUrls, status } = listingProps;
   const { user } = useAuth0();
@@ -47,15 +37,15 @@ function ListingCell({
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
-    await sendArchiveListingRequest(listingProps);
+    await sendApiRequest(RequestAction.Archive, listingProps);
   };
 
   const restoreListing = async () => {
-    await sendRestoreListingRequest(listingProps);
+    await sendApiRequest(RequestAction.Restore, listingProps);
   };
 
   const deleteListing = async () => {
-    await sendDeleteListingRequest(listingProps);
+    sendApiRequest(RequestAction.Delete, listingProps)
   };
 
   const modifyListing = (
@@ -98,13 +88,13 @@ function ListingCell({
         show={showListingView}
         handleClose={handleCloseView}
         listingProps={listingProps}
-        sendPurchaseListingRequest={sendPurchaseListingRequest}
+        sendApiRequest={sendApiRequest}
       />
       <EditListing
         show={showListingEdit}
         handleClose={handleCloseEdit}
         listingProps={listingProps}
-        sendRequest={sendUpdateListingRequest}
+        sendApiRequest={sendApiRequest}
       />
     </>
   );

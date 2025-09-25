@@ -4,19 +4,18 @@ import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy, ListingProps } from "../types";
 import EditListing from "./EditListing";
+import { SendApiRequest } from "@/pages/MainPage";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface NavigationBarProps {
   getListings: (filterBy: FilterBy) => void;
-  sendCreateListingRequest: (
-    listingProps: ListingProps,
-    images: File[]
-  ) => Promise<void>;
+  sendApiRequest: SendApiRequest;
 }
 function NavigationBar(props: NavigationBarProps) {
-  const { getListings, sendCreateListingRequest } = props;
+  const { getListings, sendApiRequest } = props;
   const [show, setShow] = useState(false);
-
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
@@ -38,42 +37,48 @@ function NavigationBar(props: NavigationBarProps) {
     >
       <Navbar.Brand className="ms-3">Marketplace</Navbar.Brand>
 
-      <Button onClick={handleShow}>
-        <i className="bi bi-plus-lg me-1" />
-        Create listing
-      </Button>
-      <EditListing
-        show={show}
-        handleClose={handleClose}
-        listingProps={{
-          title: "",
-          price: 0,
-          description: "",
-          imagesUrls: [],
-        }}
-        sendRequest={sendCreateListingRequest}
-      />
+      {isAuthenticated ? (
+        <>
+          <Button onClick={handleShow}>
+            <i className="bi bi-plus-lg me-1" />
+            Create listing
+          </Button>
+          <EditListing
+            show={show}
+            handleClose={handleClose}
+            listingProps={{
+              title: "",
+              price: 0,
+              description: "",
+              imagesUrls: [],
+            }}
+            sendApiRequest={sendApiRequest}
+          />
 
-      <NavDropdown title="Filter By" id="basic-nav-dropdown">
-        <NavDropdown.Item onClick={() => getListings(FilterBy.All)}>
-          All Active Listings
-        </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => getListings(FilterBy.Active)}>
-          Your Active
-        </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => getListings(FilterBy.Sold)}>
-          Your Sold
-        </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => getListings(FilterBy.Purchased)}>
-          Your Purchased
-        </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => getListings(FilterBy.Archived)}>
-          Your Archived
-        </NavDropdown.Item>
-        <NavDropdown.Item onClick={() => getListings(FilterBy.UserAll)}>
-          Your All
-        </NavDropdown.Item>
-      </NavDropdown>
+          <NavDropdown title="Filter By" id="basic-nav-dropdown">
+            <NavDropdown.Item onClick={() => getListings(FilterBy.All)}>
+              All Active Listings
+            </NavDropdown.Item>
+            <NavDropdown.Item onClick={() => getListings(FilterBy.Active)}>
+              Your Active
+            </NavDropdown.Item>
+            <NavDropdown.Item onClick={() => getListings(FilterBy.Sold)}>
+              Your Sold
+            </NavDropdown.Item>
+            <NavDropdown.Item onClick={() => getListings(FilterBy.Purchased)}>
+              Your Purchased
+            </NavDropdown.Item>
+            <NavDropdown.Item onClick={() => getListings(FilterBy.Archived)}>
+              Your Archived
+            </NavDropdown.Item>
+            <NavDropdown.Item onClick={() => getListings(FilterBy.UserAll)}>
+              Your All
+            </NavDropdown.Item>
+          </NavDropdown>
+        </>
+      ) : (
+        <Button onClick={() => loginWithRedirect()}>Login to add listing</Button>
+      )}
 
       <Nav className="ms-auto">
         <Form>
