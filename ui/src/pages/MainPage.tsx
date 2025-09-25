@@ -158,7 +158,10 @@ function ListingsView() {
           );
           break;
       }
-      getListings(lastFilterBy);
+
+      setTimeout(() => {
+        getListings(lastFilterBy);
+      }, 2000);
     },
     [getListings, sendRequest, lastFilterBy]
   );
