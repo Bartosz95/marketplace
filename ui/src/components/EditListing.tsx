@@ -13,6 +13,7 @@ export interface EditListingProps {
   show: boolean;
   handleClose: () => void;
   sendApiRequest: SendApiRequest;
+  requestAction: RequestAction.Create | RequestAction.Update;
 }
 
 function EditListing({
@@ -20,13 +21,14 @@ function EditListing({
   handleClose,
   listingProps,
   sendApiRequest,
+  requestAction,
 }: EditListingProps) {
   const [listing, setListing] = useState<ListingProps>({
     ...listingProps,
     imagesUrls:
       listingProps.imagesUrls.length > 0
         ? listingProps.imagesUrls.map(
-            (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
+            (image: string) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
           )
         : [`/images/no-image.png`],
   });
@@ -54,8 +56,7 @@ function EditListing({
   };
 
   const sendEditListing = async () => {
-    console.log(listing);
-    await sendApiRequest(RequestAction.Update, listing, images);
+    await sendApiRequest(requestAction, listing, images);
     handleClose();
   };
 
@@ -63,7 +64,7 @@ function EditListing({
     <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
       {listing.imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image src={imageUrl} fluid />
+          <Image alt="/images/no-image.png" src={imageUrl} fluid />
         </Carousel.Item>
       ))}
     </Carousel>

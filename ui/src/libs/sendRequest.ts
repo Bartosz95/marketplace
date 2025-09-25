@@ -1,12 +1,13 @@
-import { validate } from "uuid";
-
-export const sendRequest = async (path: string, options: any) => {
+export const sendRequest = async (path: string, options: RequestInit) => {
   try {
     const response = await fetch(path, options);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const text = await response.text();
+    if (text) {
+      return JSON.parse(text);
+    }
   } catch (error) {
     console.log(error);
   }

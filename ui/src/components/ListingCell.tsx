@@ -95,6 +95,7 @@ function ListingCell({
         handleClose={handleCloseEdit}
         listingProps={listingProps}
         sendApiRequest={sendApiRequest}
+        requestAction={RequestAction.Update}
       />
     </>
   );

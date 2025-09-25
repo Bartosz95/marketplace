@@ -20,12 +20,12 @@ function ViewListing({
   listingProps,
   sendApiRequest,
 }: ViewListingProps) {
-  const { title, description, price, imagesUrls, listingId } = listingProps;
+  const { title, description, price, imagesUrls } = listingProps;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
 
   const images = imagesUrls.map((image) => (
     <Carousel.Item key={image}>
-      <Image src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`} fluid />
+      <Image src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`} alt="/images/no-image.png" fluid />
     </Carousel.Item>
   ));
 

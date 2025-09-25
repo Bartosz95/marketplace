@@ -2,7 +2,7 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
-import { FilterBy } from "../types";
+import { FilterBy, RequestAction } from "../types";
 import EditListing from "./EditListing";
 import { SendApiRequest } from "@/pages/MainPage";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -15,10 +15,12 @@ function NavigationBar(props: NavigationBarProps) {
   const { getListings, sendApiRequest } = props;
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const { isAuthenticated, loginWithRedirect, user } = useAuth0();
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-bs-theme", theme);
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-bs-theme", theme);
+    }
   }, [theme]);
 
   return (
@@ -46,6 +48,7 @@ function NavigationBar(props: NavigationBarProps) {
               imagesUrls: [],
             }}
             sendApiRequest={sendApiRequest}
+            requestAction={RequestAction.Create}
           />
 
           <NavDropdown title="Filter By" id="basic-nav-dropdown">

@@ -19,6 +19,7 @@ function LoginButton() {
               <Image
                 style={{ width: "1.4rem", marginLeft: "5px" }}
                 src={user?.picture}
+                alt="/images/no-image.png"
                 roundedCircle
                 fluid
               />

@@ -1,10 +1,23 @@
 services:
+  ui:
+    build:
+      context: ui
+      dockerfile: Dockerfile
+    ports:
+      - "80:3000"
+    env_file:
+      - ui/.env
+    environment:
+      - NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost:80/
+    depends_on:
+      - listings-api
+      - images-api
   listings-api:
     build:
       context: api
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - api/.env
     environment:
@@ -29,13 +42,13 @@ services:
       context: api
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "3002:3000"
     env_file:
       - api/.env
     environment:
       - DB_HOST=db
       - APP_NAME=images-api
-      - APP_PORT=3002
+      - APP_PORT=3000
     depends_on:
       - db
   db:

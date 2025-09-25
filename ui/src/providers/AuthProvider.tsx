@@ -11,7 +11,7 @@ export default function AuthProvider({
       domain={process.env.NEXT_PUBLIC_AUTH0_DOMAIN!}
       clientId={process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID!}
       authorizationParams={{
-        redirect_uri: "http://localhost:3001",
+        redirect_uri: process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI,
       }}
     >
       {children}

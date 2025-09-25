@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { FilterBy, ListingProps, EventType, RequestAction } from "@/types";
+import { FilterBy, ListingProps, RequestAction } from "@/types";
 import ListingCell from "@/components/ListingCell";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -20,15 +20,16 @@ export interface SendApiRequest {
 }
 function ListingsView() {
   const [listings, setListings] = useState<ListingProps[]>([]);
-  const [token, setToken] = useState<string>();
+  const [lastFilterBy, setLastFilterBy] = useState<FilterBy>(FilterBy.All);
+  const [token, setToken] = useState<string | undefined>(undefined);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
-  const getListings = async (filterBy: FilterBy) => {
-    try {
+  const getListings = useCallback(
+    async (filterBy: FilterBy) => {
       const params = new URLSearchParams();
       params.append("limit", "100");
       params.append("offset", "0");
-      const response = await fetch(
+      const result = await sendRequest(
         `${
           process.env.NEXT_PUBLIC_API_URL
         }/listings${filterBy}?${params.toString()}`,
@@ -39,15 +40,11 @@ function ListingsView() {
           },
         }
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      setListings(result);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+      await setLastFilterBy(filterBy);
+      await setListings(result);
+    },
+    [token, setLastFilterBy, setListings, lastFilterBy]
+  );
 
   const sendImages = async (images: File[], listingId: UUID) => {
     if (images?.length > 0) {
@@ -65,106 +62,128 @@ function ListingsView() {
     }
   };
 
-  const sendApiRequest: SendApiRequest = async (
-    requestAction: RequestAction,
-    listingProps: ListingProps,
-    images?: File[]
-  ) => {
-    const listingId = listingProps.listingId;
-    switch (requestAction) {
-      case RequestAction.Create:
-        if (!images) throw new Error(`Action require images`);
-        const result = await sendRequest(
-          `${process.env.NEXT_PUBLIC_API_URL}/listings`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              title: listingProps.title,
-              price: listingProps.price,
-              description: listingProps.description,
-            }),
-          }
-        );
-        const id = result.listingId;
-        if (!id || !validate(id)) throw new Error("Creating listing failed");
-        await sendImages(images, id);
-        break;
-      case RequestAction.Update:
-        console.log(token);
-        await sendRequest(
-          `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              title: listingProps.title,
-              price: listingProps.price,
-              description: listingProps.description,
-            }),
-          }
-        );
-        if (images && listingId) await sendImages(images, listingId);
-        break;
-      case RequestAction.Purchase:
-        await sendRequest(
-          `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        break;
-      case RequestAction.Archive:
-        await sendRequest(
-          `${process.env.NEXT_PUBLIC_API_URL}/listings/archive/${listingId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        break;
-      case RequestAction.Restore:
-        await sendRequest(
-          `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${listingId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        break;
-    }
-  };
+  const sendApiRequest: SendApiRequest = useCallback(
+    async (
+      requestAction: RequestAction,
+      listingProps: ListingProps,
+      images?: File[]
+    ) => {
+      const listingId = listingProps.listingId;
+      switch (requestAction) {
+        case RequestAction.Create:
+          if (!images) throw new Error(`Action require images`);
+          const result = await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                title: listingProps.title,
+                price: listingProps.price,
+                description: listingProps.description,
+              }),
+            }
+          );
+          const id = result.listingId;
+          if (!id || !validate(id)) throw new Error("Creating listing failed");
+          await sendImages(images, id);
+          break;
+        case RequestAction.Update:
+          await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                title: listingProps.title,
+                price: listingProps.price,
+                description: listingProps.description,
+              }),
+            }
+          );
+          if (images && listingId) await sendImages(images, listingId);
+          break;
+        case RequestAction.Purchase:
+          await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          break;
+        case RequestAction.Archive:
+          await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/archive/${listingId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          break;
+        case RequestAction.Restore:
+          await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${listingId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          break;
+        case RequestAction.Delete:
+          await sendRequest(
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${listingId}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          break;
+      }
+      getListings(lastFilterBy);
+    },
+    [getListings, sendRequest, lastFilterBy]
+  );
 
-  const initApp = async () => {
-    if (isAuthenticated && !token) {
-      const t = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-        },
-      });
-      setToken(t);
-    }
-    await getListings(FilterBy.All);
-  };
   useEffect(() => {
+    const initApp = async () => {
+      if (isAuthenticated && !token) {
+        const t = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+          },
+        });
+        setToken(t);
+      }
+    };
     initApp();
-  }, [token, isAuthenticated]);
+    getListings(lastFilterBy);
+  }, [
+    token,
+    isAuthenticated,
+    getAccessTokenSilently,
+    setToken,
+    getListings,
+    lastFilterBy,
+  ]);
 
   const Listings = (
     <Row key={1}>

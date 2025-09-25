@@ -1,11 +1,7 @@
 "use client";
-import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { Carousel } from "react-bootstrap";
-import { ListingProps, RequestAction } from "../types";
-import { useAuth0, User } from "@auth0/auth0-react";
-import { SendApiRequest } from "@/pages/MainPage";
+import { User } from "@auth0/auth0-react";
 
 interface ProfileProps {
   show: boolean;
@@ -30,6 +26,7 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
           style={{ width: "14rem" }}
           className="mb-3"
           src={user?.picture}
+          alt="/images/no-image.png"
           roundedCircle
           fluid
         />

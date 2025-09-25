@@ -1,6 +1,6 @@
-import NavigationBar from "@/components/NavigationBar";
 import AuthProvider from "@/providers/AuthProvider";
-import { Container } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function RootLayout({
   children,
