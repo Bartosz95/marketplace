@@ -17,8 +17,6 @@ function NavigationBar(props: NavigationBarProps) {
   const [theme, setTheme] = useState("dark");
   const { isAuthenticated, loginWithRedirect, user } = useAuth0();
 
-  const toggleTheme = () => {};
-
   useEffect(() => {
     document.documentElement.setAttribute("data-bs-theme", theme);
   }, [theme]);

@@ -70,6 +70,7 @@ function ListingsView() {
     listingProps: ListingProps,
     images?: File[]
   ) => {
+    const listingId = listingProps.listingId;
     switch (requestAction) {
       case RequestAction.Create:
         if (!images) throw new Error(`Action require images`);
@@ -88,12 +89,12 @@ function ListingsView() {
             }),
           }
         );
-        const listingId = result.listingId;
-        if (!listingId || !validate(listingId))
-          throw new Error("Creating listing failed");
-        await sendImages(images, listingId);
+        const id = result.listingId;
+        if (!id || !validate(id)) throw new Error("Creating listing failed");
+        await sendImages(images, id);
         break;
       case RequestAction.Update:
+        console.log(token);
         await sendRequest(
           `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
           {
@@ -109,7 +110,7 @@ function ListingsView() {
             }),
           }
         );
-        if (images) await sendImages(images, listingId);
+        if (images && listingId) await sendImages(images, listingId);
         break;
       case RequestAction.Purchase:
         await sendRequest(
@@ -163,7 +164,7 @@ function ListingsView() {
   };
   useEffect(() => {
     initApp();
-  }, [token]);
+  }, [token, isAuthenticated]);
 
   const Listings = (
     <Row key={1}>

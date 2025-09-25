@@ -7,7 +7,6 @@ import ViewProfile from "./ViewProfile";
 function LoginButton() {
   const [showProfile, setShowProfile] = useState(false);
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
-  console.log(user);
   return (
     <div className="me-3">
       {!isAuthenticated ? (

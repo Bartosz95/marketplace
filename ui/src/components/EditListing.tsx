@@ -23,9 +23,12 @@ function EditListing({
 }: EditListingProps) {
   const [listing, setListing] = useState<ListingProps>({
     ...listingProps,
-    imagesUrls: listingProps.imagesUrls.map(
-      (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
-    ),
+    imagesUrls:
+      listingProps.imagesUrls.length > 0
+        ? listingProps.imagesUrls.map(
+            (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
+          )
+        : ["/images/no-image.png"],
   });
   const [images, setImages] = useState<File[]>([]);
 
@@ -51,6 +54,7 @@ function EditListing({
   };
 
   const sendEditListing = async () => {
+    console.log(listing);
     await sendApiRequest(RequestAction.Update, listing, images);
     handleClose();
   };

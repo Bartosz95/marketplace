@@ -30,7 +30,7 @@ export interface UserListingsDomain {
 }
 
 export const UserListingsDomain = (
-  listingsStateRepository: ListingsStateRepository,
+  listingsStateRepository: ListingsStateRepository
 ): UserListingsDomain => {
   const getActive = async (
     userId: string,
@@ -99,6 +99,7 @@ export const UserListingsDomain = (
         EventType.LISTING_CREATED,
         EventType.LISTING_UPDATED,
         EventType.LISTING_PURCHASED,
+        EventType.LISTING_ARCHIVED,
       ],
       limit,
       offset
