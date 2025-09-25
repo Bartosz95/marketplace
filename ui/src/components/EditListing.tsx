@@ -28,7 +28,7 @@ function EditListing({
         ? listingProps.imagesUrls.map(
             (image: any) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`
           )
-        : ["/images/no-image.png"],
+        : [`/images/no-image.png`],
   });
   const [images, setImages] = useState<File[]>([]);
 
