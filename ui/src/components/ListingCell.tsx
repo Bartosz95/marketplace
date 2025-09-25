@@ -2,7 +2,7 @@
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ViewListing from "@/components/ViewListing";
-import { EventType, ListingProps } from "@/components/types";
+import { EventType, ListingProps } from "@/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Container, Dropdown } from "react-bootstrap";
@@ -15,6 +15,7 @@ interface ListingCell {
     images: File[]
   ) => Promise<void>;
   sendArchiveListingRequest: (listingProps: ListingProps) => Promise<void>;
+  sendPurchaseListingRequest: (listingProps: ListingProps) => Promise<void>;
   sendDeleteListingRequest: (listingProps: ListingProps) => Promise<void>;
   sendRestoreListingRequest: (listingProps: ListingProps) => Promise<void>;
 }
@@ -23,6 +24,7 @@ function ListingCell({
   listingProps,
   sendUpdateListingRequest,
   sendArchiveListingRequest,
+  sendPurchaseListingRequest,
   sendRestoreListingRequest,
   sendDeleteListingRequest,
 }: ListingCell) {
@@ -96,6 +98,7 @@ function ListingCell({
         show={showListingView}
         handleClose={handleCloseView}
         listingProps={listingProps}
+        sendPurchaseListingRequest={sendPurchaseListingRequest}
       />
       <EditListing
         show={showListingEdit}

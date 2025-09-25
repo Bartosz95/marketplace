@@ -10,6 +10,8 @@ import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
 import { Authorization } from "../libs/authorization";
+import { UserListingsDomain } from "./userListingsDomain";
+import { UserListingsReadRouter } from "./userListingRouter";
 
 export default () => {
   const envSchema = z.object({
@@ -62,10 +64,12 @@ export default () => {
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
     eventSourceRepository,
-    logger
   );
+  const userListingsDomain = UserListingsDomain(listingsStateRepository);
+
   const listingReadRouter = ListingsReadRouter(listingsDomain);
   const listingWriteRouter = ListingsWriteRouter(listingsDomain);
+  const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
 
   const app = express();
   app.use(express.json());
@@ -77,6 +81,7 @@ export default () => {
 
   app.use(`/listings`, listingReadRouter);
   app.use(`/listings`, listingWriteRouter);
+  app.use(`/listings/user`, userListingReadRouter);
 
   app.use(errorHandler);
 

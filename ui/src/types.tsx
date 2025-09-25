@@ -27,9 +27,19 @@ export interface ListingProps {
 }
 
 export enum FilterBy {
-  Active = "ACTIVE",
-  Sold = "SOLD",
-  Purchased = "PURCHASED",
-  Archived = "ARCHIVED",
-  All = "ALL",
+  All = "/",
+  Active = "/user/active",
+  Sold = "/user/sold",
+  Purchased = "user/purchased",
+  Archived = "/user/archived",
+  UserAll = "/user",
+}
+
+export enum CallApi {
+  All = "/",
+  Active = "/user/active",
+  Sold = "/user/sold",
+  Purchased = "user/purchased",
+  Archived = "/user/archived",
+  UserAll = "/user",
 }

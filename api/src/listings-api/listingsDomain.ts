@@ -3,9 +3,7 @@ import { Logger } from "winston";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import {
   EventType,
-  FilterBy,
   ImagesUploadedEventData,
-  ListingArchivedEvent,
   ListingCreatedEventData,
   ListingState,
 } from "../types";
@@ -27,13 +25,6 @@ export interface ListingsDomain {
     data: UpdateListingReqBody
   ) => Promise<void>;
   getListings: (limit?: number, offset?: number) => Promise<ListingState[]>;
-  getUserListings: (
-    userId: string,
-    filter: FilterBy,
-    limit?: number,
-    offset?: number
-  ) => Promise<ListingState[]>;
-
   purchaseListing: (userId: string, listing_id: UUID) => Promise<void>;
   archiveListing: (userId: string, listing_id: UUID) => Promise<void>;
   deleteListing: (userId: string, listing_id: UUID) => Promise<void>;
@@ -42,7 +33,6 @@ export interface ListingsDomain {
 export const ListingsDomain = (
   listingsStateRepository: ListingsStateRepository,
   eventSourceRepository: EventSourceRepository,
-  logger: Logger
 ): ListingsDomain => {
   const createListing = async (userId: string, data: CreateListingReqBody) => {
     const { title, description, price } = data;
@@ -169,54 +159,10 @@ export const ListingsDomain = (
     return listings;
   };
 
-  const getUserListings = async (
-    userId: string,
-    filter: FilterBy,
-    limit = 8,
-    offset = 0
-  ): Promise<ListingState[]> => {
-    let statuses: EventType[] = [];
-
-    switch (filter) {
-      case FilterBy.Purchased:
-        const listings = await listingsStateRepository.getListingsByPurchasedBy(
-          userId,
-          [EventType.LISTING_PURCHASED],
-          limit,
-          offset
-        );
-        return listings;
-      case FilterBy.Active:
-        statuses.push(EventType.LISTING_CREATED);
-        statuses.push(EventType.LISTING_UPDATED);
-        break;
-      case FilterBy.Sold:
-        statuses.push(EventType.LISTING_PURCHASED);
-        break;
-      case FilterBy.Archived:
-        statuses.push(EventType.LISTING_ARCHIVED);
-        break;
-      case FilterBy.All:
-        statuses.push(EventType.LISTING_CREATED);
-        statuses.push(EventType.LISTING_UPDATED);
-        statuses.push(EventType.LISTING_PURCHASED);
-        statuses.push(EventType.LISTING_ARCHIVED);
-        break;
-    }
-    const listings = await listingsStateRepository.getListingsByUserId(
-      userId,
-      statuses,
-      limit,
-      offset
-    );
-    return listings;
-  };
-
   return {
     createListing,
     updateImages,
     getListings,
-    getUserListings,
     updateListing,
     purchaseListing,
     archiveListing,

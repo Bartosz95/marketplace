@@ -80,7 +80,7 @@ export interface ListingPurchasedEvent extends EventBaseInfo {
 }
 
 export interface ListingPurchasedEventData {
-  userId: string
+  userId: string;
 }
 
 export interface ListingDeletedEvent extends EventBaseInfo {
@@ -116,11 +116,3 @@ export type Event =
   | ListingArchivedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent;
-
-export enum FilterBy {
-  Active = "ACTIVE",
-  Sold = "SOLD",
-  Purchased = "PURCHASED",
-  Archived = "ARCHIVED",
-  All = "ALL",
-}

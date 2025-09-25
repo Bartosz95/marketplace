@@ -166,9 +166,9 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 1, 'LISTING_CREATED',
     '{"user_id": "e1f3bc71-76aa-4567-8c67-012abcdef256", 
-      "title":"Purple Women T-Shirt",
+      "title":"Brown shoes",
       "price":"30",
-      "description":"This purple women’s T-shirt offers both comfort and style. It is designed with a flattering cut and soft-touch fabric. The vibrant color adds a bold statement to any casual outfit.",
+      "description":"These brown high heels are gently used but still in excellent condition, offering both comfort and style. Their classic design makes them a versatile choice for both casual outings and more formal occasions.",
       "imagesUrls":[]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 

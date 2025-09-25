@@ -3,16 +3,22 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { ListingProps } from "./types";
+import { ListingProps } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
 
 interface ViewListingProps {
   show: boolean;
   handleClose: () => void;
   listingProps: ListingProps;
+  sendPurchaseListingRequest: (ListingProps: ListingProps) => Promise<void>;
 }
 
-function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
+function ViewListing({
+  show,
+  handleClose,
+  listingProps,
+  sendPurchaseListingRequest,
+}: ViewListingProps) {
   const { title, description, price, imagesUrls, listingId } = listingProps;
   const { getAccessTokenSilently } = useAuth0();
 
@@ -22,26 +28,8 @@ function ViewListing({ show, handleClose, listingProps }: ViewListingProps) {
     </Carousel.Item>
   ));
 
-  const handleBuy = async (): Promise<void> => {
-    const token = await getAccessTokenSilently({
-      authorizationParams: {
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      },
-    });
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
-      options
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  const handleBuy = async () => {
+    await sendPurchaseListingRequest(listingProps);
     handleClose();
   };
 

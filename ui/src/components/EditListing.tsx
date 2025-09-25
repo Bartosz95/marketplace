@@ -5,7 +5,7 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { ListingProps } from "@/components/types";
+import { ListingProps } from "@/types";
 import { Carousel } from "react-bootstrap";
 
 export interface EditListingProps {

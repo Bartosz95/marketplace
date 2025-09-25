@@ -57,7 +57,7 @@ export default () => {
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const listingDomain = ListingsDomain(listingsStateRepository, eventSourceRepository, logger)
+  const listingDomain = ListingsDomain(listingsStateRepository, eventSourceRepository)
   const imageRouter = imagesRouter(listingDomain);
 
   const app = express();

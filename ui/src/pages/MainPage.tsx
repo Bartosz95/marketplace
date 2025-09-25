@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { FilterBy, ListingProps, EventType } from "@/components/types";
+import { FilterBy, ListingProps, EventType } from "@/types";
 import ListingCell from "@/components/ListingCell";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -15,34 +15,15 @@ function ListingsView() {
   const [token, setToken] = useState<string>();
   const { getAccessTokenSilently } = useAuth0();
 
-  const getListings = async () => {
+  const getListings = async (filterBy: FilterBy) => {
     try {
       const params = new URLSearchParams();
       params.append("limit", "100");
       params.append("offset", "0");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/listings?${params.toString()}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      setListings(result);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const getUserListings = async (filterBy: FilterBy) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/listings/user/${filterBy}`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL
+        }/listings${filterBy}?${params.toString()}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -85,10 +66,9 @@ function ListingsView() {
   };
 
   const sendCreateListingRequest = async (
-    listingProps: ListingProps,
+    { title, price, description, imagesUrls }: ListingProps,
     images: File[]
   ) => {
-    const { title, price, description, imagesUrls } = listingProps;
     const data = {
       title,
       price,
@@ -116,8 +96,6 @@ function ListingsView() {
       if (!listingId || !validate(listingId))
         throw new Error("Creating listing failed");
       await sendImages(images, listingId);
-
-      await getListings();
     } catch (error) {
       console.log(error);
     }
@@ -156,6 +134,30 @@ function ListingsView() {
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const sendPurchaseListingRequest = async ({
+    listingId,
+  }: ListingProps): Promise<void> => {
+    const token = await getAccessTokenSilently({
+      authorizationParams: {
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      },
+    });
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+      options
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
   };
 
@@ -239,7 +241,7 @@ function ListingsView() {
         },
       });
       setToken(t);
-    } else await getListings();
+    } else await getListings(FilterBy.All);
   };
   useEffect(() => {
     initApp();
@@ -252,6 +254,7 @@ function ListingsView() {
           <ListingCell
             listingProps={listing}
             sendUpdateListingRequest={sendUpdateListingRequest}
+            sendPurchaseListingRequest={sendPurchaseListingRequest}
             sendArchiveListingRequest={sendArchiveListingRequest}
             sendRestoreListingRequest={sendRestoreListingRequest}
             sendDeleteListingRequest={sendDeleteListingRequest}
@@ -266,7 +269,6 @@ function ListingsView() {
     <>
       <NavigationBar
         getListings={getListings}
-        getUserListings={getUserListings}
         sendCreateListingRequest={sendCreateListingRequest}
       />
       <Container>{Listings}</Container>
