@@ -2,7 +2,7 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
-import { FilterBy, ListingProps } from "../types";
+import { FilterBy } from "../types";
 import EditListing from "./EditListing";
 import { SendApiRequest } from "@/pages/MainPage";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -13,20 +13,15 @@ interface NavigationBarProps {
 }
 function NavigationBar(props: NavigationBarProps) {
   const { getListings, sendApiRequest } = props;
-  const [show, setShow] = useState(false);
+  const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const { isAuthenticated, loginWithRedirect, user } = useAuth0();
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
+  const toggleTheme = () => {};
 
   useEffect(() => {
     document.documentElement.setAttribute("data-bs-theme", theme);
   }, [theme]);
-
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
 
   return (
     <Navbar
@@ -39,13 +34,13 @@ function NavigationBar(props: NavigationBarProps) {
 
       {isAuthenticated ? (
         <>
-          <Button onClick={handleShow}>
+          <Button onClick={() => setShowCreateListing(true)}>
             <i className="bi bi-plus-lg me-1" />
             Create listing
           </Button>
           <EditListing
-            show={show}
-            handleClose={handleClose}
+            show={showCreateListing}
+            handleClose={() => setShowCreateListing(false)}
             listingProps={{
               title: "",
               price: 0,
@@ -77,7 +72,9 @@ function NavigationBar(props: NavigationBarProps) {
           </NavDropdown>
         </>
       ) : (
-        <Button onClick={() => loginWithRedirect()}>Login to add listing</Button>
+        <Button onClick={() => loginWithRedirect()}>
+          Login to add listing
+        </Button>
       )}
 
       <Nav className="ms-auto">
@@ -87,7 +84,11 @@ function NavigationBar(props: NavigationBarProps) {
             id="dark-mode-switch"
             label="Dark Mode"
             checked={theme === "dark"}
-            onChange={toggleTheme}
+            onChange={() =>
+              setTheme((prevTheme) =>
+                prevTheme === "light" ? "dark" : "light"
+              )
+            }
           />
         </Form>
       </Nav>
