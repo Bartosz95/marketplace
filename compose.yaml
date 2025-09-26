@@ -21,9 +21,17 @@ services:
     env_file:
       - api/.env
     environment:
-      - DB_HOST=db
+      - NODE_ENV=production
       - APP_NAME=listings-api
+      - APP_HOST=localhost
       - APP_PORT=3000
+      - APP_LOG_LEVEL=info
+      - APP_LOOP_TIMEOUT=2000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=default_user
+      - DB_PASSWORD=password
+      - DB_NAME=marketplace
     depends_on:
       - db
   listings-state-pm:
@@ -35,6 +43,7 @@ services:
     environment:
       - DB_HOST=db
       - APP_NAME=listings-state-pm
+      - NODE_ENV=production
     depends_on:
       - db
   images-api:
@@ -49,6 +58,7 @@ services:
       - DB_HOST=db
       - APP_NAME=images-api
       - APP_PORT=3000
+      - NODE_ENV=production
     depends_on:
       - db
   db:
