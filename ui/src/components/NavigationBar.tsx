@@ -16,12 +16,37 @@ function NavigationBar(props: NavigationBarProps) {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
   const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const [filterByTitle, setFilterByTitle] = useState<string>("Filter By");
 
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-bs-theme", theme);
     }
   }, [theme]);
+
+  const setFilter = (filterBy: FilterBy) => {
+    getListings(filterBy);
+    switch (filterBy) {
+      case FilterBy.All:
+        setFilterByTitle("All Active Listings");
+        break;
+      case FilterBy.Active:
+        setFilterByTitle("Your Active");
+        break;
+      case FilterBy.Archived:
+        setFilterByTitle("Your Archived");
+        break;
+      case FilterBy.Purchased:
+        setFilterByTitle("Your Purchased");
+        break;
+      case FilterBy.Sold:
+        setFilterByTitle("Your Sold");
+        break;
+      case FilterBy.UserAll:
+        setFilterByTitle("Your All");
+        break;
+    }
+  };
 
   return (
     <Navbar
@@ -51,23 +76,27 @@ function NavigationBar(props: NavigationBarProps) {
             requestAction={RequestAction.Create}
           />
 
-          <NavDropdown title="Filter By" id="basic-nav-dropdown">
-            <NavDropdown.Item onClick={() => getListings(FilterBy.All)}>
+          <NavDropdown
+            title={filterByTitle}
+            id="basic-nav-dropdown"
+            style={{ width: "20rem" }}
+          >
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.All)}>
               All Active Listings
             </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => getListings(FilterBy.Active)}>
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.Active)}>
               Your Active
             </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => getListings(FilterBy.Sold)}>
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.Sold)}>
               Your Sold
             </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => getListings(FilterBy.Purchased)}>
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.Purchased)}>
               Your Purchased
             </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => getListings(FilterBy.Archived)}>
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.Archived)}>
               Your Archived
             </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => getListings(FilterBy.UserAll)}>
+            <NavDropdown.Item onClick={() => setFilter(FilterBy.UserAll)}>
               Your All
             </NavDropdown.Item>
           </NavDropdown>

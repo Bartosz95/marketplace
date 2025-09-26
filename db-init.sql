@@ -45,99 +45,6 @@ CREATE TABLE IF NOT EXISTS states.bookmarks (
 
 ALTER TABLE states.bookmarks OWNER TO default_user;
 
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 1, 'LISTING_CREATED',
-    '{"user_id": "a1f4e37c-12d3-4567-89ab-1234567890ab", "title":"Red Jacket","price":"50","description":"This vibrant red jacket combines comfort with a modern, stylish fit, making it perfect for casual outings or evenings out. Crafted from durable yet lightweight fabric, it provides warmth without feeling bulky. The bold color adds a statement to any outfit while keeping you cozy and confident.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/1.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Listing 2
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 1, 'LISTING_CREATED',
-    '{"user_id": "b2f5c48d-98e7-4567-9cde-234567890abc", "title":"Boots","price":"30","description":"These classic brown boots offer a timeless look that pairs effortlessly with both casual and dressy outfits. Made with sturdy materials, they provide comfort and durability for everyday wear. Their versatile design makes them a must-have staple for any wardrobe.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["b2f5c48d-98e7-4567-9cde-234567890abc/1.png","b2f5c48d-98e7-4567-9cde-234567890abc/2.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Listing 3
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 1, 'LISTING_CREATED',
-    '{"user_id": "c3a6d59e-76f8-4567-8def-34567890abcd", "title":"High hills","price":"80","description":"These vibrant colorful high heels are designed to make a bold statement at any event. With a sleek silhouette and eye-catching hues, they bring energy and confidence to your outfit. Perfect for parties or nights out, they combine style with comfort for all-day wear.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5FDA6AE3-4783-41FF-94C3-BADC7390D340/1.png","5FDA6AE3-4783-41FF-94C3-BADC7390D340/2.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Listing 4
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 1, 'LISTING_CREATED',
-    '{"user_id": "d4b7e60f-54a9-4567-9ef0-4567890abcde", "title":"Blue cup","price":"10","description":"This elegant blue cup adds a touch of calm and charm to your everyday routine. Crafted with durability and style in mind, it’s perfect for coffee, tea, or any beverage of your choice. Its rich color and simple design make it a versatile piece for both home and office use.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["d4b7e60f-54a9-4567-9ef0-4567890abcde/1.jpeg", "d4b7e60f-54a9-4567-9ef0-4567890abcde/2.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Listing 5
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 1, 'LISTING_CREATED',
-    '{"user_id": "e5c8f71a-32ba-4567-90f1-567890abcdef", "title":"Green t-shirt","price":"12","description":"This comfortable green t-shirt is perfect for everyday wear and easy to match with any outfit. Made from soft, breathable fabric, it keeps you cool and relaxed throughout the day. Its classic design makes it a versatile choice for casual outings or layering under a jacket.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5932B820-6FB0-40E7-925A-3FA7A8C1FD41/1.png","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/2.png","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/3.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Listing 6
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 1, 'LISTING_CREATED',
-    '{"user_id": "f6d9g82b-10cb-4567-9012-67890abcdef1", "title":"Blue t-shirt","price":"15","description":"Rock the casual look with this comfy blue t-shirt, perfect for your everyday adventures. It is a great go-to shirt that is easy to pair with anything and is ready for its new home!","imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["9E81D303-E6E0-4B72-BD49-43C9D10B726F/1.png","9E81D303-E6E0-4B72-BD49-43C9D10B726F/2.png","9E81D303-E6E0-4B72-BD49-43C9D10B726F/3.jpeg"]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 1, 'LISTING_CREATED',
-    '{"user_id": "a7c9f83d-21dc-4567-8f23-67890abcdef2", 
-      "title":"Blue Blazer",
-      "price":"70",
-      "description":"This classic blue blazer is perfect for both casual and formal occasions. The tailored fit ensures comfort while maintaining a sharp appearance. The fabric is lightweight yet durable, making it suitable for all seasons.",
-      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["156BEEF5-25C1-4979-BCE1-842BA114F54F/1.jpeg","156BEEF5-25C1-4979-BCE1-842BA114F54F/2.jpg","156BEEF5-25C1-4979-BCE1-842BA114F54F/3.jpg"]}'::jsonb, '{}'::jsonb);
-
--- Black Blazer
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2B45301F-CDE7-4646-A51A-9FED7CEBBB6E', 1, 'LISTING_CREATED',
-    '{"user_id": "b8d0f94e-43ed-4567-9f34-7890abcdef23", 
-      "title":"Black Blazer",
-      "price":"85",
-      "description":"A sleek black blazer designed for versatility in any wardrobe. It pairs well with both professional and casual outfits. The fabric provides comfort and breathability without compromising style.",
-      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('2B45301F-CDE7-4646-A51A-9FED7CEBBB6E', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["2B45301F-CDE7-4646-A51A-9FED7CEBBB6E/1.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Colorful Cup
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 1, 'LISTING_CREATED',
-    '{"user_id": "c9e1fa5f-54fe-4567-8a45-890abcdef234", 
-      "title":"Colorful Cup",
-      "price":"15",
-      "description":"This colorful cup brings fun and energy to your tableware collection. Its vibrant design makes it a great gift for both kids and adults. The material is sturdy and dishwasher-safe for easy cleaning.",
-      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
-
-INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["11A28B7B-6F8E-42C2-9269-671EFFB3A3EB/1.jpeg"]}'::jsonb, '{}'::jsonb);
-
--- Green Men's T-Shirt
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0', 1, 'LISTING_CREATED',
     '{"user_id": "d0f2ab60-65ff-4567-9b56-901abcdef245", 
@@ -150,7 +57,18 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
     ('D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0', 2, 'IMAGES_UPLOADED',
     '{"imagesUrls": ["D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
--- Purple Women's T-Shirt
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 1, 'LISTING_CREATED',
+    '{"user_id": "e1f3bc71-76aa-4567-8c67-012abcdef256", 
+      "title":"Brown shoes",
+      "price":"30",
+      "description":"These brown high heels are gently used but still in excellent condition, offering both comfort and style. Their classic design makes them a versatile choice for both casual outings and more formal occasions.",
+      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["5F0E6081-9247-410C-A7B5-4E5FCF7AA365/1.jpeg"]}'::jsonb, '{}'::jsonb);
+
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('0E8C0F75-7FFF-431A-938C-AD18F5D2265E', 1, 'LISTING_CREATED',
     '{"user_id": "e1f3bc71-76aa-4567-8c67-012abcdef256", 
@@ -164,13 +82,89 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
     '{"imagesUrls": ["0E8C0F75-7FFF-431A-938C-AD18F5D2265E/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 1, 'LISTING_CREATED',
-    '{"user_id": "e1f3bc71-76aa-4567-8c67-012abcdef256", 
-      "title":"Brown shoes",
-      "price":"30",
-      "description":"These brown high heels are gently used but still in excellent condition, offering both comfort and style. Their classic design makes them a versatile choice for both casual outings and more formal occasions.",
+    ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 1, 'LISTING_CREATED',
+    '{"user_id": "d4b7e60f-54a9-4567-9ef0-4567890abcde", "title":"Blue cup","price":"10","description":"This elegant blue cup adds a touch of calm and charm to your everyday routine. Crafted with durability and style in mind, it’s perfect for coffee, tea, or any beverage of your choice. Its rich color and simple design make it a versatile piece for both home and office use.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["d4b7e60f-54a9-4567-9ef0-4567890abcde/1.jpeg", "d4b7e60f-54a9-4567-9ef0-4567890abcde/2.jpeg"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 1, 'LISTING_CREATED',
+    '{"user_id": "b2f5c48d-98e7-4567-9cde-234567890abc", "title":"Boots","price":"30","description":"These classic brown boots offer a timeless look that pairs effortlessly with both casual and dressy outfits. Made with sturdy materials, they provide comfort and durability for everyday wear. Their versatile design makes them a must-have staple for any wardrobe.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["b2f5c48d-98e7-4567-9cde-234567890abc/1.jpeg","b2f5c48d-98e7-4567-9cde-234567890abc/2.png"]}'::jsonb, '{}'::jsonb);
+
+
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('2B45301F-CDE7-4646-A51A-9FED7CEBBB6E', 1, 'LISTING_CREATED',
+    '{"user_id": "b8d0f94e-43ed-4567-9f34-7890abcdef23", 
+      "title":"Black Blazer",
+      "price":"85",
+      "description":"A sleek black blazer designed for versatility in any wardrobe. It pairs well with both professional and casual outfits. The fabric provides comfort and breathability without compromising style.",
       "imagesUrls":[]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
-    ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5F0E6081-9247-410C-A7B5-4E5FCF7AA365/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    ('2B45301F-CDE7-4646-A51A-9FED7CEBBB6E', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["2B45301F-CDE7-4646-A51A-9FED7CEBBB6E/1.jpeg"]}'::jsonb, '{}'::jsonb);
+
+
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 1, 'LISTING_CREATED',
+    '{"user_id": "a1f4e37c-12d3-4567-89ab-1234567890ab", "title":"Red Jacket","price":"50","description":"This vibrant red jacket combines comfort with a modern, stylish fit, making it perfect for casual outings or evenings out. Crafted from durable yet lightweight fabric, it provides warmth without feeling bulky. The bold color adds a statement to any outfit while keeping you cozy and confident.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/1.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 1, 'LISTING_CREATED',
+    '{"user_id": "c9e1fa5f-54fe-4567-8a45-890abcdef234", 
+      "title":"Colorful Cup",
+      "price":"15",
+      "description":"This colorful cup brings fun and energy to your tableware collection. Its vibrant design makes it a great gift for both kids and adults. The material is sturdy and dishwasher-safe for easy cleaning.",
+      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["11A28B7B-6F8E-42C2-9269-671EFFB3A3EB/1.jpeg"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 1, 'LISTING_CREATED',
+    '{"user_id": "f6d9g82b-10cb-4567-9012-67890abcdef1", "title":"Blue t-shirt","price":"15","description":"Rock the casual look with this comfy blue t-shirt, perfect for your everyday adventures. It is a great go-to shirt that is easy to pair with anything and is ready for its new home!","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["9E81D303-E6E0-4B72-BD49-43C9D10B726F/1.jpeg","9E81D303-E6E0-4B72-BD49-43C9D10B726F/2.png","9E81D303-E6E0-4B72-BD49-43C9D10B726F/3.png"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 1, 'LISTING_CREATED',
+    '{"user_id": "c3a6d59e-76f8-4567-8def-34567890abcd", "title":"High hills","price":"80","description":"These vibrant colorful high heels are designed to make a bold statement at any event. With a sleek silhouette and eye-catching hues, they bring energy and confidence to your outfit. Perfect for parties or nights out, they combine style with comfort for all-day wear.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["5FDA6AE3-4783-41FF-94C3-BADC7390D340/1.jpeg","5FDA6AE3-4783-41FF-94C3-BADC7390D340/2.png"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 1, 'LISTING_CREATED',
+    '{"user_id": "e5c8f71a-32ba-4567-90f1-567890abcdef", "title":"Green t-shirt","price":"12","description":"This comfortable green t-shirt is perfect for everyday wear and easy to match with any outfit. Made from soft, breathable fabric, it keeps you cool and relaxed throughout the day. Its classic design makes it a versatile choice for casual outings or layering under a jacket.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["5932B820-6FB0-40E7-925A-3FA7A8C1FD41/1.jpeg","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/2.png","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/3.png"]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 1, 'LISTING_CREATED',
+    '{"user_id": "a7c9f83d-21dc-4567-8f23-67890abcdef2", 
+      "title":"Blue Blazer",
+      "price":"70",
+      "description":"This classic blue blazer is perfect for both casual and formal occasions. The tailored fit ensures comfort while maintaining a sharp appearance. The fabric is lightweight yet durable, making it suitable for all seasons.",
+      "imagesUrls":[]}'::jsonb, '{}'::jsonb);
+
+INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
+    ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 2, 'IMAGES_UPLOADED',
+    '{"imagesUrls": ["156BEEF5-25C1-4979-BCE1-842BA114F54F/1.jpeg","156BEEF5-25C1-4979-BCE1-842BA114F54F/2.jpg","156BEEF5-25C1-4979-BCE1-842BA114F54F/3.jpg"]}'::jsonb, '{}'::jsonb);

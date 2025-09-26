@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -33,6 +33,7 @@ function EditListing({
         : [`/images/no-image.png`],
   });
   const [images, setImages] = useState<File[]>([]);
+  const [validated, setValidated] = useState(false);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -55,9 +56,22 @@ function EditListing({
     });
   };
 
-  const sendEditListing = async () => {
-    await sendApiRequest(requestAction, listing, images);
-    handleClose();
+  const sendEditListing = (event: FormEvent<HTMLFormElement>) => {
+    const form = event.currentTarget;
+    console.log(form);
+    console.log(form.checkValidity());
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+      setValidated(false);
+    } else {
+      setValidated(true);
+      const a = async () => {
+        await sendApiRequest(requestAction, listing, images);
+      };
+      a();
+      handleClose();
+    }
   };
 
   const imagesPreview = (
@@ -84,7 +98,7 @@ function EditListing({
       </Modal.Header>
       <Modal.Body>
         {imagesPreview}
-        <Form>
+        <Form validated={validated} onSubmit={sendEditListing}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
               type="file"
@@ -92,6 +106,7 @@ function EditListing({
               onChange={uploadImages}
               className="mb-3"
               multiple
+              required
             />
             <Form.Control
               type="text"
@@ -100,7 +115,7 @@ function EditListing({
               onChange={setDetails}
               className="mb-3"
               required
-              value={listing.title}
+              defaultValue={listing.title === "" ? undefined : listing.title}
             />
             <Form.Control
               type="number"
@@ -108,7 +123,11 @@ function EditListing({
               placeholder="Price"
               onChange={setDetails}
               className="mb-3"
-              value={listing.price}
+              defaultValue={
+                listing.price === 0 || listing.title === ""
+                  ? undefined
+                  : listing.price
+              }
               required
             />
             <Form.Control
@@ -117,17 +136,20 @@ function EditListing({
               placeholder="Description"
               onChange={setDetails}
               className="mb-3"
-              value={listing.description}
+              defaultValue={
+                listing.description === "" ? undefined : listing.description
+              }
               required
             />
+            <Form.Control.Feedback type="invalid">
+              Please fill all listing details
+            </Form.Control.Feedback>
           </Form.Group>
+          <Button variant="primary" type="submit" className="float-end">
+            Submit
+          </Button>
         </Form>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="primary" onClick={sendEditListing}>
-          Add
-        </Button>
-      </Modal.Footer>
     </Modal>
   );
 }

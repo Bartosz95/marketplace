@@ -147,7 +147,7 @@ function ListingsView() {
           break;
         case RequestAction.Delete:
           await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${listingId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
             {
               method: "DELETE",
               headers: {
@@ -158,7 +158,6 @@ function ListingsView() {
           );
           break;
       }
-
       setTimeout(() => {
         getListings(lastFilterBy);
       }, 2000);
