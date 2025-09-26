@@ -10,6 +10,7 @@ import NavigationBar from "@/components/NavigationBar";
 import { validate } from "uuid";
 import { sendRequest } from "@/libs/sendRequest";
 import { UUID } from "crypto";
+import Pagination from "react-bootstrap/Pagination";
 
 export interface SendApiRequest {
   (
@@ -21,6 +22,9 @@ export interface SendApiRequest {
 function ListingsView() {
   const [listings, setListings] = useState<ListingProps[]>([]);
   const [countOfAll, setCountOfAll] = useState<number>(0);
+  const [activePage, setActivePage] = useState<number>(1);
+  const [offset, setOffset] = useState<number>(0);
+  const [limit, setLimit] = useState<number>(10);
   const [lastFilterBy, setLastFilterBy] = useState<FilterBy>(FilterBy.All);
   const [token, setToken] = useState<string | undefined>(undefined);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
@@ -28,8 +32,12 @@ function ListingsView() {
   const getListings = useCallback(
     async (filterBy: FilterBy) => {
       const params = new URLSearchParams();
-      params.append("limit", "100");
-      params.append("offset", "0");
+      params.append("limit", limit.toString());
+      params.append("offset", offset.toString());
+      console.log("limit");
+      console.log(limit);
+      console.log("offset");
+      console.log(offset);
       const result = await sendRequest(
         `${
           process.env.NEXT_PUBLIC_API_URL
@@ -41,13 +49,11 @@ function ListingsView() {
           },
         }
       );
-      console.log(result.listings);
-      console.log(result.countOfAll)
       setLastFilterBy(filterBy);
       setListings(result.listings);
-      setCountOfAll(result.countOfAll)
+      setCountOfAll(result.countOfAll);
     },
-    [token, setLastFilterBy, setListings, lastFilterBy]
+    [token, setLastFilterBy, setListings, lastFilterBy, limit, offset]
   );
 
   const sendImages = async (images: File[], listingId: UUID) => {
@@ -205,6 +211,27 @@ function ListingsView() {
     </Row>
   );
 
+  const changePage = (number: number) => {
+    console.log(number);
+    setOffset(limit * (number - 1));
+    setActivePage(number);
+  };
+
+  let items = [];
+  if (countOfAll > limit) {
+    for (let number = 1; number <= countOfAll / limit + 1; number++) {
+      items.push(
+        <Pagination.Item
+          key={number}
+          active={number === activePage}
+          onClick={() => changePage(number)}
+        >
+          {number}
+        </Pagination.Item>
+      );
+    }
+  }
+
   return (
     <>
       <NavigationBar
@@ -212,6 +239,9 @@ function ListingsView() {
         sendApiRequest={sendApiRequest}
       />
       <Container>{Listings}</Container>
+      <Container className="d-flex justify-content-center mt-3">
+        <Pagination>{items}</Pagination>
+      </Container>
     </>
   );
 }
