@@ -2,6 +2,7 @@ import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
 import {
   EventType,
+  GetListingsResponse,
   ListingState,
   ListingStateTableRow,
   ListingStatus,
@@ -12,20 +13,20 @@ export interface ListingsStateRepository {
     statuses: EventType[],
     limit: number,
     offset: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getListingById: (listingId: UUID) => Promise<ListingState | undefined>;
   getListingsByUserId: (
     userId: string,
     statuses: EventType[],
     limit: number,
     offset: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getListingsByPurchasedBy: (
     userId: string,
     statuses: EventType[],
     limit: number,
     offset: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   updateListing: (listing: ListingState) => Promise<void>;
 }
 
@@ -40,7 +41,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     statuses: EventType[],
     limit = 10,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
@@ -51,7 +52,16 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [statuses, limit, offset]
       );
-      return results.rows.map(mapListing);
+      const countOfAll = await dbClient.query(
+        `SELECT count(*) FROM states.listings
+        WHERE status = ANY($1::text[]);
+        `,
+        [statuses]
+      );
+      return {
+        listings: results.rows.map(mapListing),
+        countOfAll: mapCountOfAll(countOfAll),
+      };
     } catch (error) {
       throw error;
     } finally {
@@ -81,7 +91,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     statuses: EventType[],
     limit: number,
     offset: number
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
@@ -93,8 +103,17 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [userId, statuses, limit, offset]
       );
-      const listings: ListingState[] = results.rows.map(mapListing);
-      return listings;
+      const countOfAll = await dbClient.query(
+        `SELECT count(*) FROM states.listings
+        WHERE user_id = $1
+        AND status = ANY($2::text[]);
+        `,
+        [userId, statuses]
+      );
+      return {
+        listings: results.rows.map(mapListing),
+        countOfAll: mapCountOfAll(countOfAll),
+      };
     } catch (error) {
       throw error;
     } finally {
@@ -107,7 +126,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     statuses: EventType[],
     limit: number,
     offset: number
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
@@ -119,8 +138,17 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `,
         [userId, statuses, limit, offset]
       );
-      const listings: ListingState[] = results.rows.map(mapListing);
-      return listings;
+      const countOfAll = await dbClient.query(
+        `SELECT count(*) FROM states.listings
+        WHERE purchased_by = $1
+        AND status = ANY($2::text[]);
+        `,
+        [userId, statuses]
+      );
+      return {
+        listings: results.rows.map(mapListing),
+        countOfAll: mapCountOfAll(countOfAll),
+      };
     } catch (error) {
       throw error;
     } finally {
@@ -168,6 +196,9 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     price: Number(row.price),
     imagesUrls: row.images_urls as string[],
   });
+
+  const mapCountOfAll = (result: { rows: Array<{ count: number }> }): number =>
+    result.rows[0].count;
 
   return {
     getListings,

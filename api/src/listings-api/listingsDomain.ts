@@ -1,8 +1,8 @@
 import { UUID } from "crypto";
-import { Logger } from "winston";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import {
   EventType,
+  GetListingsResponse,
   ImagesUploadedEventData,
   ListingCreatedEventData,
   ListingState,
@@ -28,7 +28,7 @@ export interface ListingsDomain {
   archive: (userId: string, listing_id: UUID) => Promise<void>;
   restore: (userId: string, listing_id: UUID) => Promise<void>;
   deleteListing: (userId: string, listing_id: UUID) => Promise<void>;
-  getListings: (limit?: number, offset?: number) => Promise<ListingState[]>;
+  getListings: (limit?: number, offset?: number) => Promise<GetListingsResponse>;
 }
 
 export const ListingsDomain = (
@@ -162,7 +162,7 @@ export const ListingsDomain = (
   const getListings = async (
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const statuses: EventType[] = [
       EventType.LISTING_CREATED,
       EventType.LISTING_UPDATED,
@@ -172,6 +172,7 @@ export const ListingsDomain = (
       limit,
       offset
     );
+
     return listings;
   };
 

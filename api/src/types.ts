@@ -116,3 +116,8 @@ export type Event =
   | ListingArchivedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent;
+
+export interface GetListingsResponse {
+  listings: ListingState[];
+  countOfAll: number;
+}

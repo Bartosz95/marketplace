@@ -20,6 +20,7 @@ export interface SendApiRequest {
 }
 function ListingsView() {
   const [listings, setListings] = useState<ListingProps[]>([]);
+  const [countOfAll, setCountOfAll] = useState<number>(0);
   const [lastFilterBy, setLastFilterBy] = useState<FilterBy>(FilterBy.All);
   const [token, setToken] = useState<string | undefined>(undefined);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
@@ -40,8 +41,11 @@ function ListingsView() {
           },
         }
       );
-      await setLastFilterBy(filterBy);
-      await setListings(result);
+      console.log(result.listings);
+      console.log(result.countOfAll)
+      setLastFilterBy(filterBy);
+      setListings(result.listings);
+      setCountOfAll(result.countOfAll)
     },
     [token, setLastFilterBy, setListings, lastFilterBy]
   );

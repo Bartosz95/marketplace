@@ -1,32 +1,32 @@
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { EventType, ListingState } from "../types";
+import { EventType, GetListingsResponse } from "../types";
 
 export interface UserListingsDomain {
   getActive: (
     userId: string,
     limit?: number,
     offset?: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getSold: (
     userId: string,
     limit?: number,
     offset?: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getPurchased: (
     userId: string,
     limit?: number,
     offset?: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getArchived: (
     userId: string,
     limit?: number,
     offset?: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
   getAll: (
     userId: string,
     limit?: number,
     offset?: number
-  ) => Promise<ListingState[]>;
+  ) => Promise<GetListingsResponse>;
 }
 
 export const UserListingsDomain = (
@@ -36,7 +36,7 @@ export const UserListingsDomain = (
     userId: string,
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
       [EventType.LISTING_CREATED, EventType.LISTING_UPDATED],
@@ -50,7 +50,7 @@ export const UserListingsDomain = (
     userId: string,
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
       [EventType.LISTING_PURCHASED],
@@ -64,7 +64,7 @@ export const UserListingsDomain = (
     userId: string,
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByPurchasedBy(
       userId,
       [EventType.LISTING_PURCHASED],
@@ -78,7 +78,7 @@ export const UserListingsDomain = (
     userId: string,
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
       [EventType.LISTING_ARCHIVED],
@@ -92,7 +92,7 @@ export const UserListingsDomain = (
     userId: string,
     limit = 8,
     offset = 0
-  ): Promise<ListingState[]> => {
+  ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
       [
