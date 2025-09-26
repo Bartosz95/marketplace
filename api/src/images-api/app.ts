@@ -52,7 +52,7 @@ export default () => {
   });
 
   const logger = Logger(env.app.logLevel);
-  const requestLogger = RequestLogger(logger);
+  const requestLogger = RequestLogger(logger, env.app.nodeEnv);
   const errorHandler = ErrorHandler(logger);
 
   const listingsStateRepository = ListingsStateRepository(env.db);
