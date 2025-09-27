@@ -3,34 +3,38 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { ListingProps, RequestAction } from "../types";
+import { Listing, RequestAction } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
 import { SendApiRequest } from "@/pages/MainPage";
 
-interface ViewListingProps {
+interface ViewListing {
   show: boolean;
   handleClose: () => void;
-  listingProps: ListingProps;
+  listing: Listing;
   sendApiRequest: SendApiRequest;
 }
 
 function ViewListing({
   show,
   handleClose,
-  listingProps,
+  listing,
   sendApiRequest,
-}: ViewListingProps) {
-  const { title, description, price, imagesUrls } = listingProps;
+}: ViewListing) {
+  const { title, description, price, imagesUrls, listingId } = listing;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
 
   const images = imagesUrls.map((image) => (
     <Carousel.Item key={image}>
-      <Image src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`} alt="/images/no-image.png" fluid />
+      <Image
+        src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`}
+        alt="/images/no-image.png"
+        fluid
+      />
     </Carousel.Item>
   ));
 
   const handlePurches = async () => {
-    await sendApiRequest(RequestAction.Purchase, listingProps);
+    await sendApiRequest({ requestAction: RequestAction.Purchase, listingId});
     handleClose();
   };
 

@@ -7,11 +7,11 @@ export const ErrorHandler =
   (logger: Logger) =>
   (error: any, req: Request, res: Response, next: NextFunction) => {
     if (error instanceof multer.MulterError) {
-      // A Multer error occurred when uploading.
-      logger.error("muleter error");
+      logger.error("multer error");
     } else if (error instanceof ZodError) {
       logger.error("Handle zod errors");
     }
+    console.log(error);
     logger.error(error);
     res.status(error.status || 500).send();
   };

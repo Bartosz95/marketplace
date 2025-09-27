@@ -3,9 +3,9 @@ import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy, RequestAction } from "../types";
-import EditListing from "./EditListing";
 import { SendApiRequest } from "@/pages/MainPage";
 import { useAuth0 } from "@auth0/auth0-react";
+import CreateListing from "./CreateListing";
 
 interface NavigationBarProps {
   getListings: (filterBy: FilterBy) => void;
@@ -63,17 +63,10 @@ function NavigationBar(props: NavigationBarProps) {
             <i className="bi bi-plus-lg me-1" />
             Create listing
           </Button>
-          <EditListing
+          <CreateListing
             show={showCreateListing}
             handleClose={() => setShowCreateListing(false)}
-            listingProps={{
-              title: "",
-              price: 0,
-              description: "",
-              imagesUrls: [],
-            }}
             sendApiRequest={sendApiRequest}
-            requestAction={RequestAction.Create}
           />
 
           <NavDropdown

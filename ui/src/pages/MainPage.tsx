@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { FilterBy, ListingProps, RequestAction } from "@/types";
+import { FilterBy, Listing, RequestAction } from "@/types";
 import ListingCell from "@/components/ListingCell";
 import { Container } from "react-bootstrap";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -12,15 +12,50 @@ import { sendRequest } from "@/libs/sendRequest";
 import { UUID } from "crypto";
 import Pagination from "react-bootstrap/Pagination";
 
+export interface ListingDetails {
+  title: string;
+  description: string;
+  price: number;
+  images: File[];
+}
+
+export interface CreateListing {
+  requestAction: RequestAction.Create;
+  listingDetails: ListingDetails;
+}
+
+export interface UpdateListing {
+  requestAction: RequestAction.Update;
+  listingId: UUID;
+  listingDetails: ListingDetails;
+}
+
+export interface ListingDetails {
+  title: string;
+  description: string;
+  price: number;
+  images: File[];
+}
+
+export interface ModifyListing {
+  requestAction:
+    | RequestAction.Purchase
+    | RequestAction.Delete
+    | RequestAction.Archive
+    | RequestAction.Restore;
+  listingId: UUID;
+}
+
+export type SendApiRequestParams =
+  | CreateListing
+  | UpdateListing
+  | ModifyListing;
+
 export interface SendApiRequest {
-  (
-    requestAction: RequestAction,
-    listingProps: ListingProps,
-    images?: File[]
-  ): Promise<void>;
+  (sendApiRequestParams: SendApiRequestParams): Promise<void>;
 }
 function ListingsView() {
-  const [listings, setListings] = useState<ListingProps[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [countOfAll, setCountOfAll] = useState<number>(0);
   const [activePage, setActivePage] = useState<number>(1);
   const [offset, setOffset] = useState<number>(0);
@@ -34,10 +69,6 @@ function ListingsView() {
       const params = new URLSearchParams();
       params.append("limit", limit.toString());
       params.append("offset", offset.toString());
-      console.log("limit");
-      console.log(limit);
-      console.log("offset");
-      console.log(offset);
       const result = await sendRequest(
         `${
           process.env.NEXT_PUBLIC_API_URL
@@ -56,72 +87,60 @@ function ListingsView() {
     [token, setLastFilterBy, setListings, lastFilterBy, limit, offset]
   );
 
-  const sendImages = async (images: File[], listingId: UUID) => {
-    if (images?.length > 0) {
-      const formData = new FormData();
-      for (const image of images) {
-        formData.append(`images`, image);
-      }
-      await sendRequest(`${process.env.NEXT_PUBLIC_IMAGES_URL}/${listingId}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-    }
-  };
-
   const sendApiRequest: SendApiRequest = useCallback(
-    async (
-      requestAction: RequestAction,
-      listingProps: ListingProps,
-      images?: File[]
-    ) => {
-      const listingId = listingProps.listingId;
+    async (sendApiRequestParams: SendApiRequestParams) => {
+      const { requestAction } = sendApiRequestParams;
+
       switch (requestAction) {
         case RequestAction.Create:
-          if (!images) throw new Error(`Action require images`);
+          const formData = new FormData();
+          const {
+            listingDetails: { title, price, description, images },
+          } = sendApiRequestParams;
+          for (const image of images) {
+            formData.append(`images`, image);
+          }
+          //
+          formData.append(
+            `details`,
+            JSON.stringify({ title, price, description })
+          );
+
           const result = await sendRequest(
             `${process.env.NEXT_PUBLIC_API_URL}/listings`,
             {
               method: "POST",
               headers: {
-                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({
-                title: listingProps.title,
-                price: listingProps.price,
-                description: listingProps.description,
-              }),
+              body: formData,
             }
           );
           const id = result.listingId;
           if (!id || !validate(id)) throw new Error("Creating listing failed");
-          await sendImages(images, id);
+
           break;
-        case RequestAction.Update:
-          await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                title: listingProps.title,
-                price: listingProps.price,
-                description: listingProps.description,
-              }),
-            }
-          );
-          if (images && listingId) await sendImages(images, listingId);
-          break;
+        // case RequestAction.Update:
+        //   await sendRequest(
+        //     `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+        //     {
+        //       method: "PATCH",
+        //       headers: {
+        //         "Content-Type": "application/json",
+        //         Authorization: `Bearer ${token}`,
+        //       },
+        //       body: JSON.stringify({
+        //         title: Listing.title,
+        //         price: Listing.price,
+        //         description: Listing.description,
+        //       }),
+        //     }
+        //   );
+        //   if (images && listingId) await sendImages(images, listingId);
+        //   break;
         case RequestAction.Purchase:
           await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/${sendApiRequestParams.listingId}`,
             {
               method: "POST",
               headers: {
@@ -133,7 +152,7 @@ function ListingsView() {
           break;
         case RequestAction.Archive:
           await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/archive/${listingId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/archive/${sendApiRequestParams.listingId}`,
             {
               method: "PATCH",
               headers: {
@@ -145,7 +164,7 @@ function ListingsView() {
           break;
         case RequestAction.Restore:
           await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${listingId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/restore/${sendApiRequestParams.listingId}`,
             {
               method: "PATCH",
               headers: {
@@ -157,7 +176,7 @@ function ListingsView() {
           break;
         case RequestAction.Delete:
           await sendRequest(
-            `${process.env.NEXT_PUBLIC_API_URL}/listings/${listingId}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/listings/${sendApiRequestParams.listingId}`,
             {
               method: "DELETE",
               headers: {
@@ -202,7 +221,7 @@ function ListingsView() {
       {listings.map((listing, idx) => (
         <Col key={idx} style={{ flex: "0 0 0" }}>
           <ListingCell
-            listingProps={listing}
+            listing={listing}
             sendApiRequest={sendApiRequest}
             key={listing.listingId}
           />

@@ -3,13 +3,14 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
-    "target": "es2024",
-    "lib": ["es2024"],
+    "target": "es2020",
+    "lib": ["es2020"],
     "types": ["jest", "node"],
     "strict": true,
     "esModuleInterop": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "importHelpers": true
   },
   "include": ["src/**/*.ts"]
 }

@@ -16,10 +16,17 @@ export type ListingStatus =
   | EventType.LISTING_ARCHIVED
   | EventType.LISTING_DELETED;
 
-export interface ListingProps {
-  listingId?: UUID;
-  userId?: string;
-  status?: ListingStatus;
+export interface ListingDetails {
+  title: string;
+  description: string;
+  price: number;
+  images: File[];
+}
+
+export interface Listing {
+  listingId: UUID;
+  userId: string;
+  status: ListingStatus;
   title: string;
   description: string;
   price: number;

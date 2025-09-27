@@ -1,8 +1,8 @@
-import { Router } from "express";
+import { Router, urlencoded } from "express";
 import z from "zod";
 import { UUID } from "crypto";
 import { ListingsDomain } from "./listingsDomain";
-
+import multer from "multer";
 export const listingIdSchema = z.uuid();
 const userIdSchema = z.string();
 
@@ -18,18 +18,40 @@ const updateListingReqBodySchema = z.object({
   price: z.coerce.number().min(0).optional(),
 });
 
-export type CreateListingReqBody = z.infer<typeof createListingReqBodySchema>;
+export type CreateListing = {
+  title: string;
+  price: number;
+  description: string;
+  images: Express.Multer.File[];
+};
 
 export type UpdateListingReqBody = z.infer<typeof updateListingReqBodySchema>;
 
-export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
+export const ListingsWriteRouter = (
+  listingsDomain: ListingsDomain,
+  env: any
+) => {
   const router = Router();
 
-  router.post("/", async (req, res) => {
+  router.use(urlencoded({ limit: "50mb", extended: true }));
+
+  const storage = multer.memoryStorage();
+  const upload = multer({ storage: storage });
+
+  router.post("/", upload.array("images", 10), async (req, res) => {
     const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const data = await createListingReqBodySchema.parse(req.body);
-    const listingId = await listingsDomain.create(userId, data);
-    res.status(200).send({ listingId: listingId });
+    const details = await createListingReqBodySchema.parse(
+      JSON.parse(req.body.details)
+    );
+    const images = req.files as Express.Multer.File[];
+    const data: CreateListing = {
+      title: details.title,
+      price: details.price,
+      description: details.description,
+      images: images,
+    };
+    await listingsDomain.create(userId, data);
+    res.status(200).send();
   });
 
   router.post("/:listingId", async (req, res) => {

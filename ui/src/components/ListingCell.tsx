@@ -2,7 +2,7 @@
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ViewListing from "@/components/ViewListing";
-import { EventType, ListingProps, RequestAction } from "@/types";
+import { EventType, Listing, RequestAction } from "@/types";
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Container, Dropdown } from "react-bootstrap";
@@ -10,15 +10,12 @@ import EditListing from "./EditListing";
 import { SendApiRequest } from "@/pages/MainPage";
 
 interface ListingCell {
-  listingProps: ListingProps;
+  listing: Listing;
   sendApiRequest: SendApiRequest;
 }
 
-function ListingCell({
-  listingProps,
-  sendApiRequest,
-}: ListingCell) {
-  const { userId, title, price, imagesUrls, status } = listingProps;
+function ListingCell({ listing, sendApiRequest }: ListingCell) {
+  const { userId, title, price, imagesUrls, status, listingId } = listing;
   const { user } = useAuth0();
 
   const [showListingView, setShowListingView] = useState(false);
@@ -37,15 +34,15 @@ function ListingCell({
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
-    await sendApiRequest(RequestAction.Archive, listingProps);
+    await sendApiRequest({ requestAction: RequestAction.Archive, listingId});
   };
 
   const restoreListing = async () => {
-    await sendApiRequest(RequestAction.Restore, listingProps);
+    await sendApiRequest({ requestAction: RequestAction.Restore, listingId});
   };
 
   const deleteListing = async () => {
-    sendApiRequest(RequestAction.Delete, listingProps)
+    sendApiRequest({ requestAction: RequestAction.Delete, listingId});
   };
 
   const modifyListing = (
@@ -87,13 +84,13 @@ function ListingCell({
       <ViewListing
         show={showListingView}
         handleClose={handleCloseView}
-        listingProps={listingProps}
+        listing={listing}
         sendApiRequest={sendApiRequest}
       />
       <EditListing
         show={showListingEdit}
         handleClose={handleCloseEdit}
-        listingProps={listingProps}
+        listing={listing}
         sendApiRequest={sendApiRequest}
         requestAction={RequestAction.Update}
       />

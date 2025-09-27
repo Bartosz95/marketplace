@@ -3,22 +3,14 @@ import { ListingsStateRepository } from "../repositories/listingsStateRepository
 import {
   EventType,
   GetListingsResponse,
-  ImagesUploadedEventData,
   ListingCreatedEventData,
-  ListingState,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import {
-  CreateListingReqBody,
-  UpdateListingReqBody,
-} from "./listingsWriteRouter";
+import { CreateListing, UpdateListingReqBody } from "./listingsWriteRouter";
+import { ImagesRepository } from "../repositories/imagesRepository";
 
 export interface ListingsDomain {
-  create: (userId: string, data: CreateListingReqBody) => Promise<UUID>;
-  updateImages: (
-    streamId: UUID,
-    data: ImagesUploadedEventData
-  ) => Promise<void>;
+  create: (userId: string, data: CreateListing) => Promise<void>;
   update: (
     userId: string,
     listing_id: UUID,
@@ -28,15 +20,19 @@ export interface ListingsDomain {
   archive: (userId: string, listing_id: UUID) => Promise<void>;
   restore: (userId: string, listing_id: UUID) => Promise<void>;
   deleteListing: (userId: string, listing_id: UUID) => Promise<void>;
-  getListings: (limit?: number, offset?: number) => Promise<GetListingsResponse>;
+  getListings: (
+    limit?: number,
+    offset?: number
+  ) => Promise<GetListingsResponse>;
 }
 
 export const ListingsDomain = (
   listingsStateRepository: ListingsStateRepository,
-  eventSourceRepository: EventSourceRepository
+  eventSourceRepository: EventSourceRepository,
+  imagesRepository: ImagesRepository
 ): ListingsDomain => {
-  const create = async (userId: string, data: CreateListingReqBody) => {
-    const { title, description, price } = data;
+  const create = async (userId: string, data: CreateListing) => {
+    const { title, description, price, images } = data;
     const eventData: ListingCreatedEventData = {
       userId,
       title,
@@ -49,17 +45,19 @@ export const ListingsDomain = (
       EventType.LISTING_CREATED,
       eventData
     );
-    return listingId;
+    await updateImages(listingId, images);
   };
 
   const updateImages = async (
     listingId: UUID,
-    data: ImagesUploadedEventData
+    images: Express.Multer.File[]
   ) => {
+    const imagesUrls = await imagesRepository.upload(listingId, images);
+
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.IMAGES_UPLOADED,
-      data
+      imagesUrls
     );
   };
 
@@ -89,7 +87,7 @@ export const ListingsDomain = (
     );
   };
 
-    const purchase = async (userId: string, listingId: UUID) => {
+  const purchase = async (userId: string, listingId: UUID) => {
     const listing = await listingsStateRepository.getListingById(listingId);
     if (!listing) throw new Error(`listing undefined`);
     if (userId === listing.userId)
@@ -178,7 +176,6 @@ export const ListingsDomain = (
 
   return {
     create,
-    updateImages,
     update,
     purchase,
     archive,
