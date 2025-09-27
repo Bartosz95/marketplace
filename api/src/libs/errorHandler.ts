@@ -11,7 +11,6 @@ export const ErrorHandler =
     } else if (error instanceof ZodError) {
       logger.error("Handle zod errors");
     }
-    console.log(error);
     logger.error(error);
     res.status(error.status || 500).send();
   };

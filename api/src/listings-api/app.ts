@@ -80,7 +80,7 @@ export default () => {
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const imagesRepository = ImagesRepository(env.aws);
+  const imagesRepository = ImagesRepository(env.aws.bucket);
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
     eventSourceRepository,

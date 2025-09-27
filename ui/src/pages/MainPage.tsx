@@ -231,7 +231,6 @@ function ListingsView() {
   );
 
   const changePage = (number: number) => {
-    console.log(number);
     setOffset(limit * (number - 1));
     setActivePage(number);
   };

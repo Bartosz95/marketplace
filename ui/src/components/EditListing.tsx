@@ -22,7 +22,6 @@ function EditListing({
   listing: listingDetails,
   sendApiRequest,
 }: EditListing) {
-  console.log(listingDetails);
   const [listing, setListing] = useState<ListingDetails>({
     title: listingDetails.title,
     description: listingDetails.description,

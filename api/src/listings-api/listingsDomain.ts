@@ -6,7 +6,11 @@ import {
   ListingCreatedEventData,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { CreateListing, UpdateListingReqBody } from "./listingsWriteRouter";
+import {
+  CreateListing,
+  FileDetails,
+  UpdateListing,
+} from "./listingsWriteRouter";
 import { ImagesRepository } from "../repositories/imagesRepository";
 
 export interface ListingsDomain {
@@ -14,7 +18,7 @@ export interface ListingsDomain {
   update: (
     userId: string,
     listing_id: UUID,
-    data: UpdateListingReqBody
+    data: UpdateListing
   ) => Promise<void>;
   purchase: (userId: string, listing_id: UUID) => Promise<void>;
   archive: (userId: string, listing_id: UUID) => Promise<void>;
@@ -45,27 +49,20 @@ export const ListingsDomain = (
       EventType.LISTING_CREATED,
       eventData
     );
-    await updateImages(listingId, images);
-  };
-
-  const updateImages = async (
-    listingId: UUID,
-    images: Express.Multer.File[]
-  ) => {
-    const imagesUrls = await imagesRepository.upload(listingId, images);
-
+    const imagesUrls = await imagesRepository.uploadImages(listingId, images);
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.IMAGES_UPLOADED,
-      imagesUrls
+      { imagesUrls }
     );
   };
 
   const update = async (
     userId: string,
     listingId: UUID,
-    data: UpdateListingReqBody
+    data: UpdateListing
   ) => {
+    const { title, price, description, images } = data;
     const currentState = await listingsStateRepository.getListingById(
       listingId
     );
@@ -83,8 +80,17 @@ export const ListingsDomain = (
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_UPDATED,
-      data
+      { title, price, description }
     );
+    if (images) {
+      await imagesRepository.deleteImages(listingId);
+      const imagesUrls = await imagesRepository.uploadImages(listingId, images);
+      await eventSourceRepository.insertEventByStreamId(
+        listingId,
+        EventType.IMAGES_UPLOADED,
+        { imagesUrls }
+      );
+    }
   };
 
   const purchase = async (userId: string, listingId: UUID) => {
@@ -155,6 +161,7 @@ export const ListingsDomain = (
       EventType.LISTING_DELETED,
       {}
     );
+    await imagesRepository.deleteImages(listingId);
   };
 
   const getListings = async (

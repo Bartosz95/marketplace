@@ -47,7 +47,6 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
         ...listing,
         images: filesArray,
       });
-      console.log(listing);
     }
   };
 
