@@ -211,7 +211,7 @@ function ListingsView() {
 
   useEffect(() => {
     getListings(lastFilterBy);
-  }, [lastFilterBy]);
+  }, [lastFilterBy, activePage]);
 
   const Listings = (
     <Row key={1}>
