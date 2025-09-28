@@ -163,7 +163,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, modified_at) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (listing_id) DO UPDATE
-        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9, purchased_by= $10;
+        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9;
         `,
         [
           listing.listingId,
@@ -175,7 +175,6 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
           listing.price,
           listing.imagesUrls,
           listing.modifiedAt,
-          listing.purchasedBy,
         ]
       );
     } catch (error) {

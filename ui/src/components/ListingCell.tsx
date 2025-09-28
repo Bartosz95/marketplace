@@ -1,12 +1,13 @@
 "use client";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
-import ViewListing from "@/components/ViewListing";
-import { EventType, Listing, RequestAction } from "@/types";
+
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Container, Dropdown } from "react-bootstrap";
-import EditListing from "./EditListing";
+import { EventType, Listing, RequestAction } from "@/types";
+import ViewListing from "@/components/ViewListing";
+import UpdateListing from "@/components/UpdateListing";
 import { SendApiRequest } from "@/pages/MainPage";
 
 interface ListingCell {
@@ -22,9 +23,9 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
   const handleCloseView = () => setShowListingView(false);
   const handleShowView = () => setShowListingView(true);
 
-  const [showListingEdit, setShowListingEdit] = useState(false);
-  const handleCloseEdit = () => setShowListingEdit(false);
-  const handleShowEdit = () => setShowListingEdit(true);
+  const [showListingUpdate, setShowListingUpdate] = useState(false);
+  const handleCloseUpdate = () => setShowListingUpdate(false);
+  const handleShowEdit = () => setShowListingUpdate(true);
   const image = imagesUrls[0];
 
   const allowEdit =
@@ -84,12 +85,11 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
         listing={listing}
         sendApiRequest={sendApiRequest}
       />
-      <EditListing
-        show={showListingEdit}
-        handleClose={handleCloseEdit}
+      <UpdateListing
+        show={showListingUpdate}
+        handleClose={handleCloseUpdate}
         listing={listing}
         sendApiRequest={sendApiRequest}
-        requestAction={RequestAction.Update}
       />
     </>
   );

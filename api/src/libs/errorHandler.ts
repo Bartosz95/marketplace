@@ -12,5 +12,6 @@ export const ErrorHandler =
       logger.error("Handle zod errors");
     }
     logger.error(error);
+    console.log(error);
     res.status(error.status || 500).send();
   };

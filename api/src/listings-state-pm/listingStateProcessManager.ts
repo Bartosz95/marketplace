@@ -10,6 +10,7 @@ export const ListingStateProcessManager =
       case EventType.LISTING_CREATED:
         const created: ListingState = {
           ...event.data,
+          imagesUrls: [],
           listingId: streamId,
           status: EventType.LISTING_CREATED,
           modifiedAt: event.createdAt,
@@ -31,7 +32,6 @@ export const ListingStateProcessManager =
         const purchased: ListingState = {
           ...previousState,
           status: EventType.LISTING_PURCHASED,
-          purchasedBy: event.data.userId,
         };
         await listingStateRepository.updateListing(purchased);
         break;

@@ -42,7 +42,6 @@ export const ListingsDomain = (
       title,
       description,
       price,
-      imagesUrls: [],
     };
 
     const listingId = await eventSourceRepository.insertEvent(

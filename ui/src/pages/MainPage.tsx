@@ -11,6 +11,7 @@ import { validate } from "uuid";
 import { SendRequest } from "@/libs/SendRequest";
 import { UUID } from "crypto";
 import Pagination from "react-bootstrap/Pagination";
+import { InitListingDetails } from "@/components/CreateListing";
 
 export interface ListingDetails {
   title: string;
@@ -27,7 +28,7 @@ export interface CreateListing {
 export interface UpdateListing {
   requestAction: RequestAction.Update;
   listingId: UUID;
-  listingDetails: ListingDetails;
+  listingDetails: InitListingDetails;
 }
 
 export interface ListingDetails {
@@ -103,13 +104,13 @@ function ListingsView() {
           const {
             listingDetails: { title, price, description, images },
           } = sendApiRequestParams;
-          for (const image of images) {
-            formData.append(`images`, image);
-          }
           formData.append(
             `details`,
             JSON.stringify({ title, price, description })
           );
+          for (const image of images) {
+            formData.append(`images`, image);
+          }
           await sendRequest(`/listings`, {
             method: "POST",
             headers: {
@@ -120,9 +121,6 @@ function ListingsView() {
           break;
         case RequestAction.Update:
           const { listingId, listingDetails } = sendApiRequestParams;
-          for (const image of listingDetails.images) {
-            formData.append(`images`, image);
-          }
           formData.append(
             `details`,
             JSON.stringify({
@@ -131,8 +129,13 @@ function ListingsView() {
               description: listingDetails.description,
             })
           );
+          if (listingDetails.images) {
+            for (const image of listingDetails.images) {
+              formData.append(`images`, image);
+            }
+          }
           const result = await sendRequest(`/listings/${listingId}`, {
-            method: "POST",
+            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -187,7 +190,7 @@ function ListingsView() {
       }
       setTimeout(() => {
         getListings(lastFilterBy);
-      }, 2000);
+      }, 3000);
     },
     [getListings, sendRequest, lastFilterBy, token]
   );
@@ -204,15 +207,11 @@ function ListingsView() {
       }
     };
     initApp();
+  }, [token, isAuthenticated, getAccessTokenSilently, setToken, lastFilterBy]);
+
+  useEffect(() => {
     getListings(lastFilterBy);
-  }, [
-    token,
-    isAuthenticated,
-    getAccessTokenSilently,
-    setToken,
-    getListings,
-    lastFilterBy,
-  ]);
+  }, [lastFilterBy]);
 
   const Listings = (
     <Row key={1}>

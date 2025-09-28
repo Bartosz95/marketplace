@@ -4,49 +4,29 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
-import { Listing, ListingDetails, RequestAction } from "@/types";
+import { Listing, RequestAction } from "@/types";
 import { Carousel } from "react-bootstrap";
 import { SendApiRequest } from "@/pages/MainPage";
+import { InitListingDetails } from "./CreateListing";
 
 export interface EditListing {
-  listing: Listing;
   show: boolean;
   handleClose: () => void;
+  listing: Listing;
   sendApiRequest: SendApiRequest;
-  requestAction: RequestAction.Create | RequestAction.Update;
 }
 
-function EditListing({
+function UpdateListing({
   show,
   handleClose,
   listing: listingDetails,
   sendApiRequest,
 }: EditListing) {
-  const [listing, setListing] = useState<ListingDetails>({
-    title: listingDetails.title,
-    description: listingDetails.description,
-    price: listingDetails.price,
-    images: [],
-  });
+  const [listing, setListing] = useState<InitListingDetails>({});
+  const [prevImagesUrls, setPrevImagesUrls] = useState<string[]>(
+    listingDetails.imagesUrls
+  );
   const [validated, setValidated] = useState(false);
-
-  const fetchImages = useCallback(async () => {
-    const images: File[] = [];
-    for (const imageUrl of listingDetails.imagesUrls) {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const image = new File([blob], imageUrl, { type: blob.type });
-      images.push(image);
-    }
-    setListing({
-      ...listing,
-      images,
-    });
-  }, [listing, listingDetails.imagesUrls]);
-
-  useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -60,6 +40,7 @@ function EditListing({
 
   const setDetails = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
     setListing((prev) => {
       return {
         ...prev,
@@ -76,26 +57,31 @@ function EditListing({
       setValidated(false);
     } else {
       setValidated(true);
-      const a = async () => {
+      const send = async () => {
         await sendApiRequest({
           requestAction: RequestAction.Update,
           listingId: listingDetails.listingId,
           listingDetails: listing,
         });
       };
-      a();
+      send();
       handleClose();
     }
   };
 
   const imagesPreview = (
     <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-      {listing.images &&
-        listing.images.map((image) => (
-          <Carousel.Item key={image.name}>
-            <Image alt="no image" src={URL.createObjectURL(image)} fluid />
-          </Carousel.Item>
-        ))}
+      {listing.images
+        ? listing.images.map((image) => (
+            <Carousel.Item key={image.name}>
+              <Image alt="no image" src={URL.createObjectURL(image)} fluid />
+            </Carousel.Item>
+          ))
+        : prevImagesUrls.map((imageUrl) => (
+            <Carousel.Item key={imageUrl}>
+              <Image alt="no image" src={imageUrl} fluid />
+            </Carousel.Item>
+          ))}
     </Carousel>
   );
 
@@ -121,8 +107,6 @@ function EditListing({
               onChange={uploadImages}
               className="mb-3"
               multiple
-              required
-              defaultValue={listing.images.map((image) => image.name)}
             />
             <Form.Control
               type="text"
@@ -130,8 +114,7 @@ function EditListing({
               placeholder="Title"
               onChange={setDetails}
               className="mb-3"
-              required
-              defaultValue={listing.title}
+              defaultValue={listingDetails.title}
             />
             <Form.Control
               type="number"
@@ -139,8 +122,7 @@ function EditListing({
               placeholder="Price"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listing.price}
-              required
+              defaultValue={listingDetails.price}
             />
             <Form.Control
               type="text"
@@ -148,8 +130,7 @@ function EditListing({
               placeholder="Description"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listing.description}
-              required
+              defaultValue={listingDetails.description}
             />
             <Form.Control.Feedback type="invalid">
               Please fill all listing details
@@ -164,4 +145,4 @@ function EditListing({
   );
 }
 
-export default EditListing;
+export default UpdateListing;

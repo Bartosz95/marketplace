@@ -11,9 +11,8 @@ const fileSchema = z.object({
   originalname: z.string(),
   encoding: z.string(),
   mimetype: z.string(),
-  size: z.number().positive(), // Ensure size is a positive number
-  buffer: z.instanceof(Buffer).optional(), // Use .optional() if buffer might not always be present (e.g., diskStorage)
-  // Add other Multer file properties as needed
+  size: z.number().positive(),
+  buffer: z.instanceof(Buffer).optional(),
 });
 
 export type FileDetails = z.infer<typeof fileSchema>;
@@ -76,12 +75,17 @@ export const ListingsWriteRouter = (
     res.status(200).send();
   });
 
-  router.patch("/:listingId", async (req, res) => {
+  router.patch("/:listingId", upload.array("images", 10), async (req, res) => {
     const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
     const listingId = (await listingIdSchema.parse(
       req.params.listingId
     )) as UUID;
-    const data = await updateListingReqBodySchema.parse(req.body);
+    const files = req.files as Express.Multer.File[];
+    const images = files.length > 0 ? files : undefined;
+    const data = await updateListingReqBodySchema.parse({
+      ...JSON.parse(req.body.details),
+      images,
+    });
     await listingsDomain.update(userId, listingId, data);
     res.status(200).send();
   });

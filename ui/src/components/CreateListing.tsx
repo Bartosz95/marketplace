@@ -14,7 +14,7 @@ export interface CreateListing {
   sendApiRequest: SendApiRequest;
 }
 
-interface InitCreateListingDetails {
+export interface InitListingDetails {
   title?: string;
   description?: string;
   price?: number;
@@ -22,7 +22,7 @@ interface InitCreateListingDetails {
 }
 
 function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
-  const [listing, setListing] = useState<InitCreateListingDetails>({});
+  const [listing, setListing] = useState<InitListingDetails>({});
   const [validated, setValidated] = useState(false);
 
   const fetchImages = async () => {
@@ -38,7 +38,7 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
 
   useEffect(() => {
     fetchImages();
-  }, []);
+  },[]);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -80,13 +80,13 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
         price: listing.price,
         images: listing.images,
       };
-      const a = async () => {
+      const send = async () => {
         await sendApiRequest({
           requestAction: RequestAction.Create,
           listingDetails,
         });
       };
-      a();
+      send();
       handleClose();
     }
   };

@@ -26,7 +26,6 @@ export interface ListingStateTableRow {
   description: string;
   price: number;
   images_urls: string[];
-  purchased_by?: string;
 }
 
 export interface ListingState {
@@ -39,7 +38,6 @@ export interface ListingState {
   description: string;
   price: number;
   imagesUrls: string[];
-  purchasedBy?: string;
 }
 
 interface EventBaseInfo {
@@ -60,7 +58,6 @@ export interface ListingCreatedEventData {
   title: string;
   description: string;
   price: number;
-  imagesUrls: string[];
 }
 
 export interface ListingUpdatedEvent extends EventBaseInfo {
