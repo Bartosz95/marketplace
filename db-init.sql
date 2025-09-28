@@ -55,7 +55,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 1, 'LISTING_CREATED',
@@ -67,7 +67,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5F0E6081-9247-410C-A7B5-4E5FCF7AA365', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5F0E6081-9247-410C-A7B5-4E5FCF7AA365/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/5F0E6081-9247-410C-A7B5-4E5FCF7AA365/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('0E8C0F75-7FFF-431A-938C-AD18F5D2265E', 1, 'LISTING_CREATED',
@@ -79,15 +79,15 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('0E8C0F75-7FFF-431A-938C-AD18F5D2265E', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["0E8C0F75-7FFF-431A-938C-AD18F5D2265E/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/0E8C0F75-7FFF-431A-938C-AD18F5D2265E/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 1, 'LISTING_CREATED',
-    '{"user_id": "d4b7e60f-54a9-4567-9ef0-4567890abcde", "title":"Blue cup","price":"10","description":"This elegant blue cup adds a touch of calm and charm to your everyday routine. Crafted with durability and style in mind, it’s perfect for coffee, tea, or any beverage of your choice. Its rich color and simple design make it a versatile piece for both home and office use.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+    '{"user_id": "images/d4b7e60f-54a9-4567-9ef0-4567890abcde", "title":"Blue cup","price":"10","description":"This elegant blue cup adds a touch of calm and charm to your everyday routine. Crafted with durability and style in mind, it’s perfect for coffee, tea, or any beverage of your choice. Its rich color and simple design make it a versatile piece for both home and office use.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('2F77D3D5-73D3-4C2C-99E1-E9C6EF9F7A79', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["d4b7e60f-54a9-4567-9ef0-4567890abcde/1.jpeg", "d4b7e60f-54a9-4567-9ef0-4567890abcde/2.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/d4b7e60f-54a9-4567-9ef0-4567890abcde/1.jpeg", "images/d4b7e60f-54a9-4567-9ef0-4567890abcde/2.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 1, 'LISTING_CREATED',
@@ -95,7 +95,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('2BE04F60-EC70-4AC4-A792-21B5CAE89546', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["b2f5c48d-98e7-4567-9cde-234567890abc/1.jpeg","b2f5c48d-98e7-4567-9cde-234567890abc/2.png"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/b2f5c48d-98e7-4567-9cde-234567890abc/1.jpeg","images/b2f5c48d-98e7-4567-9cde-234567890abc/2.png"]}'::jsonb, '{}'::jsonb);
 
 
 
@@ -109,17 +109,17 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('2B45301F-CDE7-4646-A51A-9FED7CEBBB6E', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["2B45301F-CDE7-4646-A51A-9FED7CEBBB6E/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/2B45301F-CDE7-4646-A51A-9FED7CEBBB6E/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 1, 'LISTING_CREATED',
-    '{"user_id": "a1f4e37c-12d3-4567-89ab-1234567890ab", "title":"Red Jacket","price":"50","description":"This vibrant red jacket combines comfort with a modern, stylish fit, making it perfect for casual outings or evenings out. Crafted from durable yet lightweight fabric, it provides warmth without feeling bulky. The bold color adds a statement to any outfit while keeping you cozy and confident.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
+    '{"user_id": "images/a1f4e37c-12d3-4567-89ab-1234567890ab", "title":"Red Jacket","price":"50","description":"This vibrant red jacket combines comfort with a modern, stylish fit, making it perfect for casual outings or evenings out. Crafted from durable yet lightweight fabric, it provides warmth without feeling bulky. The bold color adds a statement to any outfit while keeping you cozy and confident.","imagesUrls":[]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/1.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg","B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/1.jpeg","images/B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg","images/B2EA4CB5-7324-4D34-BEAD-30C55F6F67BC/2.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 1, 'LISTING_CREATED',
@@ -131,7 +131,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('11A28B7B-6F8E-42C2-9269-671EFFB3A3EB', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["11A28B7B-6F8E-42C2-9269-671EFFB3A3EB/1.jpeg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/11A28B7B-6F8E-42C2-9269-671EFFB3A3EB/1.jpeg"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 1, 'LISTING_CREATED',
@@ -139,7 +139,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('9E81D303-E6E0-4B72-BD49-43C9D10B726F', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["9E81D303-E6E0-4B72-BD49-43C9D10B726F/1.jpeg","9E81D303-E6E0-4B72-BD49-43C9D10B726F/2.png","9E81D303-E6E0-4B72-BD49-43C9D10B726F/3.png"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/9E81D303-E6E0-4B72-BD49-43C9D10B726F/1.jpeg","images/9E81D303-E6E0-4B72-BD49-43C9D10B726F/2.png","images/9E81D303-E6E0-4B72-BD49-43C9D10B726F/3.png"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 1, 'LISTING_CREATED',
@@ -147,7 +147,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5FDA6AE3-4783-41FF-94C3-BADC7390D340', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5FDA6AE3-4783-41FF-94C3-BADC7390D340/1.jpeg","5FDA6AE3-4783-41FF-94C3-BADC7390D340/2.png"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/5FDA6AE3-4783-41FF-94C3-BADC7390D340/1.jpeg","images/5FDA6AE3-4783-41FF-94C3-BADC7390D340/2.png"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 1, 'LISTING_CREATED',
@@ -155,7 +155,7 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('5932B820-6FB0-40E7-925A-3FA7A8C1FD41', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["5932B820-6FB0-40E7-925A-3FA7A8C1FD41/1.jpeg","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/2.png","5932B820-6FB0-40E7-925A-3FA7A8C1FD41/3.png"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/5932B820-6FB0-40E7-925A-3FA7A8C1FD41/1.jpeg","images/5932B820-6FB0-40E7-925A-3FA7A8C1FD41/2.png","images/5932B820-6FB0-40E7-925A-3FA7A8C1FD41/3.png"]}'::jsonb, '{}'::jsonb);
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 1, 'LISTING_CREATED',
@@ -167,4 +167,4 @@ INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) 
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('156BEEF5-25C1-4979-BCE1-842BA114F54F', 2, 'IMAGES_UPLOADED',
-    '{"imagesUrls": ["156BEEF5-25C1-4979-BCE1-842BA114F54F/1.jpeg","156BEEF5-25C1-4979-BCE1-842BA114F54F/2.jpg","156BEEF5-25C1-4979-BCE1-842BA114F54F/3.jpg"]}'::jsonb, '{}'::jsonb);
+    '{"imagesUrls": ["images/156BEEF5-25C1-4979-BCE1-842BA114F54F/1.jpeg","images/156BEEF5-25C1-4979-BCE1-842BA114F54F/2.jpg","images/156BEEF5-25C1-4979-BCE1-842BA114F54F/3.jpg"]}'::jsonb, '{}'::jsonb);

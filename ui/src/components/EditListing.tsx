@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -30,9 +30,9 @@ function EditListing({
   });
   const [validated, setValidated] = useState(false);
 
-  const fetchImages = async () => {
+  const fetchImages = useCallback(async () => {
     const images: File[] = [];
-    for (const imageUrl in listingDetails.imagesUrls) {
+    for (const imageUrl of listingDetails.imagesUrls) {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const image = new File([blob], imageUrl, { type: blob.type });
@@ -42,11 +42,11 @@ function EditListing({
       ...listing,
       images,
     });
-  };
+  }, [listing, listingDetails.imagesUrls]);
 
   useEffect(() => {
     fetchImages();
-  }, []);
+  }, [fetchImages]);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -90,14 +90,10 @@ function EditListing({
 
   const imagesPreview = (
     <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-      {listing?.images &&
-        listing?.images.map((image) => (
+      {listing.images &&
+        listing.images.map((image) => (
           <Carousel.Item key={image.name}>
-            <Image
-              alt="/images/no-image.png"
-              src={URL.createObjectURL(image)}
-              fluid
-            />
+            <Image alt="no image" src={URL.createObjectURL(image)} fluid />
           </Carousel.Item>
         ))}
     </Carousel>
@@ -135,7 +131,7 @@ function EditListing({
               onChange={setDetails}
               className="mb-3"
               required
-              defaultValue={listingDetails?.title}
+              defaultValue={listing.title}
             />
             <Form.Control
               type="number"
@@ -143,7 +139,7 @@ function EditListing({
               placeholder="Price"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listingDetails?.price}
+              defaultValue={listing.price}
               required
             />
             <Form.Control
@@ -152,7 +148,7 @@ function EditListing({
               placeholder="Description"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listingDetails?.description}
+              defaultValue={listing.description}
               required
             />
             <Form.Control.Feedback type="invalid">

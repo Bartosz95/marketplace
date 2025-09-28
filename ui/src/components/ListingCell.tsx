@@ -25,24 +25,21 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
   const [showListingEdit, setShowListingEdit] = useState(false);
   const handleCloseEdit = () => setShowListingEdit(false);
   const handleShowEdit = () => setShowListingEdit(true);
-  const image =
-    imagesUrls.length > 0
-      ? `${process.env.NEXT_PUBLIC_IMAGES_URL}/${imagesUrls[0]}`
-      : `${process.env.PUBLIC_URL}/no-image.png`;
+  const image = imagesUrls[0];
 
   const allowEdit =
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
-    await sendApiRequest({ requestAction: RequestAction.Archive, listingId});
+    await sendApiRequest({ requestAction: RequestAction.Archive, listingId });
   };
 
   const restoreListing = async () => {
-    await sendApiRequest({ requestAction: RequestAction.Restore, listingId});
+    await sendApiRequest({ requestAction: RequestAction.Restore, listingId });
   };
 
   const deleteListing = async () => {
-    sendApiRequest({ requestAction: RequestAction.Delete, listingId});
+    sendApiRequest({ requestAction: RequestAction.Delete, listingId });
   };
 
   const modifyListing = (

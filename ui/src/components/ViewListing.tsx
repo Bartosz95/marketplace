@@ -23,18 +23,14 @@ function ViewListing({
   const { title, description, price, imagesUrls, listingId } = listing;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
 
-  const images = imagesUrls.map((image) => (
-    <Carousel.Item key={image}>
-      <Image
-        src={`${process.env.NEXT_PUBLIC_IMAGES_URL}/${image}`}
-        alt="/images/no-image.png"
-        fluid
-      />
+  const images = imagesUrls.map((imageUrl) => (
+    <Carousel.Item key={imageUrl}>
+      <Image src={imageUrl} alt="no image" fluid />
     </Carousel.Item>
   ));
 
   const handlePurches = async () => {
-    await sendApiRequest({ requestAction: RequestAction.Purchase, listingId});
+    await sendApiRequest({ requestAction: RequestAction.Purchase, listingId });
     handleClose();
   };
 

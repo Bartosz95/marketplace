@@ -2,7 +2,7 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
-import { FilterBy, RequestAction } from "../types";
+import { FilterBy } from "../types";
 import { SendApiRequest } from "@/pages/MainPage";
 import { useAuth0 } from "@auth0/auth0-react";
 import CreateListing from "./CreateListing";
