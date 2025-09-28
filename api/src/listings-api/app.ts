@@ -13,6 +13,7 @@ import { RequestLogger } from "../libs/requestLogger";
 import { Authorization } from "../libs/authorization";
 import { UserListingsDomain } from "./userListingsDomain";
 import { UserListingsReadRouter } from "./userListingRouter";
+import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 
 export default () => {
   const envSchema = z.object({
@@ -86,7 +87,8 @@ export default () => {
     eventSourceRepository,
     imagesRepository
   );
-  const userListingsDomain = UserListingsDomain(listingsStateRepository);
+  const purchasesStateRepository = PurchasesStateRepository(env.db)
+  const userListingsDomain = UserListingsDomain(listingsStateRepository, purchasesStateRepository);
 
   const listingReadRouter = ListingsReadRouter(listingsDomain);
   const listingWriteRouter = ListingsWriteRouter(

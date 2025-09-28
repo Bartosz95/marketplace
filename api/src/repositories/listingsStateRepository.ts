@@ -15,14 +15,13 @@ export interface ListingsStateRepository {
     offset: number
   ) => Promise<GetListingsResponse>;
   getListingById: (listingId: UUID) => Promise<ListingState | undefined>;
-  getListingsByUserId: (
-    userId: string,
-    statuses: EventType[],
+  getListingsByIds: (
+    listingId: UUID[],
     limit: number,
     offset: number
   ) => Promise<GetListingsResponse>;
-  getListingsByPurchasedBy: (
-    userId: string,
+  getListingsByUserId: (
+    userId: UUID,
     statuses: EventType[],
     limit: number,
     offset: number
@@ -103,7 +102,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     const dbClient = await pool.connect();
     try {
       const result = await dbClient.query(
-        `SELECT * FROM states.listings WHERE listing_id = $1 limit 1`,
+        `SELECT * FROM states.listings WHERE listing_id = $1 limit 1;`,
         [listingId]
       );
       return result.rows.map(mapListing).shift();
@@ -114,29 +113,24 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
-  const getListingsByUserId = async (
-    userId: string,
-    statuses: EventType[],
+  const getListingsByIds = async (
+    listingsIds: UUID[],
     limit: number,
     offset: number
   ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
-        `SELECT * FROM states.listings
-        WHERE user_id = $1
-        AND status = ANY($2::text[])
-        ORDER BY modified_at DESC
-        LIMIT $3 OFFSET $4;
-        `,
-        [userId, statuses, limit, offset]
+        `SELECT * FROM states.listings 
+        WHERE listing_id = ANY($1::UUID[])
+        LIMIT $2 OFFSET $3;`,
+        [listingsIds, limit, offset]
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
-        WHERE user_id = $1
-        AND status = ANY($2::text[]);
+        WHERE listing_id = ANY($1::UUID[]);
         `,
-        [userId, statuses]
+        [listingsIds]
       );
       return {
         listings: results.rows.map(mapListing),
@@ -149,8 +143,8 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     }
   };
 
-  const getListingsByPurchasedBy = async (
-    userId: string,
+  const getListingsByUserId = async (
+    userId: UUID,
     statuses: EventType[],
     limit: number,
     offset: number
@@ -159,7 +153,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
     try {
       const results = await dbClient.query(
         `SELECT * FROM states.listings
-        WHERE purchased_by = $1
+        WHERE user_id = $1
         AND status = ANY($2::text[])
         ORDER BY modified_at DESC
         LIMIT $3 OFFSET $4;
@@ -168,7 +162,7 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
-        WHERE purchased_by = $1
+        WHERE user_id = $1
         AND status = ANY($2::text[]);
         `,
         [userId, statuses]
@@ -202,8 +196,8 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
   return {
     getListings,
     getListingById,
+    getListingsByIds,
     getListingsByUserId,
-    getListingsByPurchasedBy,
     updateListing,
   };
 };

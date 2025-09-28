@@ -1,39 +1,42 @@
+import { UUID } from "crypto";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
+import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 import { EventType, GetListingsResponse } from "../types";
 
 export interface UserListingsDomain {
   getActive: (
-    userId: string,
+    userId: UUID,
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
   getSold: (
-    userId: string,
+    userId: UUID,
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
   getPurchased: (
-    userId: string,
+    userId: UUID,
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
   getArchived: (
-    userId: string,
+    userId: UUID,
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
   getAll: (
-    userId: string,
+    userId: UUID,
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
 }
 
 export const UserListingsDomain = (
-  listingsStateRepository: ListingsStateRepository
+  listingsStateRepository: ListingsStateRepository,
+  purchasesStateRepository: PurchasesStateRepository
 ): UserListingsDomain => {
   const getActive = async (
-    userId: string,
+    userId: UUID,
     limit = 8,
     offset = 0
   ): Promise<GetListingsResponse> => {
@@ -47,7 +50,7 @@ export const UserListingsDomain = (
   };
 
   const getSold = async (
-    userId: string,
+    userId: UUID,
     limit = 8,
     offset = 0
   ): Promise<GetListingsResponse> => {
@@ -65,9 +68,17 @@ export const UserListingsDomain = (
     limit = 8,
     offset = 0
   ): Promise<GetListingsResponse> => {
-    const listings = await listingsStateRepository.getListingsByPurchasedBy(
+    const purchases = await purchasesStateRepository.getPurchasesByBuyerId(
       userId,
       [EventType.LISTING_PURCHASED],
+      limit,
+      offset
+    );
+    const listingsIds = purchases.purchases.map(
+      (purchase) => purchase.listingId as UUID
+    );
+    const listings = await listingsStateRepository.getListingsByIds(
+      listingsIds,
       limit,
       offset
     );
@@ -75,7 +86,7 @@ export const UserListingsDomain = (
   };
 
   const getArchived = async (
-    userId: string,
+    userId: UUID,
     limit = 8,
     offset = 0
   ): Promise<GetListingsResponse> => {
@@ -89,7 +100,7 @@ export const UserListingsDomain = (
   };
 
   const getAll = async (
-    userId: string,
+    userId: UUID,
     limit = 8,
     offset = 0
   ): Promise<GetListingsResponse> => {
