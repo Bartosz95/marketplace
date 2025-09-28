@@ -4,6 +4,7 @@ import {
   EventType,
   GetListingsResponse,
   ListingCreatedEventData,
+  ListingPurchasedEventData,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import {
@@ -97,12 +98,17 @@ export const ListingsDomain = (
     if (!listing) throw new Error(`listing undefined`);
     if (userId === listing.userId)
       throw Error(`User ${userId} try to purchase its own item`);
+
+    const purchaseEventData: ListingPurchasedEventData = {
+      sellerId: listing.userId,
+      buyerId: userId,
+      price: listing.price,
+    };
+
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_PURCHASED,
-      {
-        userId,
-      }
+      purchaseEventData
     );
   };
 

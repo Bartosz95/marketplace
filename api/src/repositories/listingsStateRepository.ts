@@ -37,6 +37,34 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
 
   const pool = new Pool(dbConfig);
 
+  const updateListing = async (listing: ListingState): Promise<void> => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query(
+        `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, modified_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT (listing_id) DO UPDATE
+        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9;
+        `,
+        [
+          listing.listingId,
+          listing.userId,
+          listing.status,
+          listing.version,
+          listing.title,
+          listing.description,
+          listing.price,
+          listing.imagesUrls,
+          listing.modifiedAt,
+        ]
+      );
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
   const getListings = async (
     statuses: EventType[],
     limit = 10,
@@ -149,34 +177,6 @@ export const ListingsStateRepository = (env: any): ListingsStateRepository => {
         listings: results.rows.map(mapListing),
         countOfAll: mapCountOfAll(countOfAll),
       };
-    } catch (error) {
-      throw error;
-    } finally {
-      dbClient.release();
-    }
-  };
-
-  const updateListing = async (listing: ListingState): Promise<void> => {
-    const dbClient = await pool.connect();
-    try {
-      await dbClient.query(
-        `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, modified_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (listing_id) DO UPDATE
-        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9;
-        `,
-        [
-          listing.listingId,
-          listing.userId,
-          listing.status,
-          listing.version,
-          listing.title,
-          listing.description,
-          listing.price,
-          listing.imagesUrls,
-          listing.modifiedAt,
-        ]
-      );
     } catch (error) {
       throw error;
     } finally {

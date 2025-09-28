@@ -1,7 +1,7 @@
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { Event, EventType, ListingState } from "../types";
 
-export const ListingStateProcessManager =
+export const ListingsStateProcessManager =
   (listingStateRepository: ListingsStateRepository) => async (event: Event) => {
     const { eventType, streamId } = event;
     const previousState = await listingStateRepository.getListingById(streamId);

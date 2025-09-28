@@ -1,9 +1,9 @@
 import z from "zod";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
-import { ListingsStateProcessManager } from "./listingStateProcessManager";
+import { PurchasesStateProcessManager } from "./purchasesStateProcessManager";
+import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 
 export default () => {
   const envSchema = z.object({
@@ -39,8 +39,8 @@ export default () => {
   const logger = Logger(env.app.logLevel);
   const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const listingsStateRepository = ListingsStateRepository(env.db);
-  const processManager = ListingsStateProcessManager(listingsStateRepository);
+  const purchasesStateRepository = PurchasesStateRepository(env.db);
+  const processManager = PurchasesStateProcessManager(purchasesStateRepository);
 
   const delay = (timeout: number) =>
     new Promise((resolve) => setTimeout(resolve, timeout));

@@ -45,6 +45,18 @@ services:
       - NODE_ENV=production
     depends_on:
       - db
+  purchases-state-pm:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    env_file:
+      - api/.env
+    environment:
+      - DB_HOST=db
+      - APP_NAME=purchases-state-pm
+      - NODE_ENV=production
+    depends_on:
+      - db
   db:
     image: postgres:17
     container_name: postgres_container

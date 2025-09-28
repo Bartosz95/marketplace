@@ -77,7 +77,9 @@ export interface ListingPurchasedEvent extends EventBaseInfo {
 }
 
 export interface ListingPurchasedEventData {
-  userId: string;
+  sellerId: string;
+  buyerId: string;
+  price: number;
 }
 
 export interface ListingDeletedEvent extends EventBaseInfo {
@@ -116,5 +118,32 @@ export type Event =
 
 export interface GetListingsResponse {
   listings: ListingState[];
+  countOfAll: number;
+}
+
+export interface PurchaseStateTableRow {
+  listing_id: string;
+  seller_id: string;
+  buyer_id: string;
+  price: number;
+  modified_at: string;
+  status: string;
+  version: number;
+}
+
+export type PurchaseStatus = EventType.LISTING_PURCHASED;
+
+export interface PurchaseState {
+  listingId: UUID;
+  sellerId: string;
+  buyerId: string;
+  price: number;
+  modifiedAt: Date;
+  status: PurchaseStatus;
+  version: number;
+}
+
+export interface GetPurchasesResponse {
+  purchases: PurchaseState[];
   countOfAll: number;
 }
