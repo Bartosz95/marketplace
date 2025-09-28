@@ -11,11 +11,11 @@ CREATE SCHEMA event_store AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS event_store.events (
   stream_id   UUID DEFAULT gen_random_uuid(),
-  position    SERIAL PRIMARY KEY,
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  version     INT DEFAULT 1,
   event_type  TEXT NOT NULL,
   data        JSONB,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  version     INT DEFAULT 1,
+  position    SERIAL PRIMARY KEY,
   metadata    JSONB 
 );
 

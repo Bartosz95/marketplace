@@ -2,18 +2,7 @@
 
 ## Abstract
 
-The application is built using an Event Sourcing architecture pattern. User interaction is managed through a Graphical Interface developed with React and Bootstrap. Every user action initiates an call to the API implemented in Node.js generates corresponding events recorded in an event table within the PostgreSQL database. These events are processed by dedicated process managers that update the listing states. Images are stored on AWS S3 bucket. Access requires authentication, which is handled by Auth0, an external SaaS client.
-
-![](docs/login.png)
-
-## Services overview
-
-![](docs/graph.png)
-
-## Description
-
-In this document you will find a few sections.
-Current section presents you overview about project. Next, you can find a Tutorial which explains how to use a app. Section Requirements list tools  necessary for installation. Then you will find a installation process.
+This repository contains the source code for the Marketplace application, a platform that enables users to list their own items for sale and purchase items from others, similar in concept to Facebook Marketplace. The application is built using an event-sourcing architecture.
 
 ## Technlogies
 
@@ -22,13 +11,36 @@ Current section presents you overview about project. Next, you can find a Tutori
 - React - UI Framework
 - Bootstrap - CSS framework
 - Auth0 - authentication
-- S3 Bucket - storage
+- AWS S3 Bucket - storage
 - Postgres - database
 - Docker Compose - runtime
+
+![](docs/login.png)
+
+## Description
+
+This document is divided into several sections. The current section provides an overview of the project, including the services developed to support the application and the technologies used. Following this, you will find a Tutorial explaining how to use the application. Below the tutorial, the Requirements section outlines the necessary tools, and finally, the Installation section guides you through the setup process.
+
+### Services overview
+
+User interaction is handled through a website developed using React, with React Bootstrap serving as the dedicated CSS framework for styling. The data displayed on the website is retrieved from an API service built with Node.js and Express.js. For persistence, the application uses a PostgreSQL database, while an S3 bucket is employed for storing images. The diagram below illustrates the services that were implemented to build this application.
+
+![](docs/graph.png)
+
+### Event Sourcing architecture
+
+The application is built using an Event Sourcing architecture pattern. Users can purchase items listed in the Marketplace, as well as create, edit, archive, restore, and delete their own listings. Each of these actions generates an event that is stored in the event store table.
+
+Process managers operate as separate applications responsible for handling these events and updating the states table based on the event type. This approach provides a complete history of user activity and listing changes.
+
+The diagram below illustrates the database tables created for this application.
+
+![](docs/db.png)
 
 ## Tutorial
 
 How to use this application? It is very simple. Main page looks like:
+
 ![](docs/logout.png)
 
 ### Login
@@ -36,6 +48,7 @@ How to use this application? It is very simple. Main page looks like:
 You can browse and view listings without logging in. However, logging in allows you to purchase items and create your own listings. Click the Login button, and you will be redirected to the Auth0 page, where you will need to create an account. After successful authentication, you will be redirected back to the Marketplace, where you should see a dashboard similar to the example below.
 
 Notice that the Login to add listing button has been replaced by the _+ Create Listing_ button, and next to it, you will find a _Filter By_ dropdown. On the far right of the navigation bar, the Login button is replaced by your account nickname and profile photo.
+
 ![](docs/login.png)
 
 ### View and buy listing
@@ -43,11 +56,13 @@ Notice that the Login to add listing button has been replaced by the _+ Create L
 On the main page, each listing shows only one photo along with the item’s name and price. To view more details, you can click the View button, which will open the full listing and display the description. If the listing contains multiple photos, a carousel will automatically rotate through them every few seconds.
 
 When you want to purchase an item, simply press the Buy button and it will be added to your purchases. You can review all the items you have bought by setting the Filter By option to Your Purchases.
+
 ![](docs/view.png)
 
 ### Add your listing
 
 You can add a new item by pressing the + Create Listing button. To complete the process, you must upload at least one photo, set a price, and provide both a title and a description for the listing. Validation ensures that a listing cannot be created without this information. Once your listing is added, it will appear on the main page alongside other listings. However, instead of displaying a View button like the others, your listings will feature a Modify button, allowing you to edit them at any time.
+
 ![](docs/add.png)
 
 ### Modify your listings
@@ -55,11 +70,13 @@ You can add a new item by pressing the + Create Listing button. To complete the 
 To view listings available for purchase, set the Filter By option to Your Active. You can modify the details of an existing listing by selecting Edit from the Listing Modify dropdown menu.
 
 You can also Archive a listing, which makes it invisible to all users except you. This allows you the option to restore the listing at a later time. Alternatively, you may choose to Delete a listing permanently.
+
 ![](docs/modify.png)
 
 ### Filter and switchin beetween dark and light mode
 
 All available application filters are presented here, along with the option to activate the light theme.
+
 ![](docs/light.png)
 
 ### Account details
