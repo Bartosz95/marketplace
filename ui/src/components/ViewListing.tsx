@@ -6,6 +6,7 @@ import { Carousel } from "react-bootstrap";
 import { Listing, RequestAction } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
 import { SendApiRequest } from "@/pages/MainPage";
+import ImagePreview from "./ImagePreview";
 
 interface ViewListing {
   show: boolean;
@@ -22,12 +23,6 @@ function ViewListing({
 }: ViewListing) {
   const { title, description, price, imagesUrls, listingId } = listing;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
-
-  const images = imagesUrls.map((imageUrl) => (
-    <Carousel.Item key={imageUrl}>
-      <Image src={imageUrl} alt="no image" fluid />
-    </Carousel.Item>
-  ));
 
   const handlePurches = async () => {
     await sendApiRequest({ requestAction: RequestAction.Purchase, listingId });
@@ -49,9 +44,7 @@ function ViewListing({
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Carousel className="mb-3" style={{ width: "90%", margin: "auto" }}>
-          {images}
-        </Carousel>
+        <ImagePreview imagesUrls={imagesUrls}/>
         <h4>Price: {price}</h4>
         <p>{description}</p>
       </Modal.Body>

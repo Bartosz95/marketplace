@@ -26,7 +26,7 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
           style={{ width: "14rem" }}
           className="mb-3"
           src={user?.picture}
-          alt="/images/no-image.png"
+          alt="no image"
           roundedCircle
           fluid
         />

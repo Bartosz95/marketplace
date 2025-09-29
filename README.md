@@ -29,7 +29,7 @@ User interaction is handled through a website developed using React, with React 
 
 ### Event Sourcing architecture
 
-The application is built using an Event Sourcing architecture pattern. Users can purchase items listed in the Marketplace, as well as create, edit, archive, restore, and delete their own listings. Each of these actions generates an event that is stored in the event store table.
+The application is built using an Event Sourcing architecture pattern. Users can purchase items listed in the Marketplace, as well as create, update, archive, restore, and delete their own listings. Each of these actions generates an event that is stored in the event store table.
 
 Process managers operate as separate applications responsible for handling these events and updating the states table based on the event type. This approach provides a complete history of user activity and listing changes.
 
