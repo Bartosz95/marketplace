@@ -1,14 +1,14 @@
 import { UUID } from "crypto";
-import { ListingsStateRepository } from "../repositories/listingsStateRepository";
+import { ListingsStateRepository } from "../../repositories/listingsStateRepository";
 import {
   EventType,
   GetListingsResponse,
   ListingCreatedEventData,
   ListingPurchasedEventData,
-} from "../types";
-import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import { CreateListing, UpdateListing } from "./listingsWriteRouter";
-import { ImagesRepository } from "../repositories/imagesRepository";
+} from "../../types";
+import { EventSourceRepository } from "../../repositories/eventSourceRepository";
+import { CreateListing, UpdateListing } from "../listingsWriteRouter";
+import { ImagesRepository } from "../../repositories/imagesRepository";
 
 export interface ListingsDomain {
   create: (userId: string, data: CreateListing) => Promise<void>;

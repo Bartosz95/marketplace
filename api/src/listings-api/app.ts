@@ -4,14 +4,14 @@ import z from "zod";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ImagesRepository } from "../repositories/imagesRepository";
-import { ListingsDomain } from "./listingsDomain";
+import { ListingsDomain } from "./domain/listingsDomain";
 import { ListingsReadRouter } from "./listingsReadRouter";
 import { ListingsWriteRouter } from "./listingsWriteRouter";
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
 import { Authorization } from "../libs/authorization";
-import { UserListingsDomain } from "./userListingsDomain";
+import { UserListingsDomain } from "./domain/userListingsDomain";
 import { UserListingsReadRouter } from "./userListingRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 
@@ -112,9 +112,9 @@ export default () => {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  app.use(`/listings`, listingReadRouter);
-  app.use(`/listings`, authorization, listingWriteRouter);
-  app.use(`/listings/user`, authorization, userListingReadRouter);
+  app.use(`/api/v1/listings`, listingReadRouter);
+  app.use(`/api/v1/listings`, authorization, listingWriteRouter);
+  app.use(`/api/v1/listings/user`, authorization, userListingReadRouter);
 
   app.use(errorHandler);
 

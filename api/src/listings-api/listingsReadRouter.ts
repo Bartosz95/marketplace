@@ -1,6 +1,6 @@
 import { Router } from "express";
 import z from "zod";
-import { ListingsDomain } from "./listingsDomain";
+import { ListingsDomain } from "./domain/listingsDomain";
 
 const getListingsQuerychema = z.object({
   limit: z.coerce.number().optional(),

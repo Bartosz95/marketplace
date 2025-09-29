@@ -1,6 +1,6 @@
 import { Router } from "express";
 import z from "zod";
-import { UserListingsDomain } from "./userListingsDomain";
+import { UserListingsDomain } from "./domain/userListingsDomain";
 import { UUID } from "crypto";
 
 const listingsQuerySchema = z.object({

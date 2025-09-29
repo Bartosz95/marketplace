@@ -65,7 +65,7 @@ function ListingsView() {
   const [token, setToken] = useState<string | undefined>(undefined);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
-  const sendRequest = SendRequest(process.env.NEXT_PUBLIC_API_URL);
+  const sendRequest = SendRequest(`${process.env.NEXT_PUBLIC_API_URL}/api/v1`);
 
   const getListings = useCallback(
     async (filterBy: FilterBy) => {

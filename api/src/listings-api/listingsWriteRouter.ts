@@ -1,7 +1,7 @@
 import { Router, urlencoded } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { ListingsDomain } from "./listingsDomain";
+import { ListingsDomain } from "./domain/listingsDomain";
 import multer from "multer";
 export const listingIdSchema = z.uuid();
 const userIdSchema = z.string();

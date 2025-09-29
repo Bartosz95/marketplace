@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
-import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
-import { EventType, GetListingsResponse } from "../types";
+import { ListingsStateRepository } from "../../repositories/listingsStateRepository";
+import { PurchasesStateRepository } from "../../repositories/purchasesStateRepository";
+import { EventType, GetListingsResponse } from "../../types";
 
 export interface UserListingsDomain {
   getActive: (
