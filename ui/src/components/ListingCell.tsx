@@ -9,6 +9,7 @@ import { EventType, Listing, RequestAction } from "@/types";
 import ViewListing from "@/components/ViewListing";
 import UpdateListing from "@/components/UpdateListing";
 import { SendApiRequest } from "@/pages/MainPage";
+import "./ListingCell.css"
 
 interface ListingCell {
   listing: Listing;
@@ -63,7 +64,7 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
 
   return (
     <>
-      <Card style={{ width: "18rem" }} className="mt-3">
+      <Card style={{ width: "18rem" }} className="mt-3 blure">
         <Card.Body>
           <Card.Img variant="top" src={image} />
           <Card.Title>{title}</Card.Title>

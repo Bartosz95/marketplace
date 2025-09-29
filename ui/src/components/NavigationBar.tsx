@@ -69,11 +69,7 @@ function NavigationBar(props: NavigationBarProps) {
             sendApiRequest={sendApiRequest}
           />
 
-          <NavDropdown
-            title={filterByTitle}
-            id="basic-nav-dropdown"
-            style={{ width: "20rem" }}
-          >
+          <NavDropdown title={filterByTitle}>
             <NavDropdown.Item onClick={() => setFilter(FilterBy.All)}>
               All Active Listings
             </NavDropdown.Item>

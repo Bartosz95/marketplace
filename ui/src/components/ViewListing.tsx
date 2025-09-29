@@ -6,6 +6,7 @@ import { Carousel } from "react-bootstrap";
 import { Listing, RequestAction } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
 import { SendApiRequest } from "@/pages/MainPage";
+import "./ViewListing.css";
 
 interface ViewListing {
   show: boolean;
@@ -41,6 +42,7 @@ function ViewListing({
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
       style={{ margin: "auto" }}
+      className="blurred-background"
       size="lg"
       centered
     >
@@ -48,7 +50,7 @@ function ViewListing({
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
+        <Carousel className="mb-3" style={{ width: "90%", margin: "auto" }}>
           {images}
         </Carousel>
         <h4>Price: {price}</h4>
