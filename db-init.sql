@@ -10,14 +10,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA event_store AUTHORIZATION default_user;
 
 CREATE TABLE IF NOT EXISTS event_store.events (
+  position    SERIAL PRIMARY KEY,
   stream_id   UUID DEFAULT gen_random_uuid(),
   event_type  TEXT NOT NULL,
+  version     INT DEFAULT 1,
   data        JSONB,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  version     INT DEFAULT 1,
-  position    SERIAL PRIMARY KEY,
   metadata    JSONB 
 );
+
+CREATE INDEX idx_event_store_events_stream_id ON event_store.events (stream_id);
+CREATE INDEX idx_event_store_events_event_type ON event_store.events (event_type);
 
 ALTER TABLE event_store.events OWNER TO default_user;
 
@@ -26,14 +29,17 @@ CREATE SCHEMA states AUTHORIZATION default_user;
 CREATE TABLE IF NOT EXISTS states.listings (
   listing_id    UUID PRIMARY KEY,
   user_id       TEXT,
-  modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status        TEXT NOT NULL,
-  version       INTEGER NOT NULL,
   title         TEXT NOT NULL,
   description   TEXT NOT NULL,
   price         INTEGER NOT NULL,
-  images_urls   TEXT[] NOT NULL
+  images_urls   TEXT[] NOT NULL,
+  version       INTEGER NOT NULL,
+  modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_state_listing_user_id ON states.listings (user_id);
+CREATE INDEX idx_state_listing_status ON states.listings (status);
 
 ALTER TABLE states.listings OWNER TO default_user;
 CREATE TABLE IF NOT EXISTS states.purchases (
@@ -41,10 +47,14 @@ CREATE TABLE IF NOT EXISTS states.purchases (
   seller_id     TEXT,
   buyer_id      TEXT,
   price         INTEGER NOT NULL,
-  modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status        TEXT NOT NULL,
-  version       INTEGER NOT NULL
+  version       INTEGER NOT NULL,
+  modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_state_purchases_seller_id ON states.purchases (seller_id);
+CREATE INDEX idx_state_purchases_buyer_id ON states.purchases (buyer_id);
+CREATE INDEX idx_state_purchases_status ON states.purchases (status);
 
 ALTER TABLE states.purchases OWNER TO default_user;
 
