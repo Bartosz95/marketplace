@@ -4,6 +4,7 @@ import { ListingsStateRepository } from "../repositories/listingsStateRepository
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
 import { ListingsStateProcessManager } from "./listingStateProcessManager";
+import { Iteration } from "../libs/iteration";
 
 export default () => {
   const envSchema = z.object({
@@ -11,6 +12,7 @@ export default () => {
       name: z.string(),
       logLevel: z.string(),
       timeout: z.coerce.number(),
+      numberOfEventsPerIteration: z.number().default(100),
     }),
     db: z.object({
       host: z.string(),
@@ -26,6 +28,8 @@ export default () => {
       name: process.env.APP_NAME,
       logLevel: process.env.APP_LOG_LEVEL,
       timeout: process.env.APP_LOOP_TIMEOUT,
+      numberOfEventsPerIteration:
+        process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
     },
     db: {
       host: process.env.DB_HOST,
@@ -41,24 +45,20 @@ export default () => {
   const eventSourceRepository = EventSourceRepository(env.db);
   const listingsStateRepository = ListingsStateRepository(env.db);
   const processManager = ListingsStateProcessManager(listingsStateRepository);
-
+  const iterate = Iteration(
+    logger,
+    bookmarkRepository,
+    eventSourceRepository,
+    processManager,
+    env.app.numberOfEventsPerIteration
+  );
   const delay = (timeout: number) =>
     new Promise((resolve) => setTimeout(resolve, timeout));
 
   const start = async () => {
     while (true) {
       try {
-        const bookmarkPosition = await bookmarkRepository.getBookmark();
-        const events = await eventSourceRepository.getEventsFromPosition(
-          bookmarkPosition
-        );
-        if (events.length === 0) continue;
-        logger.info(`Processing: ${events.length}`);
-        for (const event of events) {
-          const eventPossition = event.position;
-          await processManager(event);
-          await bookmarkRepository.setBookmark(eventPossition);
-        }
+        await iterate()
       } catch (error) {
         logger.error(error);
       } finally {

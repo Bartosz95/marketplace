@@ -17,7 +17,7 @@ export interface EventSourceRepository {
     eventType: EventType,
     eventData: EventData
   ) => Promise<void>;
-  getEventsFromPosition: (position: number) => Promise<Event[]>;
+  getEventsFromPosition: (position: number, eventsNumber: number) => Promise<Event[]>;
 }
 
 export const EventSourceRepository = (env: any): EventSourceRepository => {
@@ -68,12 +68,13 @@ export const EventSourceRepository = (env: any): EventSourceRepository => {
     }
   };
 
-  const getEventsFromPosition = async (position: number): Promise<Event[]> => {
+  const getEventsFromPosition = async (startPosition: number, eventsNumber: number): Promise<Event[]> => {
     const dbClient = await pool.connect();
     try {
+      const endPosition = startPosition + eventsNumber;
       const results = await dbClient.query(
-        "SELECT * FROM event_store.events WHERE position > $1",
-        [position]
+        "SELECT * FROM event_store.events WHERE position BETWEEN $1 AND $2;",
+        [startPosition, endPosition]
       );
 
       const events = results.rows.map(mapEvent);

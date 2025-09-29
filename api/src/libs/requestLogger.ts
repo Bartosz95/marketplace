@@ -2,18 +2,16 @@ import { Request, Response, NextFunction } from "express";
 import { Logger } from "winston";
 
 export const RequestLogger =
-  (logger: Logger, NODE_ENV?: string) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    if (NODE_ENV !== "production") {
-      logger.info("----- Request -----");
-      logger.info(req.method);
-      logger.info(req.path);
-      logger.info("params:");
-      logger.info(JSON.stringify(req.params));
-      logger.info("query:");
-      logger.info(JSON.stringify(req.query));
-      logger.info(`body:`);
-      logger.info(JSON.stringify(req.body));
-    }
+  (logger: Logger) =>
+  (req: Request, _: Response, next: NextFunction) => {
+    logger.debug("----- Request -----");
+    logger.debug(req.method);
+    logger.debug(req.path);
+    logger.debug("params:");
+    logger.debug(JSON.stringify(req.params));
+    logger.debug("query:");
+    logger.debug(JSON.stringify(req.query));
+    logger.debug(`body:`);
+    logger.debug(JSON.stringify(req.body));
     next();
   };
