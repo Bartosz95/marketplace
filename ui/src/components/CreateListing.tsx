@@ -7,6 +7,7 @@ import Image from "react-bootstrap/Image";
 import { ListingDetails, RequestAction } from "@/types";
 import { Carousel } from "react-bootstrap";
 import { SendApiRequest } from "@/pages/MainPage";
+import ImagePreview from "./ImagePreview";
 
 export interface CreateListing {
   show: boolean;
@@ -38,7 +39,7 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
 
   useEffect(() => {
     fetchImages();
-  },[]);
+  }, []);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -91,15 +92,12 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
     }
   };
 
-  const imagesPreview = (
-    <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-      {listing?.images &&
-        listing?.images.map((image) => (
-          <Carousel.Item key={image.name}>
-            <Image alt="no image" src={URL.createObjectURL(image)} fluid />
-          </Carousel.Item>
-        ))}
-    </Carousel>
+  const imagesPreview = listing.images ? (
+    <ImagePreview
+      imagesUrls={listing.images.map((image) => URL.createObjectURL(image))}
+    />
+  ) : (
+    <ImagePreview imagesUrls={[`/images/no-image.png`]} />
   );
 
   return (

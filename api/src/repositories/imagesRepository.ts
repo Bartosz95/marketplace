@@ -7,6 +7,7 @@ import {
 import { UUID } from "crypto";
 import path from "path";
 import { FileDetails } from "../listings-api/listingsWriteRouter";
+import sharp from "sharp";
 
 export interface ImagesRepository {
   uploadImages(listingId: UUID, images: FileDetails[]): Promise<string[]>;
@@ -28,10 +29,11 @@ export const ImagesRepository = (env: any) => {
     for (const image of images) {
       const Key = path.join("images", listingId, image.originalname);
       imagesUrls.push(Key);
+      const Body = await sharp(image.buffer).resize({height: 689, width: 689, fit: "contain"}).toBuffer()
       const params = {
         Bucket,
         Key,
-        Body: image.buffer,
+        Body,
         ContentType: image.mimetype,
       };
       const command = new PutObjectCommand(params);

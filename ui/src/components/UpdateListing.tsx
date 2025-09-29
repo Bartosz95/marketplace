@@ -8,6 +8,7 @@ import { Listing, RequestAction } from "@/types";
 import { Carousel } from "react-bootstrap";
 import { SendApiRequest } from "@/pages/MainPage";
 import { InitListingDetails } from "./CreateListing";
+import ImagePreview from "./ImagePreview";
 
 export interface EditListing {
   show: boolean;
@@ -69,20 +70,12 @@ function UpdateListing({
     }
   };
 
-  const imagesPreview = (
-    <Carousel className="mb-3" style={{ width: "50%", margin: "auto" }}>
-      {listing.images
-        ? listing.images.map((image) => (
-            <Carousel.Item key={image.name}>
-              <Image alt="no image" src={URL.createObjectURL(image)} fluid />
-            </Carousel.Item>
-          ))
-        : prevImagesUrls.map((imageUrl) => (
-            <Carousel.Item key={imageUrl}>
-              <Image alt="no image" src={imageUrl} fluid />
-            </Carousel.Item>
-          ))}
-    </Carousel>
+  const imagesPreview = listing.images ? (
+    <ImagePreview
+      imagesUrls={listing.images.map((image) => URL.createObjectURL(image))}
+    />
+  ) : (
+    <ImagePreview imagesUrls={prevImagesUrls} />
   );
 
   return (
