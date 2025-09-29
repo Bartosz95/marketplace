@@ -13,6 +13,7 @@ export default () => {
       logLevel: z.string(),
       timeout: z.coerce.number(),
       numberOfEventsPerIteration: z.number().default(100),
+      imagesHost: z.string(),
     }),
     db: z.object({
       host: z.string(),
@@ -30,6 +31,7 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
+      imagesHost: process.env.APP_IMAGES_HOST,
     },
     db: {
       host: process.env.DB_HOST,
@@ -43,7 +45,10 @@ export default () => {
   const logger = Logger(env.app.logLevel);
   const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const listingsStateRepository = ListingsStateRepository(env.db);
+  const listingsStateRepository = ListingsStateRepository(
+    env.db,
+    env.app.imagesHost
+  );
   const processManager = ListingsStateProcessManager(listingsStateRepository);
   const iterate = Iteration(
     logger,
@@ -58,7 +63,7 @@ export default () => {
   const start = async () => {
     while (true) {
       try {
-        await iterate()
+        await iterate();
       } catch (error) {
         logger.error(error);
       } finally {

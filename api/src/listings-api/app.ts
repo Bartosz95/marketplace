@@ -22,6 +22,7 @@ export default () => {
       host: z.string(),
       logLevel: z.string(),
       nodeEnv: z.string().optional(),
+      imagesHost: z.string(),
     }),
     db: z.object({
       host: z.string(),
@@ -51,6 +52,7 @@ export default () => {
       host: process.env.APP_HOST,
       logLevel: process.env.APP_LOG_LEVEL,
       nodeEnv: process.env.NODE_ENV,
+      imagesHost: process.env.APP_IMAGES_HOST,
     },
     db: {
       host: process.env.DB_HOST,
@@ -79,7 +81,10 @@ export default () => {
   const errorHandler = ErrorHandler(logger);
   const authorization = Authorization(env.auth);
 
-  const listingsStateRepository = ListingsStateRepository(env.db);
+  const listingsStateRepository = ListingsStateRepository(
+    env.db,
+    env.app.imagesHost
+  );
   const eventSourceRepository = EventSourceRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws.bucket);
   const listingsDomain = ListingsDomain(
@@ -87,8 +92,11 @@ export default () => {
     eventSourceRepository,
     imagesRepository
   );
-  const purchasesStateRepository = PurchasesStateRepository(env.db)
-  const userListingsDomain = UserListingsDomain(listingsStateRepository, purchasesStateRepository);
+  const purchasesStateRepository = PurchasesStateRepository(env.db);
+  const userListingsDomain = UserListingsDomain(
+    listingsStateRepository,
+    purchasesStateRepository
+  );
 
   const listingReadRouter = ListingsReadRouter(listingsDomain);
   const listingWriteRouter = ListingsWriteRouter(

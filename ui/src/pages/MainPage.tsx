@@ -82,14 +82,7 @@ function ListingsView() {
         }
       );
       setLastFilterBy(filterBy);
-      setListings(
-        result.listings.map((listing: Listing) => ({
-          ...listing,
-          imagesUrls: listing.imagesUrls.map(
-            (url) => `${process.env.NEXT_PUBLIC_IMAGES_URL}/${url}`
-          ),
-        }))
-      );
+      setListings(result.listings);
       setCountOfAll(result.countOfAll);
     },
     [token, setLastFilterBy, setListings, limit, offset, sendRequest]

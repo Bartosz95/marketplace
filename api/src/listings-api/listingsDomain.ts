@@ -7,11 +7,7 @@ import {
   ListingPurchasedEventData,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
-import {
-  CreateListing,
-  FileDetails,
-  UpdateListing,
-} from "./listingsWriteRouter";
+import { CreateListing, UpdateListing } from "./listingsWriteRouter";
 import { ImagesRepository } from "../repositories/imagesRepository";
 
 export interface ListingsDomain {
