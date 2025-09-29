@@ -2,6 +2,8 @@ import { UUID } from "crypto";
 import { ListingsStateRepository } from "../../repositories/listingsStateRepository";
 import { PurchasesStateRepository } from "../../repositories/purchasesStateRepository";
 import { EventType, GetListingsResponse } from "../../types";
+import { ModifyImagesUrls } from "./modifyImagesUrls";
+import { ImagesRepository } from "../../repositories/imagesRepository";
 
 export interface UserListingsDomain {
   getActive: (
@@ -33,8 +35,11 @@ export interface UserListingsDomain {
 
 export const UserListingsDomain = (
   listingsStateRepository: ListingsStateRepository,
-  purchasesStateRepository: PurchasesStateRepository
+  purchasesStateRepository: PurchasesStateRepository,
+  imagesRepository: ImagesRepository
 ): UserListingsDomain => {
+  const modifyImagesUrls = ModifyImagesUrls(imagesRepository.imagesUrl);
+
   const getActive = async (
     userId: UUID,
     limit = 8,
@@ -46,7 +51,7 @@ export const UserListingsDomain = (
       limit,
       offset
     );
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   const getSold = async (
@@ -60,7 +65,7 @@ export const UserListingsDomain = (
       limit,
       offset
     );
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   const getPurchased = async (
@@ -82,7 +87,7 @@ export const UserListingsDomain = (
       limit,
       offset
     );
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   const getArchived = async (
@@ -96,7 +101,7 @@ export const UserListingsDomain = (
       limit,
       offset
     );
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   const getAll = async (
@@ -115,7 +120,7 @@ export const UserListingsDomain = (
       limit,
       offset
     );
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   return {

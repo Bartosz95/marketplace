@@ -5,10 +5,12 @@ import {
   GetListingsResponse,
   ListingCreatedEventData,
   ListingPurchasedEventData,
+  ListingState,
 } from "../../types";
 import { EventSourceRepository } from "../../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "../listingsWriteRouter";
 import { ImagesRepository } from "../../repositories/imagesRepository";
+import { ModifyImagesUrls } from "./modifyImagesUrls";
 
 export interface ListingsDomain {
   create: (userId: string, data: CreateListing) => Promise<void>;
@@ -32,6 +34,8 @@ export const ListingsDomain = (
   eventSourceRepository: EventSourceRepository,
   imagesRepository: ImagesRepository
 ): ListingsDomain => {
+  const modifyImagesUrls = ModifyImagesUrls(imagesRepository.imagesUrl);
+
   const create = async (userId: string, data: CreateListing) => {
     const { title, description, price, images } = data;
     const eventData: ListingCreatedEventData = {
@@ -46,10 +50,11 @@ export const ListingsDomain = (
       eventData
     );
     const imagesUrls = await imagesRepository.uploadImages(listingId, images);
+    console.log(modifyImagesUrls.removeImageHost(imagesUrls))
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.IMAGES_UPLOADED,
-      { imagesUrls }
+      { imagesUrls: modifyImagesUrls.removeImageHost(imagesUrls) }
     );
   };
 
@@ -84,7 +89,7 @@ export const ListingsDomain = (
       await eventSourceRepository.insertEventByStreamId(
         listingId,
         EventType.IMAGES_UPLOADED,
-        { imagesUrls }
+        { imagesUrls: modifyImagesUrls.removeImageHost(imagesUrls) }
       );
     }
   };
@@ -179,7 +184,7 @@ export const ListingsDomain = (
       offset
     );
 
-    return listings;
+    return modifyImagesUrls.addImageHostToListings(listings);
   };
 
   return {

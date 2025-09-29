@@ -29,9 +29,9 @@ export interface ListingsStateRepository {
   updateListing: (listing: ListingState) => Promise<void>;
 }
 
-export const ListingsStateRepository = (dbEnv: any, imagesHost: string): ListingsStateRepository => {
+export const ListingsStateRepository = (env: any): ListingsStateRepository => {
   const dbConfig: PoolConfig = {
-    ...dbEnv,
+    ...env,
   };
 
   const pool = new Pool(dbConfig);
@@ -187,7 +187,7 @@ export const ListingsStateRepository = (dbEnv: any, imagesHost: string): Listing
     title: row.title,
     description: row.description,
     price: Number(row.price),
-    imagesUrls: row.images_urls.map(imageUrl => `${imagesHost}/${imageUrl}`) as string[],
+    imagesUrls: row.images_urls as string[],
   });
 
   const mapCountOfAll = (result: { rows: Array<{ count: number }> }): number =>

@@ -12,6 +12,7 @@ import sharp from "sharp";
 export interface ImagesRepository {
   uploadImages(listingId: UUID, images: FileDetails[]): Promise<string[]>;
   deleteImages(listingId: UUID): Promise<void>;
+  imagesUrl: string
 }
 
 export const ImagesRepository = (env: any) => {
@@ -23,12 +24,13 @@ export const ImagesRepository = (env: any) => {
     region: env.region,
   });
 
+  const imagesUrl = env.url;
+
   const Bucket = env.name;
   const uploadImages = async (listingId: UUID, images: FileDetails[]) => {
     const imagesUrls: string[] = [];
     for (const image of images) {
       const Key = path.join("images", listingId, image.originalname);
-      imagesUrls.push(Key);
       const Body = await sharp(image.buffer).resize({height: 689, width: 689, fit: "contain"}).toBuffer()
       const params = {
         Bucket,
@@ -38,8 +40,9 @@ export const ImagesRepository = (env: any) => {
       };
       const command = new PutObjectCommand(params);
       await bucket.send(command);
+      imagesUrls.push(Key);
     }
-    return imagesUrls;
+    return imagesUrls.map(imageUrl => `${imagesUrl}/${imageUrl}`);
   };
 
   const deleteImages = async (listingId: UUID) => {
@@ -63,5 +66,6 @@ export const ImagesRepository = (env: any) => {
   return {
     uploadImages,
     deleteImages,
+    imagesUrl
   };
 };

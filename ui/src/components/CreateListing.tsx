@@ -23,10 +23,14 @@ export interface InitListingDetails {
 function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
   const [listing, setListing] = useState<InitListingDetails>({});
   const [validated, setValidated] = useState(false);
+  const [imagesUrls, setImagesUrls] = useState<string[]>([
+    `/images/no-image.png`,
+  ]);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
+      setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)));
       setListing({
         ...listing,
         images: filesArray,
@@ -75,14 +79,6 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
     }
   };
 
-  const imagesPreview = listing.images ? (
-    <ImagePreview
-      imagesUrls={listing.images.map((image) => URL.createObjectURL(image))}
-    />
-  ) : (
-    <ImagePreview imagesUrls={[`/images/no-image.png`]} />
-  );
-
   return (
     <Modal
       show={show}
@@ -97,7 +93,7 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
         <Modal.Title>Enter listing details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {imagesPreview}
+        <ImagePreview imagesUrls={imagesUrls} />
         <Form validated={validated} onSubmit={sendCreateListing}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control

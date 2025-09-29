@@ -22,7 +22,6 @@ export default () => {
       host: z.string(),
       logLevel: z.string(),
       nodeEnv: z.string().optional(),
-      imagesHost: z.string(),
     }),
     db: z.object({
       host: z.string(),
@@ -42,6 +41,7 @@ export default () => {
         arn: z.string(),
         accessKey: z.string(),
         secretAccessKey: z.string(),
+        url: z.string(),
       }),
     }),
   });
@@ -52,7 +52,6 @@ export default () => {
       host: process.env.APP_HOST,
       logLevel: process.env.APP_LOG_LEVEL,
       nodeEnv: process.env.NODE_ENV,
-      imagesHost: process.env.APP_IMAGES_HOST,
     },
     db: {
       host: process.env.DB_HOST,
@@ -72,6 +71,7 @@ export default () => {
         arn: process.env.AWS_BUCKET_ARN,
         accessKey: process.env.AWS_BUCKET_ACCESS_KEY,
         secretAccessKey: process.env.AWS_BUCKET_SECRET_ACCESS_KEY,
+        url: process.env.AWS_BUCKET_URL,
       },
     },
   });
@@ -81,10 +81,7 @@ export default () => {
   const errorHandler = ErrorHandler(logger);
   const authorization = Authorization(env.auth);
 
-  const listingsStateRepository = ListingsStateRepository(
-    env.db,
-    env.app.imagesHost
-  );
+  const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws.bucket);
   const listingsDomain = ListingsDomain(
@@ -95,7 +92,8 @@ export default () => {
   const purchasesStateRepository = PurchasesStateRepository(env.db);
   const userListingsDomain = UserListingsDomain(
     listingsStateRepository,
-    purchasesStateRepository
+    purchasesStateRepository,
+    imagesRepository
   );
 
   const listingReadRouter = ListingsReadRouter(listingsDomain);
@@ -106,7 +104,6 @@ export default () => {
   const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
 
   const app = express();
-  // app.use(express.json());
   app.use(cors({ origin: "*" }));
   app.use(requestLogger);
   app.use(express.json({ limit: "50mb" }));

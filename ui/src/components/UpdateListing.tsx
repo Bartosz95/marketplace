@@ -22,11 +22,13 @@ function UpdateListing({
   sendApiRequest,
 }: UpdateListing) {
   const [listing, setListing] = useState<InitListingDetails>({});
+  const [imagesUrls, setImagesUrls ] = useState<string[]>(listingDetails.imagesUrls)
   const [validated, setValidated] = useState(false);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
+      setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)))
       setListing({
         ...listing,
         images: filesArray,
@@ -64,14 +66,6 @@ function UpdateListing({
     }
   };
 
-  const imagesPreview = listing.images ? (
-    <ImagePreview
-      imagesUrls={listing.images.map((image) => URL.createObjectURL(image))}
-    />
-  ) : (
-    <ImagePreview imagesUrls={listingDetails.imagesUrls} />
-  );
-
   return (
     <Modal
       show={show}
@@ -86,7 +80,7 @@ function UpdateListing({
         <Modal.Title>Enter listing details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {imagesPreview}
+        <ImagePreview imagesUrls={imagesUrls} />
         <Form validated={validated} onSubmit={sendUpdateListing}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
