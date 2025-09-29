@@ -1,11 +1,9 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import Image from "react-bootstrap/Image";
 import { ListingDetails, RequestAction } from "@/types";
-import { Carousel } from "react-bootstrap";
 import { SendApiRequest } from "@/pages/MainPage";
 import ImagePreview from "./ImagePreview";
 
@@ -25,21 +23,6 @@ export interface InitListingDetails {
 function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
   const [listing, setListing] = useState<InitListingDetails>({});
   const [validated, setValidated] = useState(false);
-
-  const fetchImages = async () => {
-    const images: File[] = [];
-    const response = await fetch(`/images/no-image.png`);
-    const blob = await response.blob();
-    const image = new File([blob], `/images/no-image.png`, { type: blob.type });
-    images.push(image);
-    setListing({
-      images,
-    });
-  };
-
-  useEffect(() => {
-    fetchImages();
-  }, []);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -108,6 +91,7 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
+      className="blurred-background"
     >
       <Modal.Header closeButton>
         <Modal.Title>Enter listing details</Modal.Title>

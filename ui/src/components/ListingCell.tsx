@@ -9,7 +9,7 @@ import { EventType, Listing, RequestAction } from "@/types";
 import ViewListing from "@/components/ViewListing";
 import UpdateListing from "@/components/UpdateListing";
 import { SendApiRequest } from "@/pages/MainPage";
-import "./ListingCell.css"
+import "./ListingCell.css";
 
 interface ListingCell {
   listing: Listing;
@@ -26,10 +26,10 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
 
   const [showListingUpdate, setShowListingUpdate] = useState(false);
   const handleCloseUpdate = () => setShowListingUpdate(false);
-  const handleShowEdit = () => setShowListingUpdate(true);
+  const handleShowUpdate = () => setShowListingUpdate(true);
   const image = imagesUrls[0];
 
-  const allowEdit =
+  const allowUpdate =
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const archiveListing = async () => {
@@ -51,7 +51,7 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
-        <Dropdown.Item onClick={handleShowEdit}>Edit</Dropdown.Item>
+        <Dropdown.Item onClick={handleShowUpdate}>Update</Dropdown.Item>
         {status === EventType.LISTING_ARCHIVED ? (
           <Dropdown.Item onClick={restoreListing}>Restore</Dropdown.Item>
         ) : (
@@ -70,7 +70,7 @@ function ListingCell({ listing, sendApiRequest }: ListingCell) {
           <Card.Title>{title}</Card.Title>
           <Card.Text>Price: {price}</Card.Text>
           <Container className="d-flex justify-content-center">
-            {allowEdit ? (
+            {allowUpdate ? (
               modifyListing
             ) : (
               <Button style={{ width: "10rem" }} onClick={handleShowView}>

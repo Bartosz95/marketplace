@@ -10,12 +10,7 @@ function ImagePreview({ imagesUrls }: ImagePreviewProps) {
     <Carousel className="mb-3" style={{ width: "70%", margin: "auto" }}>
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image
-            alt="no image"
-            src={imageUrl}
-            style={{ margin: "auto" }}
-            fluid
-          />
+          <Image alt="no image" src={imageUrl} fluid />
         </Carousel.Item>
       ))}
     </Carousel>

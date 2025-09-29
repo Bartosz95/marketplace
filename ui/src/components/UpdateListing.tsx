@@ -1,16 +1,14 @@
 "use client";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import Image from "react-bootstrap/Image";
 import { Listing, RequestAction } from "@/types";
-import { Carousel } from "react-bootstrap";
 import { SendApiRequest } from "@/pages/MainPage";
 import { InitListingDetails } from "./CreateListing";
 import ImagePreview from "./ImagePreview";
 
-export interface EditListing {
+export interface UpdateListing {
   show: boolean;
   handleClose: () => void;
   listing: Listing;
@@ -22,11 +20,8 @@ function UpdateListing({
   handleClose,
   listing: listingDetails,
   sendApiRequest,
-}: EditListing) {
+}: UpdateListing) {
   const [listing, setListing] = useState<InitListingDetails>({});
-  const [prevImagesUrls, setPrevImagesUrls] = useState<string[]>(
-    listingDetails.imagesUrls
-  );
   const [validated, setValidated] = useState(false);
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +36,6 @@ function UpdateListing({
 
   const setDetails = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-
     setListing((prev) => {
       return {
         ...prev,
@@ -50,7 +44,7 @@ function UpdateListing({
     });
   };
 
-  const sendEditListing = (event: FormEvent<HTMLFormElement>) => {
+  const sendUpdateListing = (event: FormEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
@@ -75,7 +69,7 @@ function UpdateListing({
       imagesUrls={listing.images.map((image) => URL.createObjectURL(image))}
     />
   ) : (
-    <ImagePreview imagesUrls={prevImagesUrls} />
+    <ImagePreview imagesUrls={listingDetails.imagesUrls} />
   );
 
   return (
@@ -85,6 +79,7 @@ function UpdateListing({
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
+      className="blurred-background"
       centered
     >
       <Modal.Header closeButton>
@@ -92,7 +87,7 @@ function UpdateListing({
       </Modal.Header>
       <Modal.Body>
         {imagesPreview}
-        <Form validated={validated} onSubmit={sendEditListing}>
+        <Form validated={validated} onSubmit={sendUpdateListing}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
               type="file"

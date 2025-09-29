@@ -6,7 +6,6 @@ import { Carousel } from "react-bootstrap";
 import { Listing, RequestAction } from "../types";
 import { useAuth0 } from "@auth0/auth0-react";
 import { SendApiRequest } from "@/pages/MainPage";
-import "./ViewListing.css";
 
 interface ViewListing {
   show: boolean;
