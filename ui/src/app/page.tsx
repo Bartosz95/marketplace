@@ -1,9 +1,17 @@
 "use client";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "./page.css"
+import "./page.css";
 import MainPage from "@/pages/MainPage";
+import { AuthProvider } from "@/providers/AuthProvider";
+import Auth0Provider from "@/providers/Auth0Provider";
 
 export default function Page() {
-  return <MainPage />;
+  return (
+    <Auth0Provider>
+      <AuthProvider>
+        <MainPage />
+      </AuthProvider>
+    </Auth0Provider>
+  );
 }

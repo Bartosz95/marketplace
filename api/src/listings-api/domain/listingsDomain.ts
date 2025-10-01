@@ -50,7 +50,7 @@ export const ListingsDomain = (
       eventData
     );
     const imagesUrls = await imagesRepository.uploadImages(listingId, images);
-    console.log(modifyImagesUrls.removeImageHost(imagesUrls))
+    console.log(modifyImagesUrls.removeImageHost(imagesUrls));
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.IMAGES_UPLOADED,
@@ -64,6 +64,7 @@ export const ListingsDomain = (
     data: UpdateListing
   ) => {
     const { title, price, description, images } = data;
+    console.log(data);
     const currentState = await listingsStateRepository.getListingById(
       listingId
     );

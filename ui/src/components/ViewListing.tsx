@@ -3,31 +3,40 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { Listing, RequestAction } from "../types";
-import { useAuth0 } from "@auth0/auth0-react";
-import { SendApiRequest } from "@/pages/MainPage";
-import ImagePreview from "./ImagePreview";
+import { Listing } from "../types";
+import { useAuthContext } from "@/providers/AuthContext";
+import { sendApiV1Request } from "@/helpers/sendApiV1Request";
 
 interface ViewListing {
   show: boolean;
   handleClose: () => void;
   listing: Listing;
-  sendApiRequest: SendApiRequest;
 }
 
-function ViewListing({
-  show,
-  handleClose,
-  listing,
-  sendApiRequest,
-}: ViewListing) {
+function ViewListing({ show, handleClose, listing }: ViewListing) {
   const { title, description, price, imagesUrls, listingId } = listing;
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const { isAuthenticated, loginWithRedirect } = useAuthContext();
+  const { token } = useAuthContext();
 
   const handlePurches = async () => {
-    await sendApiRequest({ requestAction: RequestAction.Purchase, listingId });
+    await sendApiV1Request(`/listings/${listingId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     handleClose();
   };
+
+  const imagePreview = (
+    <Carousel className="mb-3 imagePreview">
+      {imagesUrls.map((imageUrl) => (
+        <Carousel.Item key={imageUrl}>
+          <Image alt="no image" src={imageUrl} fluid />
+        </Carousel.Item>
+      ))}
+    </Carousel>
+  );
 
   return (
     <Modal
@@ -44,7 +53,7 @@ function ViewListing({
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ImagePreview imagesUrls={imagesUrls}/>
+        {imagePreview}
         <h4>Price: {price}</h4>
         <p>{description}</p>
       </Modal.Body>
@@ -66,3 +75,6 @@ function ViewListing({
 }
 
 export default ViewListing;
+function sendPurchaseListingRequest(listingId: string) {
+  throw new Error("Function not implemented.");
+}

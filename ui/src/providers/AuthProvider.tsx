@@ -1,20 +1,37 @@
-"use client";
-import { Auth0Provider } from "@auth0/auth0-react";
+import { useAuth0 } from "@auth0/auth0-react";
+import {
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { AuthContext } from "./AuthContext";
 
-export default function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type Props = { children: ReactNode };
+
+export const AuthProvider = ({ children }: Props) => {
+  const  auth = useAuth0();
+  const [token, setToken] = useState<string | undefined>();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await auth.getAccessTokenSilently({
+          authorizationParams: {
+            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+          }
+        });
+        setToken(token);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
-    <Auth0Provider
-      domain={process.env.NEXT_PUBLIC_AUTH0_DOMAIN!}
-      clientId={process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID!}
-      authorizationParams={{
-        redirect_uri: process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI,
-      }}
-    >
+    <AuthContext.Provider value={{ ...auth, token }}>
       {children}
-    </Auth0Provider>
+    </AuthContext.Provider>
   );
-}
+};

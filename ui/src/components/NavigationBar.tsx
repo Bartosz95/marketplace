@@ -1,22 +1,20 @@
 "use client";
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy } from "../types";
-import { SendApiRequest } from "@/pages/MainPage";
-import { useAuth0 } from "@auth0/auth0-react";
 import CreateListing from "./CreateListing";
+import { useAuthContext } from "@/providers/AuthContext";
 
 interface NavigationBarProps {
-  getListings: (filterBy: FilterBy) => void;
-  sendApiRequest: SendApiRequest;
+  lastFilterBy: FilterBy;
+  setLastFilterBy: Dispatch<SetStateAction<FilterBy>>;
 }
 function NavigationBar(props: NavigationBarProps) {
-  const { getListings, sendApiRequest } = props;
+  const { lastFilterBy, setLastFilterBy } = props;
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const { isAuthenticated, loginWithRedirect } = useAuth0();
-  const [filterByTitle, setFilterByTitle] = useState<string>("Filter By");
+  const { isAuthenticated, loginWithRedirect } = useAuthContext();
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -24,29 +22,71 @@ function NavigationBar(props: NavigationBarProps) {
     }
   }, [theme]);
 
-  const setFilter = (filterBy: FilterBy) => {
-    getListings(filterBy);
+  const mapFilterBy = (filterBy: FilterBy) => {
     switch (filterBy) {
       case FilterBy.All:
-        setFilterByTitle("All Active Listings");
-        break;
-      case FilterBy.Active:
-        setFilterByTitle("Your Active");
-        break;
-      case FilterBy.Archived:
-        setFilterByTitle("Your Archived");
-        break;
-      case FilterBy.Purchased:
-        setFilterByTitle("Your Purchased");
-        break;
-      case FilterBy.Sold:
-        setFilterByTitle("Your Sold");
-        break;
+        return "Filter By";
       case FilterBy.UserAll:
-        setFilterByTitle("Your All");
-        break;
+        return "Yours";
+      case FilterBy.Active:
+        return "Your Active";
+      case FilterBy.Archived:
+        return "Your Archived";
+      case FilterBy.Purchased:
+        return "Your Purchased";
+      case FilterBy.Sold:
+        return "Your Sold";
     }
   };
+  const filterDropdown = isAuthenticated && (
+    <NavDropdown title={mapFilterBy(lastFilterBy)}>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.All)}>
+        {mapFilterBy(FilterBy.All)}
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Active)}>
+        {mapFilterBy(FilterBy.Active)}
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Sold)}>
+        {mapFilterBy(FilterBy.Sold)}
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Purchased)}>
+        {mapFilterBy(FilterBy.Purchased)}
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Archived)}>
+        {mapFilterBy(FilterBy.Archived)}
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.UserAll)}>
+        {mapFilterBy(FilterBy.UserAll)}
+      </NavDropdown.Item>
+    </NavDropdown>
+  );
+
+  const createListingButton = isAuthenticated && (
+    <Button onClick={() => setShowCreateListing(true)}>
+      <i className="bi bi-plus-lg me-1" />
+      Create listing
+    </Button>
+  );
+
+  const loginToAddButton = !isAuthenticated && (
+    <Button onClick={() => loginWithRedirect()}>Login to add listing</Button>
+  );
+
+  const darkModeSwitch = (
+    <Nav className="ms-auto">
+      <Form>
+        <Form.Check
+          type="switch"
+          id="dark-mode-switch"
+          label="Dark Mode"
+          checked={theme === "dark"}
+          onChange={() =>
+            setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"))
+          }
+        />
+      </Form>
+    </Nav>
+  );
 
   return (
     <Navbar
@@ -56,61 +96,14 @@ function NavigationBar(props: NavigationBarProps) {
       className="bg-body-tertiary d-flex gap-3 mb-2 "
     >
       <Navbar.Brand className="ms-3">Marketplace</Navbar.Brand>
-
-      {isAuthenticated ? (
-        <>
-          <Button onClick={() => setShowCreateListing(true)}>
-            <i className="bi bi-plus-lg me-1" />
-            Create listing
-          </Button>
-          <CreateListing
-            show={showCreateListing}
-            handleClose={() => setShowCreateListing(false)}
-            sendApiRequest={sendApiRequest}
-          />
-
-          <NavDropdown title={filterByTitle}>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.All)}>
-              All Active Listings
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.Active)}>
-              Your Active
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.Sold)}>
-              Your Sold
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.Purchased)}>
-              Your Purchased
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.Archived)}>
-              Your Archived
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={() => setFilter(FilterBy.UserAll)}>
-              Your All
-            </NavDropdown.Item>
-          </NavDropdown>
-        </>
-      ) : (
-        <Button onClick={() => loginWithRedirect()}>
-          Login to add listing
-        </Button>
-      )}
-
-      <Nav className="ms-auto">
-        <Form>
-          <Form.Check
-            type="switch"
-            id="dark-mode-switch"
-            label="Dark Mode"
-            checked={theme === "dark"}
-            onChange={() =>
-              setTheme((prevTheme) =>
-                prevTheme === "light" ? "dark" : "light"
-              )
-            }
-          />
-        </Form>
-      </Nav>
+      {createListingButton}
+      {loginToAddButton}
+      {filterDropdown}
+      <CreateListing
+        show={showCreateListing}
+        handleClose={() => setShowCreateListing(false)}
+      />
+      {darkModeSwitch}
       <Login />
     </Navbar>
   );

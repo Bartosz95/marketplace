@@ -3,42 +3,49 @@ import { FormEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import { Listing, RequestAction } from "@/types";
-import { SendApiRequest } from "@/pages/MainPage";
-import { InitListingDetails } from "./CreateListing";
-import ImagePreview from "./ImagePreview";
+import { Listing, ListingDetails, RequestAction } from "@/types";
+import Image from "react-bootstrap/Image";
+import { Carousel } from "react-bootstrap";
+import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { useAuthContext } from "@/providers/AuthContext";
 
 export interface UpdateListing {
   show: boolean;
   handleClose: () => void;
   listing: Listing;
-  sendApiRequest: SendApiRequest;
 }
+
+export type UpdateListingDetails = Partial<ListingDetails>;
 
 function UpdateListing({
   show,
   handleClose,
-  listing: listingDetails,
-  sendApiRequest,
+  listing: currentListingDetails,
 }: UpdateListing) {
-  const [listing, setListing] = useState<InitListingDetails>({});
-  const [imagesUrls, setImagesUrls ] = useState<string[]>(listingDetails.imagesUrls)
+  const [listingUpdatedDetails, setListingUpdatedDetails] =
+    useState<UpdateListingDetails>({});
+  const [imagesUrls, setImagesUrls] = useState<string[]>(
+    currentListingDetails.imagesUrls
+  );
   const [validated, setValidated] = useState(false);
+  const { token } = useAuthContext();
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)))
-      setListing({
-        ...listing,
-        images: filesArray,
-      });
+      if (filesArray.length > 0) {
+        setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)));
+        setListingUpdatedDetails({
+          ...listingUpdatedDetails,
+          images: filesArray,
+        });
+      }
     }
   };
 
   const setDetails = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setListing((prev) => {
+    setListingUpdatedDetails((prev) => {
       return {
         ...prev,
         [name]: value,
@@ -46,7 +53,7 @@ function UpdateListing({
     });
   };
 
-  const sendUpdateListing = (event: FormEvent<HTMLFormElement>) => {
+  const updateListingDetails = (event: FormEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
@@ -55,16 +62,41 @@ function UpdateListing({
     } else {
       setValidated(true);
       const send = async () => {
-        await sendApiRequest({
-          requestAction: RequestAction.Update,
-          listingId: listingDetails.listingId,
-          listingDetails: listing,
+        const formData = new FormData();
+        const { title, price, description, images } = listingUpdatedDetails;
+        formData.append(
+          `details`,
+          JSON.stringify({ title, price, description })
+        );
+        if (images && images.length > 0) {
+          for (const image of images) {
+            formData.append(`images`, image);
+          }
+        }
+
+        await sendApiV1Request(`/listings/${currentListingDetails.listingId}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         });
       };
       send();
       handleClose();
+      console.log(listingUpdatedDetails);
     }
   };
+
+  const imagePreview = (
+    <Carousel className="mb-3 imagePreview">
+      {imagesUrls.map((imageUrl) => (
+        <Carousel.Item key={imageUrl}>
+          <Image alt="no image" src={imageUrl} fluid />
+        </Carousel.Item>
+      ))}
+    </Carousel>
+  );
 
   return (
     <Modal
@@ -80,8 +112,8 @@ function UpdateListing({
         <Modal.Title>Enter listing details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ImagePreview imagesUrls={imagesUrls} />
-        <Form validated={validated} onSubmit={sendUpdateListing}>
+        {imagePreview}
+        <Form validated={validated} onSubmit={updateListingDetails}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
               type="file"
@@ -96,7 +128,8 @@ function UpdateListing({
               placeholder="Title"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listingDetails.title}
+              defaultValue={currentListingDetails.title}
+              required
             />
             <Form.Control
               type="number"
@@ -104,7 +137,8 @@ function UpdateListing({
               placeholder="Price"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listingDetails.price}
+              defaultValue={currentListingDetails.price}
+              required
             />
             <Form.Control
               type="text"
@@ -112,7 +146,8 @@ function UpdateListing({
               placeholder="Description"
               onChange={setDetails}
               className="mb-3"
-              defaultValue={listingDetails.description}
+              defaultValue={currentListingDetails.description}
+              required
             />
             <Form.Control.Feedback type="invalid">
               Please fill all listing details

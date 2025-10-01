@@ -3,3 +3,7 @@
   background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent background */
 }
 
+.imagePreview {
+  width: "70%";
+  margin: "auto";
+}

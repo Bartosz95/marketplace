@@ -3,38 +3,38 @@ import { FormEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import { ListingDetails, RequestAction } from "@/types";
-import { SendApiRequest } from "@/pages/MainPage";
-import ImagePreview from "./ImagePreview";
+import Image from "react-bootstrap/Image";
+import { Carousel } from "react-bootstrap";
+import { ListingDetails } from "@/types";
+import { useAuthContext } from "@/providers/AuthContext";
+import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { title } from "process";
 
 export interface CreateListing {
   show: boolean;
   handleClose: () => void;
-  sendApiRequest: SendApiRequest;
 }
 
-export interface InitListingDetails {
-  title?: string;
-  description?: string;
-  price?: number;
-  images?: File[];
-}
+type InitListingDetails = Partial<ListingDetails>;
 
-function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
+function CreateListing({ show, handleClose }: CreateListing) {
   const [listing, setListing] = useState<InitListingDetails>({});
   const [validated, setValidated] = useState(false);
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
+  const { token } = useAuthContext();
 
   const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)));
-      setListing({
-        ...listing,
-        images: filesArray,
-      });
+      if (filesArray.length > 0) {
+        setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)));
+        setListing({
+          ...listing,
+          images: filesArray,
+        });
+      }
     }
   };
 
@@ -48,7 +48,7 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
     });
   };
 
-  const sendCreateListing = (event: FormEvent<HTMLFormElement>) => {
+  const createListing = async (event: FormEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
     if (
       form.checkValidity() === false ||
@@ -62,22 +62,38 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
       setValidated(false);
     } else {
       setValidated(true);
-      const listingDetails: ListingDetails = {
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        images: listing.images,
-      };
-      const send = async () => {
-        await sendApiRequest({
-          requestAction: RequestAction.Create,
-          listingDetails,
-        });
-      };
-      send();
+      const formData = new FormData();
+      formData.append(
+        `details`,
+        JSON.stringify({
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+        })
+      );
+      for (const image of listing.images) {
+        formData.append(`images`, image);
+      }
+      await sendApiV1Request(`/listings`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
       handleClose();
     }
   };
+
+  const imagePreview = (
+    <Carousel className="mb-3 imagePreview">
+      {imagesUrls.map((imageUrl) => (
+        <Carousel.Item key={imageUrl}>
+          <Image alt="no image" src={imageUrl} fluid />
+        </Carousel.Item>
+      ))}
+    </Carousel>
+  );
 
   return (
     <Modal
@@ -93,8 +109,8 @@ function CreateListing({ show, handleClose, sendApiRequest }: CreateListing) {
         <Modal.Title>Enter listing details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ImagePreview imagesUrls={imagesUrls} />
-        <Form validated={validated} onSubmit={sendCreateListing}>
+        {imagePreview}
+        <Form validated={validated} onSubmit={createListing}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Control
               type="file"

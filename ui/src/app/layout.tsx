@@ -1,15 +1,11 @@
-import AuthProvider from "@/providers/AuthProvider";
+import { ReactNode } from "react";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type Props = { children: ReactNode };
+
+export default function RootLayout({ children }: Props) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
