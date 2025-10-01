@@ -17,7 +17,7 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
       onHide={handleClose}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
-      style={{ margin: "auto" }}
+      className="modal-view"
       centered
     >
       <Modal.Header closeButton></Modal.Header>

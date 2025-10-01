@@ -89,7 +89,7 @@ function UpdateListing({
   };
 
   const imagePreview = (
-    <Carousel className="mb-3 imagePreview">
+    <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image alt="no image" src={imageUrl} fluid />
@@ -105,7 +105,7 @@ function UpdateListing({
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
-      className="blurred-background"
+      className="modal-view"
       centered
     >
       <Modal.Header closeButton>

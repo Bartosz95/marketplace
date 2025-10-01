@@ -29,7 +29,7 @@ function ViewListing({ show, handleClose, listing }: ViewListing) {
   };
 
   const imagePreview = (
-    <Carousel className="mb-3 imagePreview">
+    <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image alt="no image" src={imageUrl} fluid />
@@ -44,8 +44,7 @@ function ViewListing({ show, handleClose, listing }: ViewListing) {
       onHide={handleClose}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
-      style={{ margin: "auto" }}
-      className="blurred-background"
+      className="modal-view"
       size="lg"
       centered
     >
@@ -75,6 +74,3 @@ function ViewListing({ show, handleClose, listing }: ViewListing) {
 }
 
 export default ViewListing;
-function sendPurchaseListingRequest(listingId: string) {
-  throw new Error("Function not implemented.");
-}

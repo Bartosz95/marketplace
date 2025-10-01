@@ -1,9 +1,10 @@
-.blurred-background {
-  backdrop-filter: blur(10px); /* Adjust the blur amount as needed */
-  background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent background */
+.modal-view {
+  margin: "auto";
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
-.imagePreview {
+.image-preview {
   width: "70%";
   margin: "auto";
 }

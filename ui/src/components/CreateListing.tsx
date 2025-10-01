@@ -8,7 +8,6 @@ import { Carousel } from "react-bootstrap";
 import { ListingDetails } from "@/types";
 import { useAuthContext } from "@/providers/AuthContext";
 import { sendApiV1Request } from "@/helpers/sendApiV1Request";
-import { title } from "process";
 
 export interface CreateListing {
   show: boolean;
@@ -86,7 +85,7 @@ function CreateListing({ show, handleClose }: CreateListing) {
   };
 
   const imagePreview = (
-    <Carousel className="mb-3 imagePreview">
+    <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image alt="no image" src={imageUrl} fluid />
@@ -103,7 +102,7 @@ function CreateListing({ show, handleClose }: CreateListing) {
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
-      className="blurred-background"
+      className="modal-view"
     >
       <Modal.Header closeButton>
         <Modal.Title>Enter listing details</Modal.Title>
