@@ -10,7 +10,7 @@ import Pagination from "react-bootstrap/Pagination";
 import { useAuthContext } from "@/providers/AuthContext";
 import { sendApiV1Request } from "@/helpers/sendApiV1Request";
 
-function ListingsView() {
+function Main() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [countOfAll, setCountOfAll] = useState<number>(0);
   const [activePage, setActivePage] = useState<number>(1);
@@ -23,7 +23,7 @@ function ListingsView() {
     const params = new URLSearchParams();
     params.append("limit", limit.toString());
     params.append("offset", offset.toString());
-    const result = await sendApiV1Request(
+    const respone = await sendApiV1Request(
       `/listings${lastFilterBy}?${params.toString()}`,
       {
         headers: {
@@ -31,8 +31,10 @@ function ListingsView() {
         },
       }
     );
-    setListings(result.listings);
-    setCountOfAll(result.countOfAll);
+    if (respone?.listings && respone?.countOfAll) {
+      setListings(respone.listings);
+      setCountOfAll(respone.countOfAll);
+    }
   };
 
   useEffect(() => {
@@ -83,4 +85,4 @@ function ListingsView() {
   );
 }
 
-export default ListingsView;
+export default Main;

@@ -1,4 +1,3 @@
-"use client";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { User } from "@auth0/auth0-react";

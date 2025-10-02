@@ -1,4 +1,3 @@
-"use client";
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
