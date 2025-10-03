@@ -61,7 +61,7 @@ When you want to purchase an item, simply press the Buy button and it will be ad
 
 ### Add your listing
 
-You can add a new item by pressing the + Create Listing button. To complete the process, you must upload at least one photo, set a price, and provide both a title and a description for the listing. Validation ensures that a listing cannot be created without this information. Once your listing is added, it will appear on the main page alongside other listings. However, instead of displaying a View button like the others, your listings will feature a Modify button, allowing you to edit them at any time.
+You can add a new item by pressing the + Create Listing button. To complete the process, you must upload at least one photo, set a price, and provide both a title and a description for the listing. For form validation project uses [Formik](https://formik.org/) module. Once your listing is added, it will appear on the main page alongside other listings. However, instead of displaying a View button like the others, your listings will feature a Modify button, allowing you to edit them at any time.
 
 ![](docs/add.png)
 

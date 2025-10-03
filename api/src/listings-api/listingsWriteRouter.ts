@@ -59,7 +59,7 @@ export const ListingsWriteRouter = (
   router.post("/", upload.array("images", 10), async (req, res) => {
     const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
     const data = await createListingReqBodySchema.parse({
-      ...JSON.parse(req.body.details),
+      ...req.body,
       images: req.files as Express.Multer.File[],
     });
     await listingsDomain.create(userId, data);
@@ -83,7 +83,7 @@ export const ListingsWriteRouter = (
     const files = req.files as Express.Multer.File[];
     const images = files.length > 0 ? files : undefined;
     const data = await updateListingReqBodySchema.parse({
-      ...JSON.parse(req.body.details),
+      ...req.body,
       images,
     });
     await listingsDomain.update(userId, listingId, data);

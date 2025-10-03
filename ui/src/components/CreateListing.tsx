@@ -1,88 +1,43 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { ListingDetails } from "@/types";
 import { useAuthContext } from "@/providers/AuthContext";
 import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { Formik } from "formik";
+import * as yup from "yup";
 
 export interface CreateListing {
   show: boolean;
   handleClose: () => void;
 }
 
-type InitListingDetails = Partial<ListingDetails>;
+const CreateListingSchema = yup.object().shape({
+  title: yup.string().min(1).max(20).required(),
+  price: yup.number().min(0).required(),
+  description: yup.string().min(10).max(255).required(),
+  images: yup
+    .array()
+    .min(1, "You must upload at least one image")
+    .max(5, "You can upload up to 5 images")
+    .test("fileType", "Only JPG/PNG files are allowed", (files) =>
+      files
+        ? files.every((file) => ["image/jpeg", "image/png"].includes(file.type))
+        : false
+    )
+    .required(),
+});
+
+type CreateListingDetails = Partial<yup.InferType<typeof CreateListingSchema>>;
 
 function CreateListing({ show, handleClose }: CreateListing) {
-  const [listing, setListing] = useState<InitListingDetails>({});
-  const [validated, setValidated] = useState(false);
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
   const { token } = useAuthContext();
-
-  const uploadImages = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const filesArray = Array.from(event.target.files);
-      if (filesArray.length > 0) {
-        setImagesUrls(filesArray.map((image) => URL.createObjectURL(image)));
-        setListing({
-          ...listing,
-          images: filesArray,
-        });
-      }
-    }
-  };
-
-  const setDetails = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setListing((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
-
-  const createListing = async (event: FormEvent<HTMLFormElement>) => {
-    const form = event.currentTarget;
-    if (
-      form.checkValidity() === false ||
-      !listing.title ||
-      !listing.description ||
-      !listing.price ||
-      !listing.images
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-      setValidated(false);
-    } else {
-      setValidated(true);
-      const formData = new FormData();
-      formData.append(
-        `details`,
-        JSON.stringify({
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-        })
-      );
-      for (const image of listing.images) {
-        formData.append(`images`, image);
-      }
-      await sendApiV1Request(`/listings`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      handleClose();
-    }
-  };
 
   const imagePreview = (
     <Carousel className="mb-3 image-preview">
@@ -93,6 +48,30 @@ function CreateListing({ show, handleClose }: CreateListing) {
       ))}
     </Carousel>
   );
+
+  const createListing = async ({
+    title,
+    price,
+    description,
+    images,
+  }: CreateListingDetails) => {
+    if (!title || !price || !description || !images) return;
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
+    formData.append("title", title);
+    formData.append("price", price.toString());
+    formData.append("description", description);
+    await sendApiV1Request(`/listings`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    handleClose();
+  };
 
   return (
     <Modal
@@ -109,48 +88,92 @@ function CreateListing({ show, handleClose }: CreateListing) {
       </Modal.Header>
       <Modal.Body>
         {imagePreview}
-        <Form validated={validated} onSubmit={createListing}>
-          <Form.Group controlId="formFile" className="mb-3">
-            <Form.Control
-              type="file"
-              accept="image/*"
-              onChange={uploadImages}
-              className="mb-3"
-              multiple
-              required
-            />
-            <Form.Control
-              type="text"
-              name="title"
-              placeholder="Title"
-              onChange={setDetails}
-              className="mb-3"
-              required
-            />
-            <Form.Control
-              type="number"
-              name="price"
-              placeholder="Price"
-              onChange={setDetails}
-              className="mb-3"
-              required
-            />
-            <Form.Control
-              type="text"
-              name="description"
-              placeholder="Description"
-              onChange={setDetails}
-              className="mb-3"
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Please fill all listing details
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Button variant="primary" type="submit" className="float-end">
-            Submit
-          </Button>
-        </Form>
+        <Formik
+          validationSchema={CreateListingSchema}
+          onSubmit={createListing}
+          initialValues={{
+            title: undefined,
+            price: undefined,
+            description: undefined,
+            images: undefined,
+          }}
+        >
+          {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
+            <Form noValidate onSubmit={handleSubmit}>
+              <Form.Group controlId="images" className="mb-3">
+                <Form.Label>Add images</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  name="images"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    handleChange(event);
+                    const images = Array.from(event.currentTarget.files || []);
+                    if (images.length > 0) {
+                      setFieldValue("images", images);
+                      setImagesUrls(
+                        images.map((image) => URL.createObjectURL(image))
+                      );
+                    }
+                  }}
+                  className="mb-3"
+                  multiple
+                  required
+                  isInvalid={touched.images && !!errors.images}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.images}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group controlId="title" className="mb-3">
+                <Form.Label>Listing title</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="title"
+                  placeholder="Title"
+                  onChange={handleChange}
+                  className="mb-3"
+                  isInvalid={touched.title && !!errors.title}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.title}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              <Form.Group controlId="price" className="mb-3">
+                <Form.Label>Price:</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="price"
+                  placeholder="Price"
+                  onChange={handleChange}
+                  className="mb-3"
+                  isInvalid={touched.price && !!errors.price}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.price}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group controlId="description" className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="description"
+                  placeholder="Description"
+                  onChange={handleChange}
+                  className="mb-3"
+                  isInvalid={touched.description && !!errors.description}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.description}
+                </Form.Control.Feedback>
+              </Form.Group>
+              <Button variant="primary" type="submit" className="float-end">
+                Add
+              </Button>
+            </Form>
+          )}
+        </Formik>
       </Modal.Body>
     </Modal>
   );

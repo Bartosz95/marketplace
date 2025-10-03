@@ -6,17 +6,19 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.5.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "formik": "^2.4.6",
     "next": "^15.5.3",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
