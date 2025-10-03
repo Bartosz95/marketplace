@@ -6,10 +6,10 @@ import Modal from "react-bootstrap/Modal";
 import { Listing } from "@/types";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
-import { useAuthContext } from "@/providers/AuthContext";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { updateListing } from "@/lib/redux/thunks";
 
 export interface UpdateListing {
   show: boolean;
@@ -17,12 +17,7 @@ export interface UpdateListing {
   listing: Listing;
 }
 
-export interface CreateListing {
-  show: boolean;
-  handleClose: () => void;
-}
-
-const UpdateListingSchema = yup.object().shape({
+export const UpdateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20),
   price: yup.number().min(0),
   description: yup.string().min(10).max(255),
@@ -41,30 +36,12 @@ type UpdateListingDetails = Partial<yup.InferType<typeof UpdateListingSchema>>;
 
 function UpdateListing({ show, handleClose, listing }: UpdateListing) {
   const [imagesUrls, setImagesUrls] = useState<string[]>(listing.imagesUrls);
-  const { token } = useAuthContext();
+  const dispatch = useAppDispatch();
 
-  const updateListing = async ({
-    title,
-    price,
-    description,
-    images,
-  }: UpdateListingDetails) => {
-    const formData = new FormData();
-    if (images)
-      images.forEach((image) => {
-        formData.append("images", image);
-      });
-
-    if (title) formData.append("title", title);
-    if (price) formData.append("price", price.toString());
-    if (description) formData.append("description", description);
-    await sendApiV1Request(`/listings/${listing.listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+  const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
+    dispatch(
+      updateListing({ ...updateListingDetails, listingId: listing.listingId })
+    );
     handleClose();
   };
 
@@ -95,7 +72,7 @@ function UpdateListing({ show, handleClose, listing }: UpdateListing) {
         {imagePreview}
         <Formik
           validationSchema={UpdateListingSchema}
-          onSubmit={updateListing}
+          onSubmit={handleUpdate}
           initialValues={{
             title: undefined,
             price: undefined,

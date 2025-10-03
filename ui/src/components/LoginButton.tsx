@@ -2,11 +2,11 @@
 import React, { useState } from "react";
 import { Button, Dropdown, Image } from "react-bootstrap";
 import ViewProfile from "./ViewProfile";
-import { useAuthContext } from "@/providers/AuthContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function LoginButton() {
   const [showProfile, setShowProfile] = useState(false);
-  const { isAuthenticated, loginWithRedirect, logout, user } = useAuthContext();
+  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
   return (
     <div className="me-3">
       {!isAuthenticated ? (

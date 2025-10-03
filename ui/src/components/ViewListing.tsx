@@ -4,8 +4,9 @@ import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { Listing } from "../types";
-import { useAuthContext } from "@/providers/AuthContext";
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { purchaseListing } from "@/lib/redux/thunks";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface ViewListing {
   show: boolean;
@@ -15,16 +16,11 @@ interface ViewListing {
 
 function ViewListing({ show, handleClose, listing }: ViewListing) {
   const { title, description, price, imagesUrls, listingId } = listing;
-  const { isAuthenticated, loginWithRedirect } = useAuthContext();
-  const { token } = useAuthContext();
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const dispatch = useAppDispatch();
 
   const handlePurches = async () => {
-    await sendApiV1Request(`/listings/${listingId}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    dispatch(purchaseListing(listingId))
     handleClose();
   };
 

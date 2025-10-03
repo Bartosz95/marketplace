@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy } from "../types";
 import CreateListing from "./CreateListing";
-import { useAuthContext } from "@/providers/AuthContext";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { getListings } from "@/lib/redux/thunks";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function NavigationBar() {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const { isAuthenticated, loginWithRedirect } = useAuthContext();
+  const { isAuthenticated, loginWithRedirect } = useAuth0();
   const dispatch = useAppDispatch();
   const { lastFilterBy } = useAppSelector((state) => state.listingsStore);
 

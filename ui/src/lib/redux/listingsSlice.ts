@@ -9,6 +9,8 @@ interface InitialState {
   offset: number;
   lastFilterBy: FilterBy;
   token: string;
+  user: any;
+  isAuthenticated: boolean;
 }
 
 const initialState: InitialState = {
@@ -19,6 +21,8 @@ const initialState: InitialState = {
   offset: 0,
   lastFilterBy: FilterBy.All,
   token: "",
+  user: undefined,
+  isAuthenticated: false,
 };
 
 export const listingsSlice = createSlice({
@@ -44,11 +48,7 @@ export const listingsSlice = createSlice({
       state.lastFilterBy = actions.payload;
     },
     setToken: (state, actions) => {
-      console.log(actions);
       state.token = actions.payload;
-    },
-    addListing: (state, actions) => {
-      console.log(actions.payload);
     },
   },
 });
@@ -61,5 +61,4 @@ export const {
   setOffset,
   setLastFilteredBy,
   setToken,
-  addListing,
 } = listingsSlice.actions;

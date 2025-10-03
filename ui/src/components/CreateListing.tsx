@@ -7,7 +7,6 @@ import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
-import { useDispatch } from "react-redux";
 import { createListing } from "@/redux/thunks";
 import { useAppDispatch } from "@/lib/redux/hooks";
 
@@ -50,7 +49,7 @@ function CreateListing({ show, handleClose }: CreateListing) {
     </Carousel>
   );
 
-  const create = async (createListingDetails: CreateListingDetails) => {
+  const handleCreate = async (createListingDetails: CreateListingDetails) => {
     dispatch(createListing(createListingDetails));
     handleClose();
   };
@@ -72,7 +71,7 @@ function CreateListing({ show, handleClose }: CreateListing) {
         {imagePreview}
         <Formik
           validationSchema={CreateListingSchema}
-          onSubmit={create}
+          onSubmit={handleCreate}
           initialValues={{
             title: undefined,
             price: undefined,

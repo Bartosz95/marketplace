@@ -6,15 +6,18 @@ import { EventType, Listing } from "@/types";
 import ViewListing from "@/components/ViewListing";
 import UpdateListing from "@/components/UpdateListing";
 import "./ListingCell.css";
-import { useAuthContext } from "@/providers/AuthContext";
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { archiveListing, deleteListing, restoreListing } from "@/lib/redux/thunks";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface ListingCell {
   listing: Listing;
 }
 function ListingCell({ listing }: ListingCell) {
   const { userId, title, price, imagesUrls, status, listingId } = listing;
-  const { user, token } = useAuthContext();
+  const { user } = useAuth0();
+
+  const dispatch = useAppDispatch();
 
   const [showListingView, setShowListingView] = useState(false);
   const handleCloseView = () => setShowListingView(false);
@@ -25,31 +28,16 @@ function ListingCell({ listing }: ListingCell) {
   const handleShowUpdate = () => setShowListingUpdate(true);
   const image = imagesUrls[0];
 
-  const restoreListing = async () => {
-    await sendApiV1Request(`/listings/restore/${listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const handleRestoreListing = async () => {
+    dispatch(restoreListing(listingId))
   };
 
-  const deleteListing = async () => {
-    await sendApiV1Request(`/listings/${listingId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const handleDeleteListing = async () => {
+    dispatch(deleteListing(listingId))
   };
 
-  const archiveListing = async () => {
-    await sendApiV1Request(`/listings/archive/${listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const handleArchiveListing = async () => {
+    dispatch(archiveListing(listingId))
   };
 
   const isUserListing =
@@ -63,9 +51,9 @@ function ListingCell({ listing }: ListingCell) {
 
   const archiveButton =
     status === EventType.LISTING_ARCHIVED ? (
-      <Dropdown.Item onClick={restoreListing}>Restore</Dropdown.Item>
+      <Dropdown.Item onClick={handleRestoreListing}>Restore</Dropdown.Item>
     ) : (
-      <Dropdown.Item onClick={archiveListing}>Archive</Dropdown.Item>
+      <Dropdown.Item onClick={handleArchiveListing}>Archive</Dropdown.Item>
     );
 
   const modifyDropdown = (
@@ -76,7 +64,7 @@ function ListingCell({ listing }: ListingCell) {
       <Dropdown.Menu>
         <Dropdown.Item onClick={handleShowUpdate}>Update</Dropdown.Item>
         {archiveButton}
-        <Dropdown.Item onClick={deleteListing}>Delete</Dropdown.Item>
+        <Dropdown.Item onClick={handleDeleteListing}>Delete</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );

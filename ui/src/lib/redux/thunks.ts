@@ -2,6 +2,8 @@ import { sendApiV1Request } from "@/helpers/sendApiV1Request";
 import { FilterBy } from "@/types";
 import { setCountOfAll, setLastFilteredBy, setListings } from "./listingsSlice";
 import { CreateListingDetails } from "@/components/CreateListing";
+import { UpdateListingSchema } from "@/components/UpdateListing";
+import * as yup from "yup";
 
 export const getListings =
   (filterBy?: FilterBy) => async (dispatch: any, getState: any) => {
@@ -44,5 +46,80 @@ export const createListing =
         Authorization: `Bearer ${token}`,
       },
       body: formData,
+    });
+  };
+
+export type UpdateListingThunksProp = Partial<
+  yup.InferType<typeof UpdateListingSchema>
+> & { listingId: string };
+
+export const updateListing =
+  ({ listingId, title, price, description, images }: UpdateListingThunksProp) =>
+  async (dispatch: any, getState: any) => {
+    const formData = new FormData();
+    if (images)
+      images.forEach((image) => {
+        formData.append("images", image);
+      });
+
+    if (title) formData.append("title", title);
+    if (price) formData.append("price", price.toString());
+    if (description) formData.append("description", description);
+    const state = getState();
+    const { token } = state.listingsStore;
+    await sendApiV1Request(`/listings/${listingId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+  };
+
+export const purchaseListing =
+  (listingId: string) => async (dispatch: any, getState: any) => {
+    const state = getState();
+    const { token } = state.listingsStore;
+    await sendApiV1Request(`/listings/${listingId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+export const deleteListing =
+  (listingId: string) => async (dispatch: any, getState: any) => {
+    const state = getState();
+    const { token } = state.listingsStore;
+    await sendApiV1Request(`/listings/${listingId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+export const archiveListing =
+  (listingId: string) => async (dispatch: any, getState: any) => {
+    const state = getState();
+    const { token } = state.listingsStore;
+    await sendApiV1Request(`/listings/archive/${listingId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+export const restoreListing =
+  (listingId: string) => async (dispatch: any, getState: any) => {
+    const state = getState();
+    const { token } = state.listingsStore;
+    await sendApiV1Request(`/listings/restore/${listingId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
   };
