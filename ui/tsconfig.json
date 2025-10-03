@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/redux/*": ["./src/lib/redux/*"]
     }
   },
   "include": [

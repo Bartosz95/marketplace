@@ -1,45 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { FilterBy, Listing } from "@/types";
 import ListingCell from "@/components/ListingCell";
 import { Container } from "react-bootstrap";
 import NavigationBar from "@/components/NavigationBar";
 import Pagination from "react-bootstrap/Pagination";
-import { useAuthContext } from "@/providers/AuthContext";
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 
 function Main() {
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [countOfAll, setCountOfAll] = useState<number>(0);
-  const [activePage, setActivePage] = useState<number>(1);
-  const [offset, setOffset] = useState<number>(0);
-  const [limit] = useState<number>(8);
-  const [lastFilterBy, setLastFilterBy] = useState<FilterBy>(FilterBy.All);
-  const { token } = useAuthContext();
-
-  const getListings = async () => {
-    const params = new URLSearchParams();
-    params.append("limit", limit.toString());
-    params.append("offset", offset.toString());
-    const respone = await sendApiV1Request(
-      `/listings${lastFilterBy}?${params.toString()}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    if (respone?.listings && respone?.countOfAll) {
-      setListings(respone.listings);
-      setCountOfAll(respone.countOfAll);
-    }
-  };
-
-  useEffect(() => {
-    getListings();
-  }, [lastFilterBy, activePage, token]);
+  const dispatch = useAppDispatch();
+  const { listings, limit, countOfAll, activePage } = useAppSelector(
+    (state) => state.listingsStore
+  );
 
   const Listings = (
     <Row key="listings">
@@ -52,8 +25,8 @@ function Main() {
   );
 
   const changePage = (number: number) => {
-    setOffset(limit * (number - 1));
-    setActivePage(number);
+    dispatch(setOffset(limit * (number - 1)));
+    dispatch(setActivePage(number));
   };
 
   const items = [];
@@ -73,10 +46,7 @@ function Main() {
 
   return (
     <>
-      <NavigationBar
-        lastFilterBy={lastFilterBy}
-        setLastFilterBy={setLastFilterBy}
-      />
+      <NavigationBar />
       <Container>{Listings}</Container>
       <Container className="d-flex justify-content-center mt-3">
         <Pagination>{items}</Pagination>

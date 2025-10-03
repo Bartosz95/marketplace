@@ -1,19 +1,18 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy } from "../types";
 import CreateListing from "./CreateListing";
 import { useAuthContext } from "@/providers/AuthContext";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { getListings } from "@/lib/redux/thunks";
 
-interface NavigationBarProps {
-  lastFilterBy: FilterBy;
-  setLastFilterBy: Dispatch<SetStateAction<FilterBy>>;
-}
-function NavigationBar(props: NavigationBarProps) {
-  const { lastFilterBy, setLastFilterBy } = props;
+function NavigationBar() {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [theme, setTheme] = useState("dark");
   const { isAuthenticated, loginWithRedirect } = useAuthContext();
+  const dispatch = useAppDispatch();
+  const { lastFilterBy } = useAppSelector((state) => state.listingsStore);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -39,22 +38,26 @@ function NavigationBar(props: NavigationBarProps) {
   };
   const filterDropdown = isAuthenticated && (
     <NavDropdown title={mapFilterBy(lastFilterBy)}>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.All)}>
+      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.All))}>
         {mapFilterBy(FilterBy.All)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Active)}>
+      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.Active))}>
         {mapFilterBy(FilterBy.Active)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Sold)}>
+      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.Sold))}>
         {mapFilterBy(FilterBy.Sold)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Purchased)}>
+      <NavDropdown.Item
+        onClick={() => dispatch(getListings(FilterBy.Purchased))}
+      >
         {mapFilterBy(FilterBy.Purchased)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.Archived)}>
+      <NavDropdown.Item
+        onClick={() => dispatch(getListings(FilterBy.Archived))}
+      >
         {mapFilterBy(FilterBy.Archived)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => setLastFilterBy(FilterBy.UserAll)}>
+      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.UserAll))}>
         {mapFilterBy(FilterBy.UserAll)}
       </NavDropdown.Item>
     </NavDropdown>

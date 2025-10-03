@@ -5,10 +5,11 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { useAuthContext } from "@/providers/AuthContext";
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
 import { Formik } from "formik";
 import * as yup from "yup";
+import { useDispatch } from "react-redux";
+import { createListing } from "@/redux/thunks";
+import { useAppDispatch } from "@/lib/redux/hooks";
 
 export interface CreateListing {
   show: boolean;
@@ -31,13 +32,13 @@ const CreateListingSchema = yup.object().shape({
     .required(),
 });
 
-type CreateListingDetails = Partial<yup.InferType<typeof CreateListingSchema>>;
+export type CreateListingDetails = Partial<yup.InferType<typeof CreateListingSchema>>;
 
 function CreateListing({ show, handleClose }: CreateListing) {
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
-  const { token } = useAuthContext();
+  const dispatch = useAppDispatch();
 
   const imagePreview = (
     <Carousel className="mb-3 image-preview">
@@ -49,27 +50,8 @@ function CreateListing({ show, handleClose }: CreateListing) {
     </Carousel>
   );
 
-  const createListing = async ({
-    title,
-    price,
-    description,
-    images,
-  }: CreateListingDetails) => {
-    if (!title || !price || !description || !images) return;
-    const formData = new FormData();
-    images.forEach((image) => {
-      formData.append("images", image);
-    });
-    formData.append("title", title);
-    formData.append("price", price.toString());
-    formData.append("description", description);
-    await sendApiV1Request(`/listings`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+  const create = async (createListingDetails: CreateListingDetails) => {
+    dispatch(createListing(createListingDetails));
     handleClose();
   };
 
@@ -90,7 +72,7 @@ function CreateListing({ show, handleClose }: CreateListing) {
         {imagePreview}
         <Formik
           validationSchema={CreateListingSchema}
-          onSubmit={createListing}
+          onSubmit={create}
           initialValues={{
             title: undefined,
             price: undefined,
