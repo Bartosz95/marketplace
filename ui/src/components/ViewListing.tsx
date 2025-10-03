@@ -4,24 +4,25 @@ import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { Listing } from "../types";
-import { useAppDispatch } from "@/lib/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { purchaseListing } from "@/lib/redux/thunks";
 import { useAuth0 } from "@auth0/auth0-react";
+import { setShowListingView } from "@/lib/redux/listingsSlice";
 
 interface ViewListing {
-  show: boolean;
-  handleClose: () => void;
   listing: Listing;
 }
 
-function ViewListing({ show, handleClose, listing }: ViewListing) {
+function ViewListing({ listing }: ViewListing) {
   const { title, description, price, imagesUrls, listingId } = listing;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
+  const { showListingView } = useAppSelector((state) => state.listingsStore);
+
   const dispatch = useAppDispatch();
 
   const handlePurches = async () => {
-    dispatch(purchaseListing(listingId))
-    handleClose();
+    dispatch(purchaseListing(listingId));
+    dispatch(setShowListingView(false));
   };
 
   const imagePreview = (
@@ -36,8 +37,8 @@ function ViewListing({ show, handleClose, listing }: ViewListing) {
 
   return (
     <Modal
-      show={show}
-      onHide={handleClose}
+      show={showListingView === listingId}
+      onHide={() => dispatch(setShowListingView(false))}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
       className="modal-view"
@@ -56,7 +57,8 @@ function ViewListing({ show, handleClose, listing }: ViewListing) {
         {isAuthenticated ? (
           <Button
             variant="primary"
-            style={{ marginLeft: "3" }}
+            className="ml-3"
+            style={{ width: "10rem", margin: "auto" }}
             onClick={handlePurches}
           >
             Buy

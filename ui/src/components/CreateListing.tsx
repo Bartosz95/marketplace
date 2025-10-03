@@ -8,12 +8,8 @@ import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { createListing } from "@/redux/thunks";
-import { useAppDispatch } from "@/lib/redux/hooks";
-
-export interface CreateListing {
-  show: boolean;
-  handleClose: () => void;
-}
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { setShowListingCreate } from "@/lib/redux/listingsSlice";
 
 const CreateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20).required(),
@@ -31,12 +27,15 @@ const CreateListingSchema = yup.object().shape({
     .required(),
 });
 
-export type CreateListingDetails = Partial<yup.InferType<typeof CreateListingSchema>>;
+export type CreateListingDetails = Partial<
+  yup.InferType<typeof CreateListingSchema>
+>;
 
-function CreateListing({ show, handleClose }: CreateListing) {
+function CreateListing() {
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
+  const { showListingCreate } = useAppSelector((state) => state.listingsStore);
   const dispatch = useAppDispatch();
 
   const imagePreview = (
@@ -51,13 +50,13 @@ function CreateListing({ show, handleClose }: CreateListing) {
 
   const handleCreate = async (createListingDetails: CreateListingDetails) => {
     dispatch(createListing(createListingDetails));
-    handleClose();
+    dispatch(setShowListingCreate(false));
   };
 
   return (
     <Modal
-      show={show}
-      onHide={handleClose}
+      show={showListingCreate}
+      onHide={() => dispatch(setShowListingCreate(false))}
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
@@ -149,7 +148,12 @@ function CreateListing({ show, handleClose }: CreateListing) {
                   {errors.description}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Button variant="primary" type="submit" className="float-end">
+              <Button
+                variant="primary"
+                type="submit"
+                className="float-end button-style"
+                style={{ width: "10rem" }}
+              >
                 Add
               </Button>
             </Form>

@@ -8,12 +8,11 @@ import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
-import { useAppDispatch } from "@/lib/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateListing } from "@/lib/redux/thunks";
+import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 
-export interface UpdateListing {
-  show: boolean;
-  handleClose: () => void;
+export interface UpdateListingProps {
   listing: Listing;
 }
 
@@ -34,15 +33,16 @@ export const UpdateListingSchema = yup.object().shape({
 
 type UpdateListingDetails = Partial<yup.InferType<typeof UpdateListingSchema>>;
 
-function UpdateListing({ show, handleClose, listing }: UpdateListing) {
+function UpdateListing({ listing }: UpdateListingProps) {
+  const { listingId } = listing;
   const [imagesUrls, setImagesUrls] = useState<string[]>(listing.imagesUrls);
+  const { showListingUpdate } = useAppSelector((state) => state.listingsStore);
+
   const dispatch = useAppDispatch();
 
   const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
-    dispatch(
-      updateListing({ ...updateListingDetails, listingId: listing.listingId })
-    );
-    handleClose();
+    dispatch(updateListing({ ...updateListingDetails, listingId }));
+    dispatch(setShowListingUpdate(listingId));
   };
 
   const imagePreview = (
@@ -57,8 +57,8 @@ function UpdateListing({ show, handleClose, listing }: UpdateListing) {
 
   return (
     <Modal
-      show={show}
-      onHide={handleClose}
+      show={showListingUpdate === listingId}
+      onHide={() => dispatch(setShowListingUpdate(false))}
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"

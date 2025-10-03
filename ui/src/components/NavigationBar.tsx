@@ -1,18 +1,20 @@
 import { Button, Form, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Login from "@/components/LoginButton";
 import { FilterBy } from "../types";
 import CreateListing from "./CreateListing";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { getListings } from "@/lib/redux/thunks";
 import { useAuth0 } from "@auth0/auth0-react";
+import { setShowListingCreate, setTheme } from "@/lib/redux/listingsSlice";
 
 function NavigationBar() {
-  const [showCreateListing, setShowCreateListing] = useState(false);
-  const [theme, setTheme] = useState("dark");
   const { isAuthenticated, loginWithRedirect } = useAuth0();
+
+  const { theme, lastFilterBy } = useAppSelector(
+    (state) => state.listingsStore
+  );
   const dispatch = useAppDispatch();
-  const { lastFilterBy } = useAppSelector((state) => state.listingsStore);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -64,7 +66,7 @@ function NavigationBar() {
   );
 
   const createListingButton = isAuthenticated && (
-    <Button onClick={() => setShowCreateListing(true)}>
+    <Button onClick={() => dispatch(setShowListingCreate(true))}>
       <i className="bi bi-plus-lg me-1" />
       Create listing
     </Button>
@@ -83,7 +85,7 @@ function NavigationBar() {
           label="Dark Mode"
           checked={theme === "dark"}
           onChange={() =>
-            setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"))
+            dispatch(setTheme(theme === "light" ? "dark" : "light"))
           }
         />
       </Form>
@@ -101,10 +103,7 @@ function NavigationBar() {
       {createListingButton}
       {loginToAddButton}
       {filterDropdown}
-      <CreateListing
-        show={showCreateListing}
-        handleClose={() => setShowCreateListing(false)}
-      />
+      <CreateListing />
       {darkModeSwitch}
       <Login />
     </Navbar>
