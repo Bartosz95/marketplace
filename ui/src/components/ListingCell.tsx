@@ -1,76 +1,27 @@
 import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import { useState } from "react";
-import { Container, Dropdown } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import { EventType, Listing } from "@/types";
 import ViewListing from "@/components/ViewListing";
 import UpdateListing from "@/components/UpdateListing";
-import "./ListingCell.css";
-import {
-  archiveListing,
-  deleteListing,
-  restoreListing,
-} from "@/lib/redux/thunks";
-import { useAppDispatch } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
-import {
-  setShowListingUpdate,
-  setShowListingView,
-} from "@/lib/redux/listingsSlice";
+import ModifyListingDropdown from "./ModifyListingDropdown";
+import ViewButton from "./ViewButton";
 
-interface ListingCell {
+interface ListingCellProps {
   listing: Listing;
 }
-function ListingCell({ listing }: ListingCell) {
+function ListingCell({ listing }: ListingCellProps) {
   const { userId, title, price, imagesUrls, status, listingId } = listing;
   const { user } = useAuth0();
-  const dispatch = useAppDispatch();
 
   const isUserListing =
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
-  const viewButton = (
-    <Button
-      style={{ width: "10rem" }}
-      onClick={() => {
-        dispatch(setShowListingView(listingId));
-      }}
-    >
-      View
-    </Button>
+  const listingActionButton = isUserListing ? (
+    <ModifyListingDropdown listingId={listingId} status={status} />
+  ) : (
+    <ViewButton listingId={listingId} />
   );
-
-  const archiveButton =
-    status === EventType.LISTING_ARCHIVED ? (
-      <Dropdown.Item onClick={() => dispatch(restoreListing(listingId))}>
-        Restore
-      </Dropdown.Item>
-    ) : (
-      <Dropdown.Item onClick={() => dispatch(archiveListing(listingId))}>
-        Archive
-      </Dropdown.Item>
-    );
-
-  const modifyDropdown = (
-    <Dropdown>
-      <Dropdown.Toggle style={{ width: "10rem" }} id="dropdown-basic">
-        Modify
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        <Dropdown.Item
-          onClick={() => dispatch(setShowListingUpdate(listingId))}
-        >
-          Update
-        </Dropdown.Item>
-        {archiveButton}
-        <Dropdown.Item onClick={() => dispatch(deleteListing(listingId))}>
-          Delete
-        </Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
-  );
-
-  const listingActionButton = isUserListing ? modifyDropdown : viewButton;
 
   return (
     <>

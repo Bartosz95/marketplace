@@ -12,10 +12,6 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateListing } from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 
-export interface UpdateListingProps {
-  listing: Listing;
-}
-
 export const UpdateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20),
   price: yup.number().min(0),
@@ -32,6 +28,10 @@ export const UpdateListingSchema = yup.object().shape({
 });
 
 type UpdateListingDetails = Partial<yup.InferType<typeof UpdateListingSchema>>;
+
+export interface UpdateListingProps {
+  listing: Listing;
+}
 
 function UpdateListing({ listing }: UpdateListingProps) {
   const { listingId } = listing;
