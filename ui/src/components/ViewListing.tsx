@@ -29,7 +29,7 @@ function ViewListing({ listing }: ViewListing) {
     <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image alt="no image" src={imageUrl} fluid />
+          <Image alt="no image" src={imageUrl} className="mx-auto" fluid />
         </Carousel.Item>
       ))}
     </Carousel>

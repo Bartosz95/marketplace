@@ -16,12 +16,6 @@ function NavigationBar() {
   );
   const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-bs-theme", theme);
-    }
-  }, [theme]);
-
   const mapFilterBy = (filterBy: FilterBy) => {
     switch (filterBy) {
       case FilterBy.All:
@@ -94,7 +88,7 @@ function NavigationBar() {
 
   return (
     <Navbar
-      bg={theme === "dark" ? "dark" : "light"}
+      bg={theme}
       variant={theme}
       expand="lg"
       className="bg-body-tertiary d-flex gap-3 mb-2 "
