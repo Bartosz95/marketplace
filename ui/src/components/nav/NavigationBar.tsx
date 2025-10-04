@@ -1,8 +1,8 @@
 import { Navbar } from "react-bootstrap";
-import Login from "@/components/LoginButton";
+import Login from "@/components/nav/LoginButton";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
-import CreateListing from "./CreateListing";
+import CreateListing from "./CreateListingModal";
 import FilterDropdown from "./FilterDropdown";
 import CreateListingButton from "./CreateListingButton";
 import LoginToAddListingButton from "./LoginToAddListingButton";

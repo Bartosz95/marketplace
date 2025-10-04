@@ -1,9 +1,9 @@
 "use client";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import ListingCell from "@/components/ListingCell";
+import ListingCell from "@/components/cell/ListingCell";
 import { Container } from "react-bootstrap";
-import NavigationBar from "@/components/NavigationBar";
+import NavigationBar from "@/components/nav/NavigationBar";
 import Pagination from "react-bootstrap/Pagination";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setOffset, setActivePage, setToken } from "@/lib/redux/listingsSlice";
@@ -48,7 +48,7 @@ function Main() {
     }
   }, [theme]);
 
-  const Listings = (
+  const ListingsCells = (
     <Container>
       <Row key="listings">
         {listings.map((listing, idx) => (
@@ -59,11 +59,6 @@ function Main() {
       </Row>
     </Container>
   );
-
-  const changePage = (number: number) => {
-    dispatch(setOffset(limit * (number - 1)));
-    dispatch(setActivePage(number));
-  };
 
   const Pages = (
     <Container className="d-flex justify-content-center mt-3">
@@ -81,10 +76,15 @@ function Main() {
     </Container>
   );
 
+  const changePage = (number: number) => {
+    dispatch(setOffset(limit * (number - 1)));
+    dispatch(setActivePage(number));
+  };
+
   return (
     <>
       <NavigationBar />
-      {Listings}
+      {ListingsCells}
       {Pages}
     </>
   );

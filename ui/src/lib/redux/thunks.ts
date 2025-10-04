@@ -1,8 +1,8 @@
 import { sendApiV1Request } from "@/helpers/sendApiV1Request";
 import { FilterBy } from "@/types";
 import { setCountOfAll, setLastFilteredBy, setListings } from "./listingsSlice";
-import { CreateListingDetails } from "@/components/CreateListing";
-import { UpdateListingSchema } from "@/components/UpdateListing";
+import { CreateListingDetails } from "@/components/nav/CreateListingModal";
+import { UpdateListingSchema } from "@/components/cell/UpdateListingModal";
 import * as yup from "yup";
 
 export const getListings =

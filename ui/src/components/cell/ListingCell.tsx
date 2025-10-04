@@ -1,8 +1,8 @@
 import Card from "react-bootstrap/Card";
 import { Container } from "react-bootstrap";
 import { EventType, Listing } from "@/types";
-import ViewListing from "@/components/ViewListing";
-import UpdateListing from "@/components/UpdateListing";
+import ViewListing from "@/components/cell/ViewListingModal";
+import UpdateListing from "@/components/cell/UpdateListingModal";
 import { useAuth0 } from "@auth0/auth0-react";
 import ModifyListingDropdown from "./ModifyListingDropdown";
 import ViewButton from "./ViewButton";

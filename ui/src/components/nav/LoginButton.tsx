@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Button, Dropdown, Image } from "react-bootstrap";
-import ViewProfile from "./ViewProfile";
+import ViewProfile from "../cell/ViewProfileModal";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function LoginButton() {

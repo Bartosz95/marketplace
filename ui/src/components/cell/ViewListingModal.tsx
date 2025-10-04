@@ -3,7 +3,7 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { Listing } from "../types";
+import { Listing } from "../../types";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { purchaseListing } from "@/lib/redux/thunks";
 import { useAuth0 } from "@auth0/auth0-react";
