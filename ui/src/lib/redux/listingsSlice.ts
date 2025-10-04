@@ -1,6 +1,5 @@
 import { FilterBy, Listing } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
-import { boolean } from "yup";
 
 interface InitialState {
   showListingCreate: boolean;
@@ -10,6 +9,7 @@ interface InitialState {
   listings: Listing[];
   countOfAll: number;
   activePage: number;
+  pagesNumbers: number[];
   limit: number;
   offset: number;
   lastFilterBy: FilterBy;
@@ -26,7 +26,8 @@ const initialState: InitialState = {
   listings: [],
   countOfAll: 0,
   activePage: 1,
-  limit: 10,
+  pagesNumbers: [1],
+  limit: 8,
   offset: 0,
   lastFilterBy: FilterBy.All,
   token: "",
@@ -55,6 +56,7 @@ export const listingsSlice = createSlice({
     },
     setCountOfAll: (state, actions) => {
       state.countOfAll = actions.payload;
+      state.pagesNumbers =  Array.from({ length: Math.ceil(state.countOfAll / state.limit) }, (_, i) => i + 1);;
     },
     setActivePage: (state, actions) => {
       state.activePage = actions.payload;

@@ -13,7 +13,7 @@ import { getListings } from "@/lib/redux/thunks";
 
 function Main() {
   const dispatch = useAppDispatch();
-  const { listings, limit, countOfAll, activePage, theme } = useAppSelector(
+  const { listings, limit, activePage, pagesNumbers, theme } = useAppSelector(
     (state) => state.listingsStore
   );
 
@@ -40,7 +40,7 @@ function Main() {
 
   useEffect(() => {
     dispatch(getListings());
-  }, []);
+  }, [activePage]);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -49,13 +49,15 @@ function Main() {
   }, [theme]);
 
   const Listings = (
-    <Row key="listings">
-      {listings.map((listing, idx) => (
-        <Col key={idx} style={{ flex: "0 0 0" }}>
-          <ListingCell listing={listing} key={listing.listingId} />
-        </Col>
-      ))}
-    </Row>
+    <Container>
+      <Row key="listings">
+        {listings.map((listing, idx) => (
+          <Col key={idx} style={{ flex: "0 0 0" }}>
+            <ListingCell listing={listing} key={listing.listingId} />
+          </Col>
+        ))}
+      </Row>
+    </Container>
   );
 
   const changePage = (number: number) => {
@@ -63,28 +65,27 @@ function Main() {
     dispatch(setActivePage(number));
   };
 
-  const items = [];
-  if (countOfAll > limit) {
-    for (let number = 1; number <= countOfAll / limit + 1; number++) {
-      items.push(
-        <Pagination.Item
-          key={number}
-          active={number === activePage}
-          onClick={() => changePage(number)}
-        >
-          {number}
-        </Pagination.Item>
-      );
-    }
-  }
+  const Pages = (
+    <Container className="d-flex justify-content-center mt-3">
+      <Pagination>
+        {pagesNumbers.map((pageNumber) => (
+          <Pagination.Item
+            key={pageNumber}
+            active={pageNumber === activePage}
+            onClick={() => changePage(pageNumber)}
+          >
+            {pageNumber}
+          </Pagination.Item>
+        ))}
+      </Pagination>
+    </Container>
+  );
 
   return (
     <>
       <NavigationBar />
-      <Container>{Listings}</Container>
-      <Container className="d-flex justify-content-center mt-3">
-        <Pagination>{items}</Pagination>
-      </Container>
+      {Listings}
+      {Pages}
     </>
   );
 }
