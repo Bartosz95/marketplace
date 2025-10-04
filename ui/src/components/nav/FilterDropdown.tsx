@@ -1,4 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 import { getListings } from "@/lib/redux/thunks";
 import { FilterBy } from "@/types";
 import { NavDropdown } from "react-bootstrap";
@@ -21,7 +22,7 @@ const mapFilterBy = (filterBy: FilterBy) => {
 };
 
 function filterDropdown() {
-  const { lastFilterBy } = useAppSelector((state) => state.listingsStore);
+  const { lastFilterBy } = useAppSelector(listingStoreSelector);
   const dispatch = useAppDispatch();
 
   return (

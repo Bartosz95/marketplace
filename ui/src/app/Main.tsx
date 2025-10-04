@@ -10,12 +10,12 @@ import { setOffset, setActivePage, setToken } from "@/lib/redux/listingsSlice";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect } from "react";
 import { getListings } from "@/lib/redux/thunks";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 
 function Main() {
   const dispatch = useAppDispatch();
-  const { listings, limit, activePage, pagesNumbers, theme } = useAppSelector(
-    (state) => state.listingsStore
-  );
+  const { listings, limit, activePage, pagesNumbers, theme } =
+    useAppSelector(listingStoreSelector);
 
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 

@@ -10,6 +10,7 @@ import * as yup from "yup";
 import { createListing } from "@/redux/thunks";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setShowListingCreate } from "@/lib/redux/listingsSlice";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 
 const CreateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20).required(),
@@ -35,7 +36,7 @@ function CreateListing() {
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
-  const { showListingCreate } = useAppSelector((state) => state.listingsStore);
+  const { showListingCreate } = useAppSelector(listingStoreSelector);
   const dispatch = useAppDispatch();
 
   const imagePreview = (

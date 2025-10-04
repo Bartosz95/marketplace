@@ -1,4 +1,4 @@
-import { sendApiV1Request } from "@/helpers/sendApiV1Request";
+import { sendApiV1Request } from "@/lib/sendApiV1Request";
 import { FilterBy } from "@/types";
 import { setCountOfAll, setLastFilteredBy, setListings } from "./listingsSlice";
 import { CreateListingDetails } from "@/components/nav/CreateListingModal";

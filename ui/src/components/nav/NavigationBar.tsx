@@ -7,11 +7,12 @@ import FilterDropdown from "./FilterDropdown";
 import CreateListingButton from "./CreateListingButton";
 import LoginToAddListingButton from "./LoginToAddListingButton";
 import DarkModeSwitch from "./DarkModeSwitch";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 
 function NavigationBar() {
   const { isAuthenticated } = useAuth0();
 
-  const { theme } = useAppSelector((state) => state.listingsStore);
+  const { theme } = useAppSelector(listingStoreSelector);
 
   const createListingButton = isAuthenticated ? (
     <CreateListingButton />

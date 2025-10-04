@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { purchaseListing } from "@/lib/redux/thunks";
 import { useAuth0 } from "@auth0/auth0-react";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 
 interface ViewListing {
   listing: Listing;
@@ -16,7 +17,7 @@ interface ViewListing {
 function ViewListing({ listing }: ViewListing) {
   const { title, description, price, imagesUrls, listingId } = listing;
   const { isAuthenticated, loginWithRedirect } = useAuth0();
-  const { showListingView } = useAppSelector((state) => state.listingsStore);
+  const { showListingView } = useAppSelector(listingStoreSelector);
 
   const dispatch = useAppDispatch();
 

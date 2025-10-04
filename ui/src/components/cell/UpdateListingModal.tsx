@@ -11,6 +11,7 @@ import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateListing } from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
+import { listingStoreSelector } from "@/lib/redux/selectors";
 
 export const UpdateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20),
@@ -36,7 +37,7 @@ export interface UpdateListingProps {
 function UpdateListing({ listing }: UpdateListingProps) {
   const { listingId } = listing;
   const [imagesUrls, setImagesUrls] = useState<string[]>(listing.imagesUrls);
-  const { showListingUpdate } = useAppSelector((state) => state.listingsStore);
+  const { showListingUpdate } = useAppSelector(listingStoreSelector);
 
   const dispatch = useAppDispatch();
 
