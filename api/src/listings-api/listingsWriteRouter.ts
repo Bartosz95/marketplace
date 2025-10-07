@@ -3,8 +3,8 @@ import z from "zod";
 import { UUID } from "crypto";
 import { ListingsDomain } from "./domain/listingsDomain";
 import multer from "multer";
-export const listingIdSchema = z.uuid();
-const userIdSchema = z.string();
+import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
+
 
 const fileSchema = z.object({
   fieldname: z.string(),

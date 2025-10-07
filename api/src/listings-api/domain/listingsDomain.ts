@@ -5,7 +5,6 @@ import {
   GetListingsResponse,
   ListingCreatedEventData,
   ListingPurchasedEventData,
-  ListingState,
 } from "../../types";
 import { EventSourceRepository } from "../../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "../listingsWriteRouter";

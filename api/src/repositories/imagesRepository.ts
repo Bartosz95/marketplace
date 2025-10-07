@@ -8,6 +8,7 @@ import { UUID } from "crypto";
 import path from "path";
 import { FileDetails } from "../listings-api/listingsWriteRouter";
 import sharp from "sharp";
+import { EnvAWS } from "../libs/validationSchemas";
 
 export interface ImagesRepository {
   uploadImages(listingId: UUID, images: FileDetails[]): Promise<string[]>;
@@ -15,18 +16,18 @@ export interface ImagesRepository {
   imagesUrl: string
 }
 
-export const ImagesRepository = (env: any) => {
+export const ImagesRepository = (env: EnvAWS) => {
   const bucket = new S3Client({
     credentials: {
-      accessKeyId: env.accessKey,
-      secretAccessKey: env.secretAccessKey,
+      accessKeyId: env.bucket.accessKey,
+      secretAccessKey: env.bucket.secretAccessKey,
     },
-    region: env.region,
+    region: env.bucket.region,
   });
 
-  const imagesUrl = env.url;
+  const imagesUrl = env.bucket.url;
 
-  const Bucket = env.name;
+  const Bucket = env.bucket.name;
   const uploadImages = async (listingId: UUID, images: FileDetails[]) => {
     const imagesUrls: string[] = [];
     for (const image of images) {

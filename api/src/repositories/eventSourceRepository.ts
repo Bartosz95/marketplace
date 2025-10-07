@@ -1,14 +1,11 @@
 import { UUID } from "crypto";
-import { Pool, PoolClient, PoolConfig } from "pg";
+import { Pool, PoolConfig } from "pg";
 import {
   EventType,
   Event,
-  ListingCreatedEventData,
-  ImagesUploadedEventData,
-  ListingUpdatedEventData,
-  ListingPurchasedEventData,
   EventData,
 } from "../types";
+import { EnvDB } from "../libs/validationSchemas";
 
 export interface EventSourceRepository {
   insertEvent: (eventType: EventType, eventData: EventData) => Promise<UUID>;
@@ -20,7 +17,7 @@ export interface EventSourceRepository {
   getEventsFromPosition: (position: number, eventsNumber: number) => Promise<Event[]>;
 }
 
-export const EventSourceRepository = (env: any): EventSourceRepository => {
+export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
   const dbConfig: PoolConfig = {
     ...env,
   };

@@ -7,6 +7,7 @@ import {
   ListingStateTableRow,
   ListingStatus,
 } from "../types";
+import { EnvDB } from "../libs/validationSchemas";
 
 export interface ListingsStateRepository {
   getListings: (
@@ -29,7 +30,7 @@ export interface ListingsStateRepository {
   updateListing: (listing: ListingState) => Promise<void>;
 }
 
-export const ListingsStateRepository = (env: any): ListingsStateRepository => {
+export const ListingsStateRepository = (env: EnvDB): ListingsStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,
   };

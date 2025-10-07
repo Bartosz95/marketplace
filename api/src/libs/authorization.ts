@@ -1,14 +1,14 @@
 import { auth } from "express-oauth2-jwt-bearer";
 import z from "zod";
 
-const AuthorizationSchema = z.object({
+export const EnvAuthSchema = z.object({
   audience: z.string(),
   issuerBaseURL: z.string(),
 });
 
-export type AuthorizationEnvironments = z.infer<typeof AuthorizationSchema>;
+export type EnvAuth = z.infer<typeof EnvAuthSchema>;
 
-export const Authorization = (env: AuthorizationEnvironments) =>
+export const Authorization = (env: EnvAuth) =>
   auth({
     audience: env.audience,
     issuerBaseURL: env.issuerBaseURL,

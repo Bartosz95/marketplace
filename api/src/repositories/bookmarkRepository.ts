@@ -1,5 +1,6 @@
 import { Logger } from "winston";
 import { Pool, PoolConfig } from "pg";
+import { EnvDB } from "../libs/validationSchemas";
 
 export interface BookmarkTableRow {
   process_name: string;
@@ -12,7 +13,7 @@ export interface BookmarkRepository {
 }
 
 export const BookmarkRepository = (
-  env: any,
+  env: EnvDB,
   process_name: string
 ): BookmarkRepository => {
   const dbConfig: PoolConfig = {

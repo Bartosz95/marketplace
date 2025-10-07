@@ -10,40 +10,33 @@ import { ListingsWriteRouter } from "./listingsWriteRouter";
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
-import { Authorization } from "../libs/authorization";
+import { Authorization, EnvAuthSchema } from "../libs/authorization";
 import { UserListingsDomain } from "./domain/userListingsDomain";
 import { UserListingsReadRouter } from "./userListingRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
+import { PurchaseRouter } from "./purchaseRouter";
+import {
+  EnvDBSchema,
+  EnvAWSSchema,
+  EnvPurchaseSchema,
+} from "../libs/validationSchemas";
+
+export const EnvAppSchema = z.object({
+  port: z.coerce.number(),
+  host: z.string(),
+  logLevel: z.string(),
+  nodeEnv: z.string().optional(),
+});
+
+export type EnvApp = z.infer<typeof EnvAppSchema>;
 
 export default () => {
   const envSchema = z.object({
-    app: z.object({
-      port: z.coerce.number(),
-      host: z.string(),
-      logLevel: z.string(),
-      nodeEnv: z.string().optional(),
-    }),
-    db: z.object({
-      host: z.string(),
-      port: z.coerce.number(),
-      user: z.string(),
-      password: z.string(),
-      database: z.string(),
-    }),
-    auth: z.object({
-      audience: z.string(),
-      issuerBaseURL: z.string(),
-    }),
-    aws: z.object({
-      bucket: z.object({
-        region: z.string(),
-        name: z.string(),
-        arn: z.string(),
-        accessKey: z.string(),
-        secretAccessKey: z.string(),
-        url: z.string(),
-      }),
-    }),
+    app: EnvAppSchema,
+    db: EnvDBSchema,
+    auth: EnvAuthSchema,
+    aws: EnvAWSSchema,
+    purchase: EnvPurchaseSchema,
   });
 
   const env = envSchema.parse({
@@ -74,16 +67,20 @@ export default () => {
         url: process.env.AWS_BUCKET_URL,
       },
     },
+    purchase: {
+      secretKey: process.env.STRIPE_SECRET_KEY,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    },
   });
 
-  const logger = Logger(env.app.logLevel);
+  const logger = Logger(env.app);
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
   const authorization = Authorization(env.auth);
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const imagesRepository = ImagesRepository(env.aws.bucket);
+  const imagesRepository = ImagesRepository(env.aws);
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
     eventSourceRepository,
@@ -102,6 +99,7 @@ export default () => {
     env.aws.bucket
   );
   const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
+  const purchaseRouter = PurchaseRouter(listingsDomain, env.purchase);
 
   const app = express();
   app.use(cors({ origin: "*" }));
@@ -112,6 +110,7 @@ export default () => {
   app.use(`/api/v1/listings`, listingReadRouter);
   app.use(`/api/v1/listings`, authorization, listingWriteRouter);
   app.use(`/api/v1/listings/user`, authorization, userListingReadRouter);
+  app.use(`/api/v1/purchase`, purchaseRouter);
 
   app.use(errorHandler);
 
