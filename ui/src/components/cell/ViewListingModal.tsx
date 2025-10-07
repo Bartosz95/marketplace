@@ -29,8 +29,13 @@ function ViewListing({ listing }: ViewListing) {
   const imagePreview = (
     <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
-        <Carousel.Item key={imageUrl}>
-          <Image alt="no image" src={imageUrl} className="mx-auto" fluid />
+        <Carousel.Item key={imageUrl} className="image-carousel-item-my">
+          <Image
+            src={imageUrl}
+            alt="preview"
+            className="carousel-img-my"
+            fluid
+          />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -56,15 +61,17 @@ function ViewListing({ listing }: ViewListing) {
       </Modal.Body>
       <Modal.Footer>
         {isAuthenticated ? (
-          <Button
-            variant="primary"
-            className="ml-3"
-            style={{ width: "10rem", margin: "auto" }}
-            onClick={handlePurches}
-          >
-            Buy
-          </Button>
+          <Button href="/checkout">Checkout</Button>
         ) : (
+          // <CheckoutButton />
+          // <Button
+          //   variant="primary"
+          //   className="ml-3"
+          //   style={{ width: "10rem", margin: "auto" }}
+          //   onClick={handlePurches}
+          // >
+          //   Buy
+          // </Button>
           <Button onClick={() => loginWithRedirect()}>Log in to buy</Button>
         )}
       </Modal.Footer>

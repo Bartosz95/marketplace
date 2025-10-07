@@ -21,7 +21,7 @@ const mapFilterBy = (filterBy: FilterBy) => {
   }
 };
 
-function filterDropdown() {
+function FilterDropdown() {
   const { lastFilterBy } = useAppSelector(listingStoreSelector);
   const dispatch = useAppDispatch();
 
@@ -53,4 +53,4 @@ function filterDropdown() {
   );
 }
 
-export default filterDropdown;
+export default FilterDropdown;
