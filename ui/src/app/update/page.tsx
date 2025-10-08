@@ -3,7 +3,6 @@ import { ChangeEvent, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import { Listing } from "@/types";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
@@ -12,6 +11,8 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateListing } from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
+import { redirect } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 export const UpdateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20),
@@ -30,25 +31,29 @@ export const UpdateListingSchema = yup.object().shape({
 
 type UpdateListingDetails = Partial<yup.InferType<typeof UpdateListingSchema>>;
 
-export interface UpdateListingProps {
-  listing: Listing;
-}
-
-function UpdateListing({ listing }: UpdateListingProps) {
-  const { listingId } = listing;
-  const [imagesUrls, setImagesUrls] = useState<string[]>(listing.imagesUrls);
-  const { showListingUpdate } = useAppSelector(listingStoreSelector);
-
+function UpdateListingModal() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { showListingUpdate } = useAppSelector(listingStoreSelector);
+  const [imagesUrls, setImagesUrls] = useState<string[]>(
+    showListingUpdate?.imagesUrls || []
+  );
+
+  if (!showListingUpdate) redirect("/");
 
   const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
-    dispatch(updateListing({ ...updateListingDetails, listingId }));
-    dispatch(setShowListingUpdate(listingId));
+    dispatch(
+      updateListing({
+        ...updateListingDetails,
+        listingId: showListingUpdate.listingId,
+      })
+    );
+    router.push("/");
   };
 
   const imagePreview = (
     <Carousel className="mb-3 image-preview">
-      {imagesUrls.map((imageUrl) => (
+      {imagesUrls?.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image alt="no image" src={imageUrl} fluid />
         </Carousel.Item>
@@ -58,8 +63,11 @@ function UpdateListing({ listing }: UpdateListingProps) {
 
   return (
     <Modal
-      show={showListingUpdate === listingId}
-      onHide={() => dispatch(setShowListingUpdate(false))}
+      show={!!showListingUpdate}
+      onHide={() => {
+        dispatch(setShowListingUpdate(undefined));
+        redirect("/");
+      }}
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
@@ -117,7 +125,7 @@ function UpdateListing({ listing }: UpdateListingProps) {
                   onChange={handleChange}
                   className="mb-3"
                   isInvalid={touched.title && !!errors.title}
-                  defaultValue={listing.title}
+                  defaultValue={showListingUpdate.title}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.title}
@@ -133,7 +141,7 @@ function UpdateListing({ listing }: UpdateListingProps) {
                   onChange={handleChange}
                   className="mb-3"
                   isInvalid={touched.price && !!errors.price}
-                  defaultValue={listing.price}
+                  defaultValue={showListingUpdate.price}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.price}
@@ -148,7 +156,7 @@ function UpdateListing({ listing }: UpdateListingProps) {
                   onChange={handleChange}
                   className="mb-3"
                   isInvalid={touched.description && !!errors.description}
-                  defaultValue={listing.description}
+                  defaultValue={showListingUpdate.description}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.description}
@@ -165,4 +173,4 @@ function UpdateListing({ listing }: UpdateListingProps) {
   );
 }
 
-export default UpdateListing;
+export default UpdateListingModal;

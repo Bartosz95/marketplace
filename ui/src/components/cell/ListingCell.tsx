@@ -1,8 +1,6 @@
 import Card from "react-bootstrap/Card";
 import { Container } from "react-bootstrap";
 import { EventType, Listing } from "@/types";
-import ViewListing from "@/components/cell/ViewListingModal";
-import UpdateListing from "@/components/cell/UpdateListingModal";
 import { useAuth0 } from "@auth0/auth0-react";
 import ModifyListingDropdown from "./ModifyListingDropdown";
 import ViewButton from "./ViewButton";
@@ -11,16 +9,16 @@ interface ListingCellProps {
   listing: Listing;
 }
 function ListingCell({ listing }: ListingCellProps) {
-  const { userId, title, price, imagesUrls, status, listingId } = listing;
+  const { userId, title, price, imagesUrls, status } = listing;
   const { user } = useAuth0();
 
   const isUserListing =
     user?.sub === userId && status !== EventType.LISTING_PURCHASED;
 
   const listingActionButton = isUserListing ? (
-    <ModifyListingDropdown listingId={listingId} status={status} />
+    <ModifyListingDropdown listing={listing} />
   ) : (
-    <ViewButton listingId={listingId} />
+    <ViewButton listing={listing} />
   );
 
   return (
@@ -35,8 +33,6 @@ function ListingCell({ listing }: ListingCellProps) {
           </Container>
         </Card.Body>
       </Card>
-      <ViewListing listing={listing} />
-      <UpdateListing listing={listing} />
     </>
   );
 }

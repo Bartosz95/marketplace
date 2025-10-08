@@ -31,7 +31,7 @@ export const EnvPurchaseSchema = z.object({
   publishableKey: z.string(),
 });
 
-export type EnvAPurchase = z.infer<typeof EnvPurchaseSchema>;
+export type EnvPurchase = z.infer<typeof EnvPurchaseSchema>;
 
 export const fileSchema = z.object({
   fieldname: z.string(),

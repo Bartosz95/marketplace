@@ -1,18 +1,19 @@
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
+import { Listing } from "@/types";
 import { Button } from "react-bootstrap";
 
 interface ViewButtonProps {
-  listingId: string;
+  listing: Listing;
 }
 
-function ViewButton({ listingId }: ViewButtonProps) {
+function ViewButton({ listing }: ViewButtonProps) {
   const dispatch = useAppDispatch();
   return (
     <Button
       style={{ width: "10rem" }}
       onClick={() => {
-        dispatch(setShowListingView(listingId));
+        dispatch(setShowListingView(listing));
       }}
     >
       View

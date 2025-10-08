@@ -1,10 +1,10 @@
 import { FilterBy, Listing } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
+import { Stripe } from "@stripe/stripe-js";
 
 interface InitialState {
-  showListingCreate: boolean;
-  showListingView: string;
-  showListingUpdate: string;
+  showListingView?: Listing;
+  showListingUpdate?: Listing;
   theme: "dark" | "light";
   listings: Listing[];
   countOfAll: number;
@@ -13,15 +13,16 @@ interface InitialState {
   limit: number;
   offset: number;
   lastFilterBy: FilterBy;
-  token: string;
-  user: any;
+  token?: string;
+  user?: any;
   isAuthenticated: boolean;
+  apiURL?: string;
+  stripe: Stripe | null;
 }
 
 const initialState: InitialState = {
-  showListingCreate: false,
-  showListingView: "",
-  showListingUpdate: "",
+  showListingView: undefined,
+  showListingUpdate: undefined,
   theme: "dark",
   listings: [],
   countOfAll: 0,
@@ -30,9 +31,11 @@ const initialState: InitialState = {
   limit: 8,
   offset: 0,
   lastFilterBy: FilterBy.All,
-  token: "",
+  token: undefined,
   user: undefined,
   isAuthenticated: false,
+  apiURL: undefined,
+  stripe: null,
 };
 
 export const listingsSlice = createSlice({
@@ -41,9 +44,6 @@ export const listingsSlice = createSlice({
   reducers: {
     setShowListingView: (state, actions) => {
       state.showListingView = actions.payload;
-    },
-    setShowListingCreate: (state, actions) => {
-      state.showListingCreate = actions.payload;
     },
     setShowListingUpdate: (state, actions) => {
       state.showListingUpdate = actions.payload;
@@ -56,7 +56,10 @@ export const listingsSlice = createSlice({
     },
     setCountOfAll: (state, actions) => {
       state.countOfAll = actions.payload;
-      state.pagesNumbers =  Array.from({ length: Math.ceil(state.countOfAll / state.limit) }, (_, i) => i + 1);;
+      state.pagesNumbers = Array.from(
+        { length: Math.ceil(state.countOfAll / state.limit) },
+        (_, i) => i + 1
+      );
     },
     setActivePage: (state, actions) => {
       state.activePage = actions.payload;
@@ -73,12 +76,17 @@ export const listingsSlice = createSlice({
     setToken: (state, actions) => {
       state.token = actions.payload;
     },
+    setApiURL: (state, actions) => {
+      state.apiURL = actions.payload;
+    },
+    setStripe: (state, actions) => {
+      state.stripe = actions.payload;
+    },
   },
 });
 
 export const {
   setShowListingView,
-  setShowListingCreate,
   setShowListingUpdate,
   setTheme,
   setListings,
@@ -88,4 +96,6 @@ export const {
   setOffset,
   setLastFilteredBy,
   setToken,
+  setApiURL,
+  setStripe,
 } = listingsSlice.actions;

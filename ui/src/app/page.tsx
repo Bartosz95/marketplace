@@ -1,8 +1,6 @@
 "use client";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "./page.css";
 import ListingCell from "@/components/cell/ListingCell";
+import ViewListingModal from "@/components/cell/ViewListingModal";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
@@ -57,6 +55,8 @@ export default function Page() {
 
   return (
     <>
+      <ViewListingModal />
+      
       {ListingsCells}
       {Pages}
     </>

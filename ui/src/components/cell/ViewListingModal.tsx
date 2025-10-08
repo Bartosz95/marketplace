@@ -3,27 +3,21 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
 import { Carousel } from "react-bootstrap";
-import { Listing } from "../../types";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import { purchaseListing } from "@/lib/redux/thunks";
 import { useAuth0 } from "@auth0/auth0-react";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
+import { redirect } from "next/navigation";
 
-interface ViewListing {
-  listing: Listing;
-}
-
-function ViewListing({ listing }: ViewListing) {
-  const { title, description, price, imagesUrls, listingId } = listing;
+function ViewListingModal() {
+  const dispatch = useAppDispatch();
   const { isAuthenticated, loginWithRedirect } = useAuth0();
   const { showListingView } = useAppSelector(listingStoreSelector);
+  if (!showListingView) return;
+  const { title, description, price, imagesUrls } = showListingView;
 
-  const dispatch = useAppDispatch();
-
-  const handlePurches = async () => {
-    dispatch(purchaseListing(listingId));
-    dispatch(setShowListingView(false));
+  const redirectToCheckout = async () => {
+    redirect("/checkout");
   };
 
   const imagePreview = (
@@ -43,8 +37,8 @@ function ViewListing({ listing }: ViewListing) {
 
   return (
     <Modal
-      show={showListingView === listingId}
-      onHide={() => dispatch(setShowListingView(false))}
+      show={!!showListingView}
+      onHide={() => dispatch(setShowListingView(undefined))}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
       className="modal-view"
@@ -61,17 +55,15 @@ function ViewListing({ listing }: ViewListing) {
       </Modal.Body>
       <Modal.Footer>
         {isAuthenticated ? (
-          <Button href="/checkout">Checkout</Button>
+          <Button
+            variant="primary"
+            className="ml-3"
+            style={{ width: "10rem", margin: "auto" }}
+            onClick={redirectToCheckout}
+          >
+            Buy
+          </Button>
         ) : (
-          // <CheckoutButton />
-          // <Button
-          //   variant="primary"
-          //   className="ml-3"
-          //   style={{ width: "10rem", margin: "auto" }}
-          //   onClick={handlePurches}
-          // >
-          //   Buy
-          // </Button>
           <Button onClick={() => loginWithRedirect()}>Log in to buy</Button>
         )}
       </Modal.Footer>
@@ -79,4 +71,4 @@ function ViewListing({ listing }: ViewListing) {
   );
 }
 
-export default ViewListing;
+export default ViewListingModal;

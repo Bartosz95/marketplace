@@ -11,6 +11,8 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.5.0",
     "@reduxjs/toolkit": "^2.9.0",
+    "@stripe/react-stripe-js": "^5.0.0",
+    "@stripe/stripe-js": "^8.0.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "formik": "^2.4.6",

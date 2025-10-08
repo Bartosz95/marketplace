@@ -5,16 +5,17 @@ import {
   deleteListing,
   restoreListing,
 } from "@/lib/redux/thunks";
-import { EventType } from "@/types";
+import { EventType, Listing } from "@/types";
+import { redirect } from "next/navigation";
 import { Dropdown } from "react-bootstrap";
 
 interface ModifyListingDropdownProps {
-  listingId: string;
-  status: EventType;
+  listing: Listing;
 }
 
-function ModifyListingDropdown({ listingId, status }: ModifyListingDropdownProps) {
+function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
   const dispatch = useAppDispatch();
+  const { listingId, status } = listing;
 
   const archiveButton =
     status === EventType.LISTING_ARCHIVED ? (
@@ -33,9 +34,7 @@ function ModifyListingDropdown({ listingId, status }: ModifyListingDropdownProps
         Modify
       </Dropdown.Toggle>
       <Dropdown.Menu>
-        <Dropdown.Item
-          onClick={() => dispatch(setShowListingUpdate(listingId))}
-        >
+        <Dropdown.Item onClick={() => {dispatch(setShowListingUpdate(listing)); redirect('/update')}}>
           Update
         </Dropdown.Item>
         {archiveButton}

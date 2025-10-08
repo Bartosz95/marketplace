@@ -1,9 +1,16 @@
 import { sendApiV1Request } from "@/lib/sendApiV1Request";
 import { FilterBy } from "@/types";
-import { setCountOfAll, setLastFilteredBy, setListings } from "./listingsSlice";
-import { CreateListingDetails } from "@/components/nav/CreateListingModal";
-import { UpdateListingSchema } from "@/components/cell/UpdateListingModal";
+import {
+  setCountOfAll,
+  setLastFilteredBy,
+  setListings,
+  setShowListingView,
+  setStripe,
+} from "./listingsSlice";
 import * as yup from "yup";
+import { loadStripe } from "@stripe/stripe-js";
+import { CreateListingDetails } from "@/app/create/page";
+import { UpdateListingSchema } from "@/app/update/page";
 
 export const getListings =
   (filterBy?: FilterBy) => async (dispatch: any, getState: any) => {
@@ -74,6 +81,7 @@ export const updateListing =
       },
       body: formData,
     });
+    dispatch(setShowListingView(undefined));
   };
 
 export const purchaseListing =
@@ -123,3 +131,17 @@ export const restoreListing =
       },
     });
   };
+
+export const setupStripe = () => async (dispatch: any, getState: any) => {
+  const state = getState();
+  const { token } = state.listingsStore;
+  const { publishableKey } = await sendApiV1Request(`/purchase/config`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const stripe = await loadStripe(publishableKey);
+  console.log("stripe");
+  console.log(stripe);
+  dispatch(setStripe(stripe));
+};

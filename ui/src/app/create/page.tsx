@@ -8,9 +8,8 @@ import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { createListing } from "@/redux/thunks";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import { setShowListingCreate } from "@/lib/redux/listingsSlice";
-import { listingStoreSelector } from "@/lib/redux/selectors";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { redirect, useRouter } from "next/navigation";
 
 const CreateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20).required(),
@@ -36,9 +35,8 @@ function CreateListing() {
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     `/images/no-image.png`,
   ]);
-  const { showListingCreate } = useAppSelector(listingStoreSelector);
   const dispatch = useAppDispatch();
-
+  const router = useRouter();
   const imagePreview = (
     <Carousel className="mb-3 image-preview">
       {imagesUrls.map((imageUrl) => (
@@ -51,13 +49,13 @@ function CreateListing() {
 
   const handleCreate = async (createListingDetails: CreateListingDetails) => {
     dispatch(createListing(createListingDetails));
-    dispatch(setShowListingCreate(false));
+    router.push(`/`);
   };
 
   return (
     <Modal
-      show={showListingCreate}
-      onHide={() => dispatch(setShowListingCreate(false))}
+      show={true}
+      onHide={() => router.push(`/`)}
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"

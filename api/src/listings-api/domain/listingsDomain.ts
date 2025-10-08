@@ -5,6 +5,7 @@ import {
   GetListingsResponse,
   ListingCreatedEventData,
   ListingPurchasedEventData,
+  ListingState,
 } from "../../types";
 import { EventSourceRepository } from "../../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "../listingsWriteRouter";
@@ -26,6 +27,7 @@ export interface ListingsDomain {
     limit?: number,
     offset?: number
   ) => Promise<GetListingsResponse>;
+  getListingById: (listingId: UUID) => Promise<ListingState | undefined>;
 }
 
 export const ListingsDomain = (
@@ -185,6 +187,18 @@ export const ListingsDomain = (
     return modifyImagesUrls.addImageHostToListings(listings);
   };
 
+  const getListingById = async (
+    listingId: UUID
+  ): Promise<ListingState | undefined> => {
+    const statuses: EventType[] = [
+      EventType.LISTING_CREATED,
+      EventType.LISTING_UPDATED,
+    ];
+    const listings = await listingsStateRepository.getListingById(listingId);
+
+    return listings;
+  };
+
   return {
     create,
     update,
@@ -193,5 +207,6 @@ export const ListingsDomain = (
     restore,
     deleteListing,
     getListings,
+    getListingById,
   };
 };
