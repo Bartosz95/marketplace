@@ -3,8 +3,7 @@ import AuthProvider from "@/providers/AuthProvider";
 import StoreProvider from "@/providers/StoreProvider";
 import { ReactNode } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "./page.css";
+import "./global.css";
 
 type Props = { children: ReactNode };
 

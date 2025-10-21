@@ -22,7 +22,7 @@ export default function Page() {
       <Container>
         <Row key="listings">
           {listings.map((listing, idx) => (
-            <Col key={idx} style={{ flex: "0 0 0" }}>
+            <Col key={idx} className="no-flex">
               <ListingCell listing={listing} key={listing.listingId} />
             </Col>
           ))}
@@ -56,7 +56,7 @@ export default function Page() {
   return (
     <>
       <ViewListingModal />
-      
+
       {ListingsCells}
       {Pages}
     </>

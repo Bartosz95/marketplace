@@ -7,6 +7,7 @@ import {
 } from "@/lib/redux/thunks";
 import { EventType, Listing } from "@/types";
 import { redirect } from "next/navigation";
+import router from "next/router";
 import { Dropdown } from "react-bootstrap";
 
 interface ModifyListingDropdownProps {
@@ -30,11 +31,16 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
 
   return (
     <Dropdown>
-      <Dropdown.Toggle style={{ width: "10rem" }} id="dropdown-basic">
+      <Dropdown.Toggle className="button-style" id="dropdown-basic">
         Modify
       </Dropdown.Toggle>
       <Dropdown.Menu>
-        <Dropdown.Item onClick={() => {dispatch(setShowListingUpdate(listing)); redirect('/update')}}>
+        <Dropdown.Item
+          onClick={() => {
+            dispatch(setShowListingUpdate(listing));
+            redirect("/update");
+          }}
+        >
           Update
         </Dropdown.Item>
         {archiveButton}

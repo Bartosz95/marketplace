@@ -16,13 +16,6 @@ function LoginButton() {
           <Dropdown>
             <Dropdown.Toggle id="dropdown-basic">
               {user?.nickname}
-              <Image
-                style={{ width: "1.4rem", marginLeft: "5px" }}
-                src={user?.picture}
-                alt="no image"
-                roundedCircle
-                fluid
-              />
             </Dropdown.Toggle>
 
             <Dropdown.Menu>

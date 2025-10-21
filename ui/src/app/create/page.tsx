@@ -9,7 +9,7 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import { createListing } from "@/redux/thunks";
 import { useAppDispatch } from "@/lib/redux/hooks";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const CreateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20).required(),
@@ -38,10 +38,15 @@ function CreateListing() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const imagePreview = (
-    <Carousel className="mb-3 image-preview">
+    <Carousel className="carusel">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image alt="no image" src={imageUrl} fluid />
+          <Image
+            alt="listing image"
+            src={imageUrl}
+            fluid
+            className="carousel-image"
+          />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -80,7 +85,7 @@ function CreateListing() {
           {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
             <Form noValidate onSubmit={handleSubmit}>
               <Form.Group controlId="images" className="mb-3">
-                <Form.Label>Add images</Form.Label>
+                <Form.Label>Select images</Form.Label>
                 <Form.Control
                   type="file"
                   accept="image/*"
@@ -105,7 +110,7 @@ function CreateListing() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="title" className="mb-3">
-                <Form.Label>Listing title</Form.Label>
+                <Form.Label>Add title</Form.Label>
                 <Form.Control
                   type="text"
                   name="title"
@@ -120,7 +125,7 @@ function CreateListing() {
               </Form.Group>
 
               <Form.Group controlId="price" className="mb-3">
-                <Form.Label>Price:</Form.Label>
+                <Form.Label>Set price</Form.Label>
                 <Form.Control
                   type="number"
                   name="price"
@@ -134,7 +139,7 @@ function CreateListing() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="description" className="mb-3">
-                <Form.Label>Description</Form.Label>
+                <Form.Label>Describe your item</Form.Label>
                 <Form.Control
                   type="text"
                   name="description"
@@ -147,13 +152,8 @@ function CreateListing() {
                   {errors.description}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Button
-                variant="primary"
-                type="submit"
-                className="float-end button-style"
-                style={{ width: "10rem" }}
-              >
-                Add
+              <Button variant="primary" type="submit" className="button-style">
+                Create
               </Button>
             </Form>
           )}

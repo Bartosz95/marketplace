@@ -11,7 +11,7 @@ function ViewButton({ listing }: ViewButtonProps) {
   const dispatch = useAppDispatch();
   return (
     <Button
-      style={{ width: "10rem" }}
+      className="button-style"
       onClick={() => {
         dispatch(setShowListingView(listing));
       }}

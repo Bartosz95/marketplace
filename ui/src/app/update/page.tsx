@@ -11,8 +11,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { updateListing } from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { redirect } from "next/navigation";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 export const UpdateListingSchema = yup.object().shape({
   title: yup.string().min(1).max(20),
@@ -39,7 +38,7 @@ function UpdateListingModal() {
     showListingUpdate?.imagesUrls || []
   );
 
-  if (!showListingUpdate) redirect("/");
+  if (!showListingUpdate) return router.push(`/`);
 
   const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
     dispatch(
@@ -52,10 +51,15 @@ function UpdateListingModal() {
   };
 
   const imagePreview = (
-    <Carousel className="mb-3 image-preview">
+    <Carousel className="carusel">
       {imagesUrls?.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image alt="no image" src={imageUrl} fluid />
+          <Image
+            alt="listing image"
+            src={imageUrl}
+            className="carousel-image"
+            fluid
+          />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -66,7 +70,7 @@ function UpdateListingModal() {
       show={!!showListingUpdate}
       onHide={() => {
         dispatch(setShowListingUpdate(undefined));
-        redirect("/");
+        router.push(`/`);
       }}
       backdrop="static"
       size="lg"
@@ -92,7 +96,7 @@ function UpdateListingModal() {
           {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
             <Form noValidate onSubmit={handleSubmit}>
               <Form.Group controlId="images" className="mb-3">
-                <Form.Label>Add images</Form.Label>
+                <Form.Label>Select images</Form.Label>
                 <Form.Control
                   type="file"
                   accept="image/*"
@@ -117,7 +121,7 @@ function UpdateListingModal() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="title" className="mb-3">
-                <Form.Label>Listing title</Form.Label>
+                <Form.Label>Add title</Form.Label>
                 <Form.Control
                   type="text"
                   name="title"
@@ -133,7 +137,7 @@ function UpdateListingModal() {
               </Form.Group>
 
               <Form.Group controlId="price" className="mb-3">
-                <Form.Label>Price:</Form.Label>
+                <Form.Label>Set price</Form.Label>
                 <Form.Control
                   type="number"
                   name="price"
@@ -148,7 +152,7 @@ function UpdateListingModal() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="description" className="mb-3">
-                <Form.Label>Description</Form.Label>
+                <Form.Label>Describe your item</Form.Label>
                 <Form.Control
                   type="text"
                   name="description"
@@ -162,8 +166,8 @@ function UpdateListingModal() {
                   {errors.description}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Button variant="primary" type="submit" className="float-end">
-                Add
+              <Button variant="primary" type="submit" className="button-style">
+                Update
               </Button>
             </Form>
           )}

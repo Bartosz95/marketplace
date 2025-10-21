@@ -20,12 +20,11 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
       centered
     >
       <Modal.Header closeButton></Modal.Header>
-      <Modal.Body style={{ margin: "auto" }}>
+      <Modal.Body className="profile-modal">
         <Image
-          style={{ width: "14rem" }}
-          className="mb-3"
+          className="profile-modal-image"
           src={user?.picture}
-          alt="no image"
+          alt="profile image"
           roundedCircle
           fluid
         />

@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { redirect } from "next/navigation";
+import router from "next/router";
 
 function ViewListingModal() {
   const dispatch = useAppDispatch();
@@ -17,17 +17,17 @@ function ViewListingModal() {
   const { title, description, price, imagesUrls } = showListingView;
 
   const redirectToCheckout = async () => {
-    redirect("/checkout");
+    router.push("/checkout");
   };
 
   const imagePreview = (
-    <Carousel className="mb-3 image-preview">
+    <Carousel className="carusel">
       {imagesUrls.map((imageUrl) => (
-        <Carousel.Item key={imageUrl} className="image-carousel-item-my">
+        <Carousel.Item key={imageUrl}>
           <Image
             src={imageUrl}
-            alt="preview"
-            className="carousel-img-my"
+            alt="listing image"
+            className="carousel-image"
             fluid
           />
         </Carousel.Item>
@@ -57,8 +57,7 @@ function ViewListingModal() {
         {isAuthenticated ? (
           <Button
             variant="primary"
-            className="ml-3"
-            style={{ width: "10rem", margin: "auto" }}
+            className="button-style"
             onClick={redirectToCheckout}
           >
             Buy

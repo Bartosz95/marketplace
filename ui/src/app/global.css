@@ -1,0 +1,48 @@
+.modal-view {
+  margin: "auto";
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.blure {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.carusel {
+  width: "70%";
+  margin-bottom: 1rem;
+}
+
+.carousel-image {
+  margin: auto;
+  display: block;
+  margin-bottom: 1reem;
+}
+
+.button-style {
+  width: 10rem;
+  margin: auto;
+  display: block;
+}
+
+.no-flex {
+  flex: 0 0 0 !important;
+}
+
+.listing-cell {
+  width: 18rem !important;
+  margin-bottom: 1rem;
+}
+
+.listing-cell-image {
+  margin-bottom: 1rem;
+}
+
+.profile-modal {
+  margin: "auto";
+}
+
+.profile-modal-image {
+  width: "14rem";
+  margin-bottom: 1rem;
+}

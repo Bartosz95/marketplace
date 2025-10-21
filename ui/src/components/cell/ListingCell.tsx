@@ -23,14 +23,17 @@ function ListingCell({ listing }: ListingCellProps) {
 
   return (
     <>
-      <Card style={{ width: "18rem" }} className="mt-3 blure">
+      <Card className="listing-cell">
         <Card.Body>
-          <Card.Img variant="top" src={imagesUrls[0]} />
+          <Card.Img
+            variant="top"
+            src={imagesUrls[0]}
+            className="listing-cell-image"
+            alt="listing image"
+          />
           <Card.Title>{title}</Card.Title>
-          <Card.Text>Price: {price}</Card.Text>
-          <Container className="d-flex justify-content-center">
-            {listingActionButton}
-          </Container>
+          <Card.Text>${price}</Card.Text>
+          {listingActionButton}
         </Card.Body>
       </Card>
     </>

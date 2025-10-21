@@ -28,7 +28,10 @@ function FilterDropdown() {
   return (
     <NavDropdown title={mapFilterBy(lastFilterBy)}>
       <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.All))}>
-        {mapFilterBy(FilterBy.All)}
+        All
+      </NavDropdown.Item>
+      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.UserAll))}>
+        {mapFilterBy(FilterBy.UserAll)}
       </NavDropdown.Item>
       <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.Active))}>
         {mapFilterBy(FilterBy.Active)}
@@ -45,9 +48,6 @@ function FilterDropdown() {
         onClick={() => dispatch(getListings(FilterBy.Archived))}
       >
         {mapFilterBy(FilterBy.Archived)}
-      </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.UserAll))}>
-        {mapFilterBy(FilterBy.UserAll)}
       </NavDropdown.Item>
     </NavDropdown>
   );

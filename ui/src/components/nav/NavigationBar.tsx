@@ -10,6 +10,8 @@ import DarkModeSwitch from "./DarkModeSwitch";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { setApiURL, setToken } from "@/lib/redux/listingsSlice";
 import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import { Shop } from "react-bootstrap-icons";
 
 function NavigationBar() {
   const { theme } = useAppSelector(listingStoreSelector);
@@ -53,10 +55,10 @@ function NavigationBar() {
       <Navbar
         bg={theme}
         variant={theme}
-        expand="lg"
-        className="bg-body-tertiary d-flex gap-3 mb-2 "
+        className="bg-body-tertiary d-flex gap-3 mb-2"
       >
-        <Navbar.Brand href="/" className="ms-3">
+        <Navbar.Brand onClick={() => redirect(`/`)} className="ms-3 me-0">
+          <Shop className="me-2 pb-1 h-25" />
           Marketplace
         </Navbar.Brand>
         {createListingButton}
