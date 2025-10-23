@@ -19,14 +19,16 @@ export default function Page() {
 
   const ListingsCells = useMemo(
     () => (
-      <Container>
-        <Row key="listings">
-          {listings.map((listing, idx) => (
-            <Col key={idx} className="no-flex">
-              <ListingCell listing={listing} key={listing.listingId} />
-            </Col>
-          ))}
-        </Row>
+      <Container
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        {listings.map((listing, idx) => (
+          <ListingCell listing={listing} key={listing.listingId} />
+        ))}
       </Container>
     ),
     [listings]

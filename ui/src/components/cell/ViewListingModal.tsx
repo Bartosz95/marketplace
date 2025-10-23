@@ -21,13 +21,13 @@ function ViewListingModal() {
   };
 
   const imagePreview = (
-    <Carousel className="carusel">
+    <Carousel className="mb-3">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image
             src={imageUrl}
             alt="listing image"
-            className="carousel-image"
+            className="set-center mb-3"
             fluid
           />
         </Carousel.Item>
@@ -41,7 +41,7 @@ function ViewListingModal() {
       onHide={() => dispatch(setShowListingView(undefined))}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
-      className="modal-view"
+      className="modal-view m-auto"
       size="lg"
       centered
     >
@@ -57,13 +57,18 @@ function ViewListingModal() {
         {isAuthenticated ? (
           <Button
             variant="primary"
-            className="button-style"
+            className="button-style set-center"
             onClick={redirectToCheckout}
           >
             Buy
           </Button>
         ) : (
-          <Button onClick={() => loginWithRedirect()}>Log in to buy</Button>
+          <Button
+            onClick={() => loginWithRedirect()}
+            className="button-style set-center"
+          >
+            Log in to buy
+          </Button>
         )}
       </Modal.Footer>
     </Modal>

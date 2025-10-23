@@ -38,14 +38,14 @@ function CreateListing() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const imagePreview = (
-    <Carousel className="carusel">
+    <Carousel className="mb-3">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image
             alt="listing image"
             src={imageUrl}
             fluid
-            className="carousel-image"
+            className="set-center mb-3"
           />
         </Carousel.Item>
       ))}
@@ -65,7 +65,7 @@ function CreateListing() {
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
-      className="modal-view"
+      className="modal-view m-auto"
     >
       <Modal.Header closeButton>
         <Modal.Title>Enter listing details</Modal.Title>
@@ -152,7 +152,11 @@ function CreateListing() {
                   {errors.description}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Button variant="primary" type="submit" className="button-style">
+              <Button
+                variant="primary"
+                type="submit"
+                className="button-style set-center"
+              >
                 Create
               </Button>
             </Form>

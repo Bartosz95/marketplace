@@ -31,7 +31,7 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
 
   return (
     <Dropdown>
-      <Dropdown.Toggle className="button-style" id="dropdown-basic">
+      <Dropdown.Toggle className="button-style set-center" id="dropdown-basic">
         Modify
       </Dropdown.Toggle>
       <Dropdown.Menu>

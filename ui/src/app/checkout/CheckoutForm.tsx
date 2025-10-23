@@ -44,7 +44,7 @@ function CheckoutForm() {
         show={true}
         backdrop="static"
         aria-labelledby="contained-modal-title-vcenter"
-        className="modal-view"
+        className="modal-view m-auto"
         size="lg"
         centered
       >
@@ -57,7 +57,7 @@ function CheckoutForm() {
             <Button
               disabled={isProcessing}
               type="submit"
-              className="button-style"
+              className="button-style set-center"
             >
               Purchase
             </Button>

@@ -38,7 +38,7 @@ function UpdateListingModal() {
     showListingUpdate?.imagesUrls || []
   );
 
-  if (!showListingUpdate) return router.push(`/`);
+  if (!showListingUpdate) return router.push("/");
 
   const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
     dispatch(
@@ -51,13 +51,13 @@ function UpdateListingModal() {
   };
 
   const imagePreview = (
-    <Carousel className="carusel">
+    <Carousel className="mb-3">
       {imagesUrls?.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
           <Image
             alt="listing image"
             src={imageUrl}
-            className="carousel-image"
+            className="set-center mb-3"
             fluid
           />
         </Carousel.Item>
@@ -75,7 +75,7 @@ function UpdateListingModal() {
       backdrop="static"
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
-      className="modal-view"
+      className="modal-view m-auto"
       centered
     >
       <Modal.Header closeButton>
@@ -166,7 +166,11 @@ function UpdateListingModal() {
                   {errors.description}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Button variant="primary" type="submit" className="button-style">
+              <Button
+                variant="primary"
+                type="submit"
+                className="button-style set-center"
+              >
                 Update
               </Button>
             </Form>

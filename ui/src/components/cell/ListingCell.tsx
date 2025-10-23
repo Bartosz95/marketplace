@@ -23,12 +23,12 @@ function ListingCell({ listing }: ListingCellProps) {
 
   return (
     <>
-      <Card className="listing-cell">
+      <Card className="listing-cell m-3">
         <Card.Body>
           <Card.Img
             variant="top"
             src={imagesUrls[0]}
-            className="listing-cell-image"
+            className="mb-3"
             alt="listing image"
           />
           <Card.Title>{title}</Card.Title>

@@ -10,11 +10,13 @@ function LoginButton() {
   return (
     <div className="me-3">
       {!isAuthenticated ? (
-        <Button onClick={() => loginWithRedirect()}>Log In</Button>
+        <Button className="button-style" onClick={() => loginWithRedirect()}>
+          Log In
+        </Button>
       ) : (
         <>
           <Dropdown>
-            <Dropdown.Toggle id="dropdown-basic">
+            <Dropdown.Toggle id="dropdown-basic" style={{ minWidth: "10rem" }}>
               {user?.nickname}
             </Dropdown.Toggle>
 

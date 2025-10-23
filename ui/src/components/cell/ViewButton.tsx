@@ -11,7 +11,7 @@ function ViewButton({ listing }: ViewButtonProps) {
   const dispatch = useAppDispatch();
   return (
     <Button
-      className="button-style"
+      className="button-style set-center"
       onClick={() => {
         dispatch(setShowListingView(listing));
       }}

@@ -16,13 +16,13 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
       onHide={handleClose}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
-      className="modal-view"
+      className="modal-view m-auto"
       centered
     >
       <Modal.Header closeButton></Modal.Header>
-      <Modal.Body className="profile-modal">
+      <Modal.Body className="m-auto">
         <Image
-          className="profile-modal-image"
+          className="profile-modal-image mb-3"
           src={user?.picture}
           alt="profile image"
           roundedCircle

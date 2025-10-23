@@ -4,7 +4,7 @@ import { PlusLg } from "react-bootstrap-icons";
 
 function CreateListingButton() {
   return (
-    <Button onClick={() => redirect("/create")}>
+    <Button onClick={() => redirect("/create")} className="button-style">
       <PlusLg className="pb-1 pe-1" />
       Create listing
     </Button>
