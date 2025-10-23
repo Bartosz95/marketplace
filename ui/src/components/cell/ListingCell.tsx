@@ -1,5 +1,4 @@
 import Card from "react-bootstrap/Card";
-import { Container } from "react-bootstrap";
 import { EventType, Listing } from "@/types";
 import { useAuth0 } from "@auth0/auth0-react";
 import ModifyListingDropdown from "./ModifyListingDropdown";
@@ -22,21 +21,19 @@ function ListingCell({ listing }: ListingCellProps) {
   );
 
   return (
-    <>
-      <Card className="listing-cell m-3">
-        <Card.Body>
-          <Card.Img
-            variant="top"
-            src={imagesUrls[0]}
-            className="mb-3"
-            alt="listing image"
-          />
-          <Card.Title>{title}</Card.Title>
-          <Card.Text>${price}</Card.Text>
-          {listingActionButton}
-        </Card.Body>
-      </Card>
-    </>
+    <Card className="listing-cell m-3">
+      <Card.Body>
+        <Card.Img
+          variant="top"
+          src={imagesUrls[0]}
+          className="mb-3"
+          alt="listing image"
+        />
+        <Card.Title>{title}</Card.Title>
+        <Card.Text>${price}</Card.Text>
+        {listingActionButton}
+      </Card.Body>
+    </Card>
   );
 }
 

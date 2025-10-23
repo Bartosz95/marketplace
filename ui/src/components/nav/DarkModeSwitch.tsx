@@ -7,19 +7,17 @@ function DarkModeSwitch() {
   const { theme } = useAppSelector(listingStoreSelector);
   const dispatch = useAppDispatch();
   return (
-    <Nav className="ms-auto">
-      <Form>
-        <Form.Check
-          type="switch"
-          id="dark-mode-switch"
-          label="Dark Mode"
-          checked={theme === "dark"}
-          onChange={() =>
-            dispatch(setTheme(theme === "light" ? "dark" : "light"))
-          }
-        />
-      </Form>
-    </Nav>
+    <Form>
+      <Form.Check
+        type="switch"
+        id="dark-mode-switch"
+        label="Dark Mode"
+        checked={theme === "dark"}
+        onChange={() =>
+          dispatch(setTheme(theme === "light" ? "dark" : "light"))
+        }
+      />
+    </Form>
   );
 }
 

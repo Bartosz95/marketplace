@@ -1,16 +1,14 @@
 "use client";
-import { Navbar } from "react-bootstrap";
+import { Nav, Navbar, NavItem } from "react-bootstrap";
 import Login from "@/components/nav/LoginButton";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
 import FilterDropdown from "./FilterDropdown";
 import CreateListingButton from "./CreateListingButton";
-import LoginToAddListingButton from "./LoginToAddListingButton";
 import DarkModeSwitch from "./DarkModeSwitch";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { setApiURL, setToken } from "@/lib/redux/listingsSlice";
 import { useEffect } from "react";
-import { redirect } from "next/navigation";
 import { Shop } from "react-bootstrap-icons";
 
 function NavigationBar() {
@@ -44,29 +42,34 @@ function NavigationBar() {
     }
   }, [theme === "dark"]);
 
-  const createListingButton = isAuthenticated ? (
-    <CreateListingButton />
-  ) : (
-    <LoginToAddListingButton />
-  );
+  const createListingButton = isAuthenticated && <CreateListingButton />;
 
   return (
-    <>
-      <Navbar
-        bg={theme}
-        variant={theme}
-        className="bg-body-tertiary d-flex gap-3 mb-2"
-      >
-        <Navbar.Brand onClick={() => redirect(`/`)} className="ms-3 me-0">
-          <Shop className="me-2 pb-1 h-25" />
-          Marketplace
-        </Navbar.Brand>
-        {createListingButton}
-        {isAuthenticated && <FilterDropdown />}
-        <DarkModeSwitch />
-        <Login />
-      </Navbar>
-    </>
+    <Navbar expand="lg" className="bg-body-tertiary py-1 px-3">
+      <Navbar.Brand href="/">
+        <Shop /> Marketplace
+      </Navbar.Brand>
+      <Navbar.Toggle aria-controls="nav-menu" />
+      <Navbar.Collapse>
+        <Nav className="me-auto gap-2">
+          <NavItem>{createListingButton}</NavItem>
+          <NavItem>{isAuthenticated && <FilterDropdown />}</NavItem>
+        </Nav>
+      </Navbar.Collapse>
+      <Navbar.Collapse id="nav-menu" className="justify-content-end">
+        <Nav
+          variant={theme}
+          className="gap-2 justify-content-end navbar-expand navbar py-1"
+        >
+          <NavItem>
+            <DarkModeSwitch />
+          </NavItem>
+          <NavItem>
+            <Login />
+          </NavItem>
+        </Nav>
+      </Navbar.Collapse>
+    </Navbar>
   );
 }
 

@@ -65,7 +65,7 @@ function CreateListing() {
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
       centered
-      className="modal-view m-auto"
+      className="blure m-auto"
     >
       <Modal.Header closeButton>
         <Modal.Title>Enter listing details</Modal.Title>
