@@ -6,7 +6,7 @@ import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { getListings } from "@/lib/redux/thunks";
 import { useEffect, useMemo } from "react";
-import { Container, Row, Col, Pagination } from "react-bootstrap";
+import { Container, Pagination } from "react-bootstrap";
 
 export default function Page() {
   const dispatch = useAppDispatch();
@@ -58,7 +58,6 @@ export default function Page() {
   return (
     <>
       <ViewListingModal />
-
       {ListingsCells}
       {Pages}
     </>

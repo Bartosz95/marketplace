@@ -28,7 +28,7 @@ const initialState: InitialState = {
   countOfAll: 0,
   activePage: 1,
   pagesNumbers: [1],
-  limit: 8,
+  limit: 12,
   offset: 0,
   lastFilterBy: FilterBy.All,
   token: undefined,

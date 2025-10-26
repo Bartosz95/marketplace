@@ -45,9 +45,12 @@ function NavigationBar() {
   const createListingButton = isAuthenticated && <CreateListingButton />;
 
   return (
-    <Navbar expand="lg" className="bg-body-tertiary py-1 px-3">
+    <Navbar
+      expand="lg"
+      className="bg-body-tertiary py-1 px-3 position-sticky top-0 z-3"
+    >
       <Navbar.Brand href="/">
-        <Shop /> Marketplace
+        <Shop viewBox="0 3 16 16" className="h-3" height="2rem" /> Marketplace
       </Navbar.Brand>
       <Navbar.Toggle aria-controls="nav-menu" />
       <Navbar.Collapse>
