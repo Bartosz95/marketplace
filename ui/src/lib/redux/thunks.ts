@@ -11,9 +11,11 @@ import * as yup from "yup";
 import { loadStripe } from "@stripe/stripe-js";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
+import { AppDispatch, AppGetState } from "./store";
 
 export const getListings =
-  (filterBy?: FilterBy) => async (dispatch: any, getState: any) => {
+  (filterBy?: FilterBy) =>
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const { lastFilterBy, limit, offset, token } = state.listingsStore;
 
@@ -36,7 +38,7 @@ export const getListings =
 
 export const createListing =
   ({ title, price, description, images }: CreateListingDetails) =>
-  async (dispatch: any, getState: any) => {
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     if (!title || !price || !description || !images) return;
     const formData = new FormData();
     images.forEach((image) => {
@@ -62,7 +64,7 @@ export type UpdateListingThunksProp = Partial<
 
 export const updateListing =
   ({ listingId, title, price, description, images }: UpdateListingThunksProp) =>
-  async (dispatch: any, getState: any) => {
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const formData = new FormData();
     if (images)
       images.forEach((image) => {
@@ -85,7 +87,8 @@ export const updateListing =
   };
 
 export const purchaseListing =
-  (listingId: string) => async (dispatch: any, getState: any) => {
+  (listingId: string) =>
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const { token } = state.listingsStore;
     await sendApiV1Request(`/listings/${listingId}`, {
@@ -97,7 +100,8 @@ export const purchaseListing =
   };
 
 export const deleteListing =
-  (listingId: string) => async (dispatch: any, getState: any) => {
+  (listingId: string) =>
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const { token } = state.listingsStore;
     await sendApiV1Request(`/listings/${listingId}`, {
@@ -109,7 +113,8 @@ export const deleteListing =
   };
 
 export const archiveListing =
-  (listingId: string) => async (dispatch: any, getState: any) => {
+  (listingId: string) =>
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const { token } = state.listingsStore;
     await sendApiV1Request(`/listings/archive/${listingId}`, {
@@ -121,7 +126,8 @@ export const archiveListing =
   };
 
 export const restoreListing =
-  (listingId: string) => async (dispatch: any, getState: any) => {
+  (listingId: string) =>
+  async (dispatch: AppDispatch, getState: AppGetState) => {
     const state = getState();
     const { token } = state.listingsStore;
     await sendApiV1Request(`/listings/restore/${listingId}`, {
@@ -132,16 +138,17 @@ export const restoreListing =
     });
   };
 
-export const setupStripe = () => async (dispatch: any, getState: any) => {
-  const state = getState();
-  const { token } = state.listingsStore;
-  const { publishableKey } = await sendApiV1Request(`/purchase/config`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const stripe = await loadStripe(publishableKey);
-  console.log("stripe");
-  console.log(stripe);
-  dispatch(setStripe(stripe));
-};
+export const setupStripe =
+  () => async (dispatch: AppDispatch, getState: AppGetState) => {
+    const state = getState();
+    const { token } = state.listingsStore;
+    const { publishableKey } = await sendApiV1Request(`/purchase/config`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const stripe = await loadStripe(publishableKey);
+    console.log("stripe");
+    console.log(stripe);
+    dispatch(setStripe(stripe));
+  };

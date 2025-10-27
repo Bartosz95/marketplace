@@ -1,8 +1,9 @@
 import { FilterBy, Listing } from "@/types";
+import { User } from "@auth0/auth0-react";
 import { createSlice } from "@reduxjs/toolkit";
 import { Stripe } from "@stripe/stripe-js";
 
-interface InitialState {
+interface State {
   showListingView?: Listing;
   showListingUpdate?: Listing;
   theme: "dark" | "light";
@@ -14,13 +15,13 @@ interface InitialState {
   offset: number;
   lastFilterBy: FilterBy;
   token?: string;
-  user?: any;
+  user?: User;
   isAuthenticated: boolean;
   apiURL?: string;
-  stripe: Stripe | null;
+  stripe?: Stripe;
 }
 
-const initialState: InitialState = {
+const initialState: State = {
   showListingView: undefined,
   showListingUpdate: undefined,
   theme: "dark",
@@ -35,7 +36,6 @@ const initialState: InitialState = {
   user: undefined,
   isAuthenticated: false,
   apiURL: undefined,
-  stripe: null,
 };
 
 export const listingsSlice = createSlice({

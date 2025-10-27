@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.5.0",
@@ -25,7 +25,6 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@types/node": "^20.19.17",
     "@types/react": "^19.1.13",
     "@types/react-bootstrap": "^1.0.1",

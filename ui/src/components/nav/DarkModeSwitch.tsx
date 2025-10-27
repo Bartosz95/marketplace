@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setTheme } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { Nav, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 
 function DarkModeSwitch() {
   const { theme } = useAppSelector(listingStoreSelector);

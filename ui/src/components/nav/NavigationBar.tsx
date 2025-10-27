@@ -30,17 +30,17 @@ function NavigationBar() {
         console.error(err);
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, getAccessTokenSilently, dispatch]);
 
   useEffect(() => {
     dispatch(setApiURL(process.env.NEXT_PUBLIC_API_URL));
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-bs-theme", theme);
     }
-  }, [theme === "dark"]);
+  }, [theme]);
 
   const createListingButton = isAuthenticated && <CreateListingButton />;
 

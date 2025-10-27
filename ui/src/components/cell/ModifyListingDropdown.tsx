@@ -7,7 +7,6 @@ import {
 } from "@/lib/redux/thunks";
 import { EventType, Listing } from "@/types";
 import { redirect } from "next/navigation";
-import router from "next/router";
 import { Dropdown } from "react-bootstrap";
 
 interface ModifyListingDropdownProps {
