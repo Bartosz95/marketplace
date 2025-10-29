@@ -19,3 +19,9 @@
 .profile-modal-image {
   width: 14rem;
 }
+
+.custom-modal-dialog {
+  max-width: 50vw; /* Set desired maximum width, e.g., 90% of viewport width */
+  width: 70vw; /* Ensure the width is applied */
+  height: auto;
+}

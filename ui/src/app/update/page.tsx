@@ -51,15 +51,10 @@ function UpdateListingModal() {
   };
 
   const imagePreview = (
-    <Carousel className="mb-3">
+    <Carousel className="mb-3 w-50 set-center">
       {imagesUrls?.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image
-            alt="listing image"
-            src={imageUrl}
-            className="set-center mb-3"
-            fluid
-          />
+          <Image alt="listing image" src={imageUrl} fluid />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -73,8 +68,8 @@ function UpdateListingModal() {
         router.push(`/`);
       }}
       backdrop="static"
-      size="lg"
       aria-labelledby="contained-modal-title-vcenter"
+      dialogClassName="custom-modal-dialog"
       className="blure m-auto"
       centered
     >
@@ -96,11 +91,12 @@ function UpdateListingModal() {
           {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
             <Form noValidate onSubmit={handleSubmit}>
               <Form.Group controlId="images" className="mb-3">
-                <Form.Label>Select images</Form.Label>
+                <Form.Label htmlFor="images">Select images</Form.Label>
                 <Form.Control
                   type="file"
                   accept="image/*"
                   name="images"
+                  id="images"
                   onChange={(event: ChangeEvent<HTMLInputElement>) => {
                     handleChange(event);
                     const images = Array.from(event.currentTarget.files || []);
@@ -111,7 +107,6 @@ function UpdateListingModal() {
                       );
                     }
                   }}
-                  className="mb-3"
                   multiple
                   required
                   isInvalid={touched.images && !!errors.images}
@@ -121,13 +116,13 @@ function UpdateListingModal() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="title" className="mb-3">
-                <Form.Label>Add title</Form.Label>
+                <Form.Label htmlFor="title">Add title</Form.Label>
                 <Form.Control
                   type="text"
                   name="title"
+                  id="title"
                   placeholder="Title"
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.title && !!errors.title}
                   defaultValue={showListingUpdate.title}
                 />
@@ -137,13 +132,13 @@ function UpdateListingModal() {
               </Form.Group>
 
               <Form.Group controlId="price" className="mb-3">
-                <Form.Label>Set price</Form.Label>
+                <Form.Label htmlFor="price">Set price</Form.Label>
                 <Form.Control
                   type="number"
                   name="price"
+                  id="price"
                   placeholder="Price"
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.price && !!errors.price}
                   defaultValue={showListingUpdate.price}
                 />
@@ -152,13 +147,18 @@ function UpdateListingModal() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="description" className="mb-3">
-                <Form.Label>Describe your item</Form.Label>
+                <Form.Label htmlFor="description">
+                  Describe your item
+                </Form.Label>
                 <Form.Control
+                  as="textarea"
+                  rows={3}
                   type="text"
                   name="description"
+                  id="description"
                   placeholder="Description"
+                  maxLength={255}
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.description && !!errors.description}
                   defaultValue={showListingUpdate.description}
                 />

@@ -10,10 +10,15 @@ type Props = { children: ReactNode };
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en">
+      <head>
+        <title>Marketplace</title>
+      </head>
       <body>
         <AuthProvider>
           <StoreProvider>
-            <NavigationBar />
+            <header>
+              <NavigationBar />
+            </header>
             <main>{children}</main>
           </StoreProvider>
         </AuthProvider>

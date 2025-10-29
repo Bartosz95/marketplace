@@ -38,15 +38,10 @@ function CreateListing() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const imagePreview = (
-    <Carousel className="mb-3">
+    <Carousel className="mb-3 w-50 set-center">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image
-            alt="listing image"
-            src={imageUrl}
-            fluid
-            className="set-center mb-3"
-          />
+          <Image alt="listing image" src={imageUrl} fluid />
         </Carousel.Item>
       ))}
     </Carousel>
@@ -62,10 +57,10 @@ function CreateListing() {
       show={true}
       onHide={() => router.push(`/`)}
       backdrop="static"
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
       centered
+      dialogClassName="custom-modal-dialog"
       className="blure m-auto"
+      aria-labelledby="contained-modal-title-vcenter"
     >
       <Modal.Header closeButton>
         <Modal.Title>Enter listing details</Modal.Title>
@@ -85,11 +80,12 @@ function CreateListing() {
           {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
             <Form noValidate onSubmit={handleSubmit}>
               <Form.Group controlId="images" className="mb-3">
-                <Form.Label>Select images</Form.Label>
+                <Form.Label htmlFor="images">Select images</Form.Label>
                 <Form.Control
                   type="file"
                   accept="image/*"
                   name="images"
+                  id="images"
                   onChange={(event: ChangeEvent<HTMLInputElement>) => {
                     handleChange(event);
                     const images = Array.from(event.currentTarget.files || []);
@@ -100,7 +96,6 @@ function CreateListing() {
                       );
                     }
                   }}
-                  className="mb-3"
                   multiple
                   required
                   isInvalid={touched.images && !!errors.images}
@@ -110,13 +105,13 @@ function CreateListing() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="title" className="mb-3">
-                <Form.Label>Add title</Form.Label>
+                <Form.Label htmlFor="title">Add title</Form.Label>
                 <Form.Control
                   type="text"
                   name="title"
+                  id="title"
                   placeholder="Title"
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.title && !!errors.title}
                 />
                 <Form.Control.Feedback type="invalid">
@@ -125,13 +120,13 @@ function CreateListing() {
               </Form.Group>
 
               <Form.Group controlId="price" className="mb-3">
-                <Form.Label>Set price</Form.Label>
+                <Form.Label htmlFor="price">Set price</Form.Label>
                 <Form.Control
                   type="number"
                   name="price"
+                  id="price"
                   placeholder="Price"
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.price && !!errors.price}
                 />
                 <Form.Control.Feedback type="invalid">
@@ -139,13 +134,17 @@ function CreateListing() {
                 </Form.Control.Feedback>
               </Form.Group>
               <Form.Group controlId="description" className="mb-3">
-                <Form.Label>Describe your item</Form.Label>
+                <Form.Label htmlFor="description">
+                  Describe your item
+                </Form.Label>
                 <Form.Control
-                  type="text"
+                  as="textarea"
+                  rows={3}
+                  maxLength={255}
+                  id="description"
                   name="description"
                   placeholder="Description"
                   onChange={handleChange}
-                  className="mb-3"
                   isInvalid={touched.description && !!errors.description}
                 />
                 <Form.Control.Feedback type="invalid">
