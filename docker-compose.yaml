@@ -67,7 +67,23 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-storage:/var/lib/postgresql/data
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      # Optional: Set default admin user and password (change in production)
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+      # Optional: Configure root URL if Grafana is behind a reverse proxy
+      # - GF_SERVER_ROOT_URL=http://your-domain.com:3000
 volumes:
-  postgres_data:
+  postgres-storage:
+  grafana-storage:
+    driver: local
