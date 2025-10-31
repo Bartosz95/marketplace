@@ -1,3 +1,3 @@
 import { RootState } from "./store";
 
-export const listingStoreSelector = (state: RootState) => state.listingsStore
+export const listingStoreSelector = (state: RootState) => state.listingsStore;
