@@ -1,4 +1,3 @@
-import { Logger } from "winston";
 import { Pool, PoolConfig } from "pg";
 import { EnvDB } from "../libs/validationSchemas";
 

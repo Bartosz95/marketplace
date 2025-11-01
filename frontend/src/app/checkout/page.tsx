@@ -5,26 +5,26 @@ import { useEffect, useState } from "react";
 import CheckoutForm from "./CheckoutForm";
 import { Elements } from "@stripe/react-stripe-js";
 import { sendApiV1Request } from "@/lib/sendApiV1Request";
-import router from "next/router";
+import { redirect } from "next/navigation";
 
 function Checkout() {
   const { stripe, showListingView } = useAppSelector(listingStoreSelector);
   const [clientSecret, setClientSecret] = useState<string>();
 
   useEffect(() => {
-    if(showListingView)
-    sendApiV1Request(
-      `/purchase/create-payment-intent/${showListingView?.listingId}`,
-      {
-        method: "POST",
-        body: JSON.stringify({}),
-      }
-    ).then(({ clientSecret }) => {
-      setClientSecret(clientSecret);
-    });
+    if (showListingView)
+      sendApiV1Request(
+        `/purchase/create-payment-intent/${showListingView?.listingId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        }
+      ).then(({ clientSecret }) => {
+        setClientSecret(clientSecret);
+      });
   }, [stripe, showListingView]);
 
-  if (!showListingView) return router.push("/");
+  if (!showListingView) return redirect("/");
 
   return (
     <>

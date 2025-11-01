@@ -1,10 +1,6 @@
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
-import {
-  EventType,
-  Event,
-  EventData,
-} from "../types";
+import { EventType, Event, EventData } from "../types";
 import { EnvDB } from "../libs/validationSchemas";
 
 export interface EventSourceRepository {
@@ -14,7 +10,10 @@ export interface EventSourceRepository {
     eventType: EventType,
     eventData: EventData
   ) => Promise<void>;
-  getEventsFromPosition: (position: number, eventsNumber: number) => Promise<Event[]>;
+  getEventsFromPosition: (
+    position: number,
+    eventsNumber: number
+  ) => Promise<Event[]>;
 }
 
 export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
@@ -65,7 +64,10 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
     }
   };
 
-  const getEventsFromPosition = async (startPosition: number, eventsNumber: number): Promise<Event[]> => {
+  const getEventsFromPosition = async (
+    startPosition: number,
+    eventsNumber: number
+  ): Promise<Event[]> => {
     const dbClient = await pool.connect();
     try {
       const endPosition = startPosition + eventsNumber;

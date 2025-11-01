@@ -1,9 +1,8 @@
 import winston from "winston";
-import { EnvApp } from "../listings-api/app";
 
-export const Logger = (env: EnvApp) => {
+export const Logger = (level: string) => {
   const logger = winston.createLogger({
-    level: env.logLevel,
+    level,
     format: winston.format.simple(),
     transports: [
       new winston.transports.Console({

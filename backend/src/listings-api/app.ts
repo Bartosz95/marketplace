@@ -73,7 +73,7 @@ export default () => {
     },
   });
 
-  const logger = Logger(env.app);
+  const logger = Logger(env.app.logLevel);
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
   const authorization = Authorization(env.auth);
