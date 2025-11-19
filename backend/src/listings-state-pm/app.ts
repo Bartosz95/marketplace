@@ -5,6 +5,7 @@ import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
 import { ListingsStateProcessManager } from "./listingStateProcessManager";
 import { Iteration } from "../libs/iteration";
+import { IterationMetrics } from "../libs/iterationMetrics";
 
 export default () => {
   const envSchema = z.object({
@@ -13,6 +14,7 @@ export default () => {
       logLevel: z.string(),
       timeout: z.coerce.number(),
       numberOfEventsPerIteration: z.number().default(100),
+      metricsPort: z.coerce.number().default(4001),
     }),
     db: z.object({
       host: z.string(),
@@ -30,6 +32,7 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
+      metricsPort: process.env.APP_METRICS_PORT,
     },
     db: {
       host: process.env.DB_HOST,
@@ -45,12 +48,15 @@ export default () => {
   const eventSourceRepository = EventSourceRepository(env.db);
   const listingsStateRepository = ListingsStateRepository(env.db);
   const processManager = ListingsStateProcessManager(listingsStateRepository);
+  const iterationMetrics = IterationMetrics(env.app.name, logger);
+  iterationMetrics.startMetricsServer(env.app.metricsPort);
+
   const iterate = Iteration(
-    logger,
     bookmarkRepository,
     eventSourceRepository,
     processManager,
-    env.app.numberOfEventsPerIteration
+    env.app.numberOfEventsPerIteration,
+    iterationMetrics
   );
   const delay = (timeout: number) =>
     new Promise((resolve) => setTimeout(resolve, timeout));
@@ -60,6 +66,7 @@ export default () => {
       try {
         await iterate();
       } catch (error) {
+        console.log(error);
         logger.error(error);
       } finally {
         await delay(env.app.timeout);

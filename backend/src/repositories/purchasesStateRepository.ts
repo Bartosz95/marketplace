@@ -7,6 +7,7 @@ import {
   PurchaseStateTableRow,
   PurchaseStatus,
 } from "../types";
+import { EnvDB } from "../libs/validationSchemas";
 
 export interface PurchasesStateRepository {
   updatePurchase: (purchase: PurchaseState) => Promise<void>;
@@ -30,7 +31,7 @@ export interface PurchasesStateRepository {
 }
 
 export const PurchasesStateRepository = (
-  env: any
+  env: EnvDB
 ): PurchasesStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,

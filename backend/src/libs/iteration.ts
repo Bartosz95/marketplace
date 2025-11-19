@@ -1,27 +1,38 @@
-import { Logger } from "winston";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Event } from "../types";
 
 export const Iteration = (
-  logger: Logger,
   bookmarkRepository: BookmarkRepository,
   eventSourceRepository: EventSourceRepository,
   processManager: (event: Event) => Promise<void>,
-  eventsNumber: number
+  eventsNumber: number,
+  iterationMetrics: {
+    startMetricsServer?: (port?: number) => void;
+    eventsProcessed: any;
+    bookmartDepth: any;
+    eventDuration: any;
+  }
 ) => {
+  const { eventsProcessed, bookmartDepth, eventDuration } = iterationMetrics;
   const iterate = async () => {
-      const bookmarkPosition = await bookmarkRepository.getBookmark();
-      const events = await eventSourceRepository.getEventsFromPosition(
-        bookmarkPosition,
-        eventsNumber
-      );
-      if (events.length === 0) return;
-      logger.debug(`Processing ${events.length} events`);
-      for (const event of events) {
-        await processManager(event);
-        await bookmarkRepository.setBookmark(event.position);
-      }
+    const bookmarkPosition = await bookmarkRepository.getBookmark();
+    const events = await eventSourceRepository.getEventsFromPosition(
+      bookmarkPosition,
+      eventsNumber
+    );
+    if (events.length === 0) return;
+    const start = process.hrtime();
+    for (const event of events) {
+      await processManager(event);
+      eventsProcessed.labels({ event_type: event.eventType }).inc();
+      const depth = event.position - bookmarkPosition;
+      bookmartDepth.set(depth);
+      await bookmarkRepository.setBookmark(event.position);
+    }
+    const diff = process.hrtime(start);
+    const duration = diff[0] + diff[1] / (1e9 * events.length);
+    eventDuration.observe(duration);
   };
   return iterate;
 };

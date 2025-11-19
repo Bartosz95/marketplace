@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import z from "zod";
+
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ImagesRepository } from "../repositories/imagesRepository";
@@ -20,12 +21,14 @@ import {
   EnvAWSSchema,
   EnvPurchaseSchema,
 } from "../libs/validationSchemas";
+import { RequestMetrics } from "../libs/requestMetrics";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
   host: z.string(),
   logLevel: z.string(),
   nodeEnv: z.string().optional(),
+  metricsPort: z.coerce.number().default(4001),
 });
 
 export type EnvApp = z.infer<typeof EnvAppSchema>;
@@ -45,6 +48,7 @@ export default () => {
       host: process.env.APP_HOST,
       logLevel: process.env.APP_LOG_LEVEL,
       nodeEnv: process.env.NODE_ENV,
+      metricsPort: process.env.APP_METRICS_PORT,
     },
     db: {
       host: process.env.DB_HOST,
@@ -101,7 +105,11 @@ export default () => {
   const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
   const purchaseRouter = PurchaseRouter(listingsDomain, env.purchase);
 
+  const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
+  startMetricsServer(env.app.metricsPort);
+
   const app = express();
+  app.use(collectRequestMetrics);
   app.use(cors({ origin: "*" }));
   app.use(requestLogger);
   app.use(express.json({ limit: "50mb" }));
@@ -111,7 +119,6 @@ export default () => {
   app.use(`/api/v1/listings`, authorization, listingWriteRouter);
   app.use(`/api/v1/listings/user`, authorization, userListingReadRouter);
   app.use(`/api/v1/purchase`, purchaseRouter);
-
   app.use(errorHandler);
 
   app.listen(env.app.port, () =>
