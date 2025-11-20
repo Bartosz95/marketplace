@@ -147,8 +147,10 @@ services:
       - GF_LOG_LEVEL=warn
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     volumes:
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
       - grafana-storage:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - monitoring
 

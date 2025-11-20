@@ -57,7 +57,7 @@ export const RequestMetrics = (logger: Logger) => {
       }
     });
     app.listen(port, () => {
-      console.log(`Metrics server listening on port ${port}`);
+      logger.info(`Metrics server listening on port ${port}`);
     });
   };
 

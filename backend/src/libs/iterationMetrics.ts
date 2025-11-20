@@ -25,7 +25,7 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
       }
     });
     app.listen(port, () => {
-      logger.debug(`Metrics server listening on port ${port}`);
+      logger.info(`Metrics server listening on port ${port}`);
     });
   };
 

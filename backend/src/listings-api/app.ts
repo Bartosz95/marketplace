@@ -122,6 +122,6 @@ export default () => {
   app.use(errorHandler);
 
   app.listen(env.app.port, () =>
-    logger.info(`Server running at http://${env.app.host}:${env.app.port}/`)
+    logger.info(`App server listening on port ${env.app.port}`)
   );
 };
