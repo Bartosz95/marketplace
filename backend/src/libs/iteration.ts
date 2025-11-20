@@ -1,3 +1,4 @@
+import { de } from "zod/locales";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Event } from "../types";
@@ -18,7 +19,7 @@ export const Iteration = (
   const iterate = async () => {
     const bookmarkPosition = await bookmarkRepository.getBookmark();
     const events = await eventSourceRepository.getEventsFromPosition(
-      bookmarkPosition,
+      bookmarkPosition + 1,
       eventsNumber
     );
     if (events.length === 0) return;
@@ -26,7 +27,7 @@ export const Iteration = (
     for (const event of events) {
       await processManager(event);
       eventsProcessed.labels({ event_type: event.eventType }).inc();
-      const depth = event.position - bookmarkPosition;
+      const depth = bookmarkPosition + events.length - event.position;
       bookmartDepth.set(depth);
       await bookmarkRepository.setBookmark(event.position);
     }
