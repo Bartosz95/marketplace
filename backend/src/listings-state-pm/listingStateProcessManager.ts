@@ -11,6 +11,7 @@ export const ListingsStateProcessManager =
         const created: ListingState = {
           ...event.data,
           imagesUrls: [],
+          paymentLink: "",
           listingId: streamId,
           status: EventType.LISTING_CREATED,
           modifiedAt: event.createdAt,
@@ -52,6 +53,15 @@ export const ListingsStateProcessManager =
           imagesUrls,
         };
         await listingStateRepository.updateListing(imagesUploaded);
+        break;
+      case EventType.PAYMENT_LINK_CREATED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        const paymentLink = event.data.paymentLink;
+        const paymentLinkCreated: ListingState = {
+          ...previousState,
+          paymentLink,
+        };
+        await listingStateRepository.updateListing(paymentLinkCreated);
         break;
     }
   };

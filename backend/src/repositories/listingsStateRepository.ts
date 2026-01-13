@@ -43,10 +43,10 @@ export const ListingsStateRepository = (
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, modified_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO states.listings (listing_id, user_id, status, version, title, description, price, images_urls, payment_link, modified_at) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT (listing_id) DO UPDATE
-        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, modified_at = $9;
+        SET status = $3, version = $4, title = $5, description = $6, price = $7, images_urls = $8, payment_link = $9, modified_at = $10;
         `,
         [
           listing.listingId,
@@ -57,6 +57,7 @@ export const ListingsStateRepository = (
           listing.description,
           listing.price,
           listing.imagesUrls,
+          listing.paymentLink,
           listing.modifiedAt,
         ]
       );
@@ -191,6 +192,7 @@ export const ListingsStateRepository = (
     description: row.description,
     price: Number(row.price),
     imagesUrls: row.images_urls as string[],
+    paymentLink: row.payment_link,
   });
 
   const mapCountOfAll = (result: { rows: Array<{ count: number }> }): number =>

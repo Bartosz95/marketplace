@@ -45,8 +45,10 @@ export default () => {
   const paymentProviderRepository = PaymentProviderRepository(
     env.purchaseProvider
   );
+
   const paymentProcessManager = PaymentProcessManager(
-    paymentProviderRepository
+    paymentProviderRepository,
+    eventSourceRepository,
   );
   const iterationMetrics = IterationMetrics(env.app.name, logger);
   iterationMetrics.startMetricsServer();

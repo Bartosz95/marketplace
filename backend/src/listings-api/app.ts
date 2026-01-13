@@ -15,7 +15,6 @@ import { Authorization, EnvAuthSchema } from "../libs/authorization";
 import { UserListingsDomain } from "./domain/userListingsDomain";
 import { UserListingsReadRouter } from "./userListingRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
-import { PurchaseRouter } from "./purchaseRouter";
 import {
   EnvDBSchema,
   EnvAWSSchema,
@@ -98,12 +97,8 @@ export default () => {
   );
 
   const listingReadRouter = ListingsReadRouter(listingsDomain);
-  const listingWriteRouter = ListingsWriteRouter(
-    listingsDomain,
-    env.aws.bucket
-  );
+  const listingWriteRouter = ListingsWriteRouter(listingsDomain);
   const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
-  const purchaseRouter = PurchaseRouter(listingsDomain, env.purchase);
 
   const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
   startMetricsServer(env.app.metricsPort);
@@ -118,7 +113,6 @@ export default () => {
   app.use(`/api/v1/listings`, listingReadRouter);
   app.use(`/api/v1/listings`, authorization, listingWriteRouter);
   app.use(`/api/v1/listings/user`, authorization, userListingReadRouter);
-  app.use(`/api/v1/purchase`, purchaseRouter);
   app.use(errorHandler);
 
   app.listen(env.app.port, () =>

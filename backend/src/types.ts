@@ -7,37 +7,7 @@ export enum EventType {
   LISTING_ARCHIVED = "LISTING_ARCHIVED",
   LISTING_DELETED = "LISTING_DELETED",
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
-}
-
-export type ListingStatus =
-  | EventType.LISTING_CREATED
-  | EventType.LISTING_UPDATED
-  | EventType.LISTING_PURCHASED
-  | EventType.LISTING_ARCHIVED
-  | EventType.LISTING_DELETED;
-
-export interface ListingStateTableRow {
-  listing_id: string;
-  user_id: string;
-  modified_at: string;
-  status: string;
-  version: number;
-  title: string;
-  description: string;
-  price: number;
-  images_urls: string[];
-}
-
-export interface ListingState {
-  listingId: UUID;
-  userId: string;
-  modifiedAt: Date;
-  status: ListingStatus;
-  version: number;
-  title: string;
-  description: string;
-  price: number;
-  imagesUrls: string[];
+  PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
 }
 
 interface EventBaseInfo {
@@ -101,6 +71,15 @@ export interface ImagesUploadedEventData {
   imagesUrls: string[];
 }
 
+export interface PaymentLinkCreatedEvent extends EventBaseInfo {
+  eventType: EventType.PAYMENT_LINK_CREATED;
+  data: PaymentLinkCreatedEventData;
+}
+
+export interface PaymentLinkCreatedEventData {
+  paymentLink: string;
+}
+
 export type EventData =
   | {}
   | ListingCreatedEventData
@@ -114,7 +93,41 @@ export type Event =
   | ListingPurchasedEvent
   | ListingArchivedEvent
   | ListingDeletedEvent
-  | ImagesUploadedEvent;
+  | ImagesUploadedEvent
+  | PaymentLinkCreatedEvent;
+
+export type ListingStatus =
+  | EventType.LISTING_CREATED
+  | EventType.LISTING_UPDATED
+  | EventType.LISTING_PURCHASED
+  | EventType.LISTING_ARCHIVED
+  | EventType.LISTING_DELETED;
+
+export interface ListingStateTableRow {
+  listing_id: string;
+  user_id: string;
+  modified_at: string;
+  status: string;
+  version: number;
+  title: string;
+  description: string;
+  price: number;
+  images_urls: string[];
+  payment_link: string;
+}
+
+export interface ListingState {
+  listingId: UUID;
+  userId: string;
+  modifiedAt: Date;
+  status: ListingStatus;
+  version: number;
+  title: string;
+  description: string;
+  price: number;
+  imagesUrls: string[];
+  paymentLink: string;
+}
 
 export interface GetListingsResponse {
   listings: ListingState[];

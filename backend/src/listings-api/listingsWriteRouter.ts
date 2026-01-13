@@ -47,7 +47,6 @@ export type UpdateListing = {
 
 export const ListingsWriteRouter = (
   listingsDomain: ListingsDomain,
-  env: any
 ) => {
   const router = Router();
 

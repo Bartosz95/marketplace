@@ -7,18 +7,15 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import router from "next/router";
-
+import { useRouter } from "next/navigation";
 function ViewListingModal() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, loginWithRedirect } = useAuth0();
   const { showListingView } = useAppSelector(listingStoreSelector);
+  const router = useRouter();
+
   if (!showListingView) return;
   const { title, description, price, imagesUrls } = showListingView;
-
-  const redirectToCheckout = async () => {
-    router.push("/checkout");
-  };
 
   const imagePreview = (
     <Carousel className="mb-3">
@@ -34,6 +31,8 @@ function ViewListingModal() {
       ))}
     </Carousel>
   );
+
+  console.log(showListingView);
 
   return (
     <Modal
@@ -58,7 +57,7 @@ function ViewListingModal() {
           <Button
             variant="primary"
             className="button-style set-center"
-            onClick={redirectToCheckout}
+            onClick={() => router.push(showListingView.paymentLink)}
           >
             Buy
           </Button>

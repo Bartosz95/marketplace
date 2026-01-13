@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS states.listings (
   description   TEXT NOT NULL,
   price         INTEGER NOT NULL,
   images_urls   TEXT[] NOT NULL,
+  payment_link  TEXT,
   version       INTEGER NOT NULL,
   modified_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
