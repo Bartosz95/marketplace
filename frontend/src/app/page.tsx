@@ -4,7 +4,7 @@ import ViewListingModal from "@/components/cell/ViewListingModal";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { getListings, setupStripe } from "@/lib/redux/thunks";
+import { getListings } from "@/lib/redux/thunks";
 import { useEffect, useMemo } from "react";
 import { Container, Pagination } from "react-bootstrap";
 
@@ -16,10 +16,6 @@ export default function Page() {
   useEffect(() => {
     dispatch(getListings());
   }, [activePage, dispatch]);
-
-  useEffect(() => {
-    dispatch(setupStripe());
-  }, [dispatch]);
 
   const ListingsCells = useMemo(
     () => (

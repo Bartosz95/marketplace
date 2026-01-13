@@ -3,6 +3,14 @@ import z from "zod";
 export const listingIdSchema = z.uuid();
 export const userIdSchema = z.string();
 
+export const envPMSchema = z.object({
+  name: z.string(),
+  logLevel: z.string(),
+  timeout: z.coerce.number(),
+  numberOfEventsPerIteration: z.number().default(100),
+  metricsPort: z.coerce.number().default(4001),
+});
+
 export const EnvDBSchema = z.object({
   host: z.string(),
   port: z.coerce.number(),
@@ -28,7 +36,7 @@ export type EnvAWS = z.infer<typeof EnvAWSSchema>;
 
 export const EnvPurchaseSchema = z.object({
   secretKey: z.string(),
-  publishableKey: z.string(),
+  publishableKey: z.string().optional(),
 });
 
 export type EnvPurchase = z.infer<typeof EnvPurchaseSchema>;

@@ -1,5 +1,5 @@
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
-import { Event, EventType, ListingState, PurchaseState } from "../types";
+import { Event, EventType, PurchaseState } from "../types";
 
 export const PurchasesStateProcessManager =
   (purchasesStateRepository: PurchasesStateRepository) => async (event: Event) => {

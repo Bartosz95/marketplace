@@ -1,7 +1,6 @@
 import { FilterBy, Listing } from "@/types";
 import { User } from "@auth0/auth0-react";
 import { createSlice } from "@reduxjs/toolkit";
-import { Stripe } from "@stripe/stripe-js";
 
 interface State {
   showListingView?: Listing;
@@ -18,7 +17,6 @@ interface State {
   user?: User;
   isAuthenticated: boolean;
   apiURL?: string;
-  stripe?: Stripe;
 }
 
 const initialState: State = {
@@ -79,9 +77,6 @@ export const listingsSlice = createSlice({
     setApiURL: (state, actions) => {
       state.apiURL = actions.payload;
     },
-    setStripe: (state, actions) => {
-      state.stripe = actions.payload;
-    },
   },
 });
 
@@ -97,5 +92,4 @@ export const {
   setLastFilteredBy,
   setToken,
   setApiURL,
-  setStripe,
 } = listingsSlice.actions;

@@ -5,10 +5,8 @@ import {
   setLastFilteredBy,
   setListings,
   setShowListingView,
-  setStripe,
 } from "./listingsSlice";
 import * as yup from "yup";
-import { loadStripe } from "@stripe/stripe-js";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
 import { AppDispatch, AppGetState } from "./store";
@@ -136,19 +134,4 @@ export const restoreListing =
         Authorization: `Bearer ${token}`,
       },
     });
-  };
-
-export const setupStripe =
-  () => async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { token } = state.listingsStore;
-    const { publishableKey } = await sendApiV1Request(`/purchase/config`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const stripe = await loadStripe(publishableKey);
-    console.log("stripe");
-    console.log(stripe);
-    dispatch(setStripe(stripe));
   };
