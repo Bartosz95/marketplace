@@ -10,7 +10,7 @@ import {
 import { EventSourceRepository } from "../../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "../listingsWriteRouter";
 import { ImagesRepository } from "../../repositories/imagesRepository";
-import { ModifyImagesUrls } from "./modifyImagesUrls";
+import { ModifyImagesUrls } from "../../libs/modifyImagesUrls";
 
 export interface ListingsDomain {
   create: (userId: string, data: CreateListing) => Promise<void>;

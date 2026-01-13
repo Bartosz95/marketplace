@@ -25,7 +25,6 @@ services:
     env_file:
       - backend/.env
     environment:
-      - NODE_ENV=production
       - APP_NAME=listings-api
       - APP_HOST=localhost
       - APP_PORT=3000
@@ -46,7 +45,6 @@ services:
     environment:
       - DB_HOST=db
       - APP_NAME=listings-state-pm
-      - NODE_ENV=production
       - DB_HOST=db
     depends_on:
       - db
@@ -62,7 +60,6 @@ services:
       - backend/.env
     environment:
       - APP_NAME=purchases-state-pm
-      - NODE_ENV=production
       - DB_HOST=db
     depends_on:
       - db
@@ -77,7 +74,6 @@ services:
       - backend/.env
     environment:
       - APP_NAME=payment-pm
-      - NODE_ENV=production
       - DB_HOST=db
     depends_on:
       - db

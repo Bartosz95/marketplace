@@ -1,3 +1,4 @@
+import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
 import { Event, EventType } from "../types";
@@ -5,7 +6,8 @@ import { Event, EventType } from "../types";
 export const PaymentProcessManager =
   (
     paymentProvider: PaymentProviderRepository,
-    eventSourceRepository: EventSourceRepository
+    eventSourceRepository: EventSourceRepository,
+    modifyImagesUrls: ModifyImagesUrls
   ) =>
   async (event: Event) => {
     const { eventType } = event;
@@ -29,20 +31,20 @@ export const PaymentProcessManager =
         const updated_id = event.streamId;
         const updated_name = event.data.title;
         const updated_price = event.data.price;
-        await paymentProvider.updateProduct(
-          updated_id,
-          updated_name,
-          updated_price
-        );
+        if (updated_name) {
+          await paymentProvider.updateProductName(updated_id, updated_name);
+        }
+        if (updated_price) {
+          await paymentProvider.updateProductPrice(updated_id, updated_price);
+        }
         break;
-
       case EventType.IMAGES_UPLOADED:
         const images_updated_id = event.streamId;
-        const images_updated_images_urls = event.data.imagesUrls;
-        await paymentProvider.updateProduct(
+        const images_updated_images_urls = modifyImagesUrls.addImageHostToLinks(
+          event.data.imagesUrls
+        );
+        await paymentProvider.updateProductImages(
           images_updated_id,
-          undefined,
-          undefined,
           images_updated_images_urls
         );
         break;

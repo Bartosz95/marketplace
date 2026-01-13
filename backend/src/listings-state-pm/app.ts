@@ -23,6 +23,7 @@ export default () => {
       password: z.string(),
       database: z.string(),
     }),
+    imageHost: z.string(),
   });
 
   const env = envSchema.parse({
@@ -41,6 +42,7 @@ export default () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     },
+    imageHost: process.env.AWS_BUCKET_URL,
   });
 
   const logger = Logger(env.app.logLevel);

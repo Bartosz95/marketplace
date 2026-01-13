@@ -4,12 +4,9 @@ import { isDataView } from "util/types";
 
 export interface PaymentProviderRepository {
   createProduct: (id: string, name: string, price: number) => Promise<string>;
-  updateProduct: (
-    id: string,
-    name?: string,
-    price?: number,
-    images?: string[]
-  ) => Promise<void>;
+  updateProductName: (id: string, price: string) => Promise<void>;
+  updateProductPrice: (id: string, price: number) => Promise<string>;
+  updateProductImages: (id: string, images: string[]) => Promise<void>;
 }
 
 export const PaymentProviderRepository = (
@@ -89,22 +86,49 @@ export const PaymentProviderRepository = (
     }
   };
 
-  const updateProduct = async (
-    id: string,
-    name?: string,
-    price?: number,
-    images?: string[]
-  ) => {
-    if (name) {
-      const updateProductParams: Stripe.ProductUpdateParams = {
-        name,
-      };
-      const product = await stripe.products.update(id, updateProductParams);
-    }
+  const updateProductName = async (id: string, name: string) => {
+    const updateProductParams: Stripe.ProductUpdateParams = {
+      name,
+    };
+    await stripe.products.update(id, updateProductParams);
+  };
+
+  const updateProductPrice = async (id: string, price: number) => {
+    const existingPriceQuery = await stripe.prices.search({
+      query: `product:'${id}'`,
+    });
+    const existingPrice = existingPriceQuery.data[0];
+    await stripe.prices.update(existingPrice.id, {
+      active: false,
+    });
+
+    await stripe.prices.create({
+      product: id,
+      unit_amount: price * 100,
+      currency: "aud",
+    });
+    const paymentLink = await stripe.paymentLinks.create({
+      line_items: [
+        {
+          price: existingPrice.id,
+          quantity: 1,
+        },
+      ],
+    });
+    return paymentLink.url;
+  };
+
+  const updateProductImages = async (id: string, images: string[]) => {
+    const updateProductParams: Stripe.ProductUpdateParams = {
+      images,
+    };
+    await stripe.products.update(id, updateProductParams);
   };
 
   return {
     createProduct,
-    updateProduct,
+    updateProductName,
+    updateProductPrice,
+    updateProductImages,
   };
 };

@@ -2,7 +2,7 @@ import { UUID } from "crypto";
 import { ListingsStateRepository } from "../../repositories/listingsStateRepository";
 import { PurchasesStateRepository } from "../../repositories/purchasesStateRepository";
 import { EventType, GetListingsResponse } from "../../types";
-import { ModifyImagesUrls } from "./modifyImagesUrls";
+import { ModifyImagesUrls } from "../../libs/modifyImagesUrls";
 import { ImagesRepository } from "../../repositories/imagesRepository";
 
 export interface UserListingsDomain {

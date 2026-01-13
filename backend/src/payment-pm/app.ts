@@ -11,10 +11,11 @@ import {
   envPMSchema,
   EnvPurchaseSchema,
 } from "../libs/validationSchemas";
+import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 
 export default () => {
   const envSchema = z.object({
-    app: envPMSchema,
+    app: envPMSchema.extend({ imagesUrl: z.string() }),
     db: EnvDBSchema,
     purchaseProvider: EnvPurchaseSchema,
   });
@@ -26,6 +27,7 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
+      imagesUrl: process.env.AWS_BUCKET_URL,
     },
     db: {
       host: process.env.DB_HOST,
@@ -45,10 +47,11 @@ export default () => {
   const paymentProviderRepository = PaymentProviderRepository(
     env.purchaseProvider
   );
-
+  const modifyImagesUrls = ModifyImagesUrls(env.app.imagesUrl);
   const paymentProcessManager = PaymentProcessManager(
     paymentProviderRepository,
     eventSourceRepository,
+    modifyImagesUrls
   );
   const iterationMetrics = IterationMetrics(env.app.name, logger);
   iterationMetrics.startMetricsServer();
