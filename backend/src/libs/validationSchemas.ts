@@ -34,12 +34,12 @@ export const EnvAWSSchema = z.object({
 
 export type EnvAWS = z.infer<typeof EnvAWSSchema>;
 
-export const EnvPurchaseSchema = z.object({
+export const EnvPaymentSchema = z.object({
   secretKey: z.string(),
   publishableKey: z.string().optional(),
 });
 
-export type EnvPurchase = z.infer<typeof EnvPurchaseSchema>;
+export type EnvPurchase = z.infer<typeof EnvPaymentSchema>;
 
 export const fileSchema = z.object({
   fieldname: z.string(),

@@ -9,7 +9,7 @@ import { PaymentProcessManager } from "./paymentProcessManager";
 import {
   EnvDBSchema,
   envPMSchema,
-  EnvPurchaseSchema,
+  EnvPaymentSchema,
 } from "../libs/validationSchemas";
 import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 
@@ -17,7 +17,7 @@ export default () => {
   const envSchema = z.object({
     app: envPMSchema.extend({ imagesUrl: z.string() }),
     db: EnvDBSchema,
-    purchaseProvider: EnvPurchaseSchema,
+    purchaseProvider: EnvPaymentSchema,
   });
 
   const env = envSchema.parse({

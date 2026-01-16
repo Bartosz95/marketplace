@@ -8,6 +8,7 @@ export enum EventType {
   LISTING_DELETED = "LISTING_DELETED",
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
   PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
+  USER_CREATED = "USER_CREATED",
 }
 
 interface EventBaseInfo {
@@ -80,6 +81,15 @@ export interface PaymentLinkCreatedEventData {
   paymentLink: string;
 }
 
+export interface UserCreated extends EventBaseInfo {
+  eventType: EventType.USER_CREATED;
+  data: UserCreatedEventData;
+}
+
+export interface UserCreatedEventData {
+  name: string[];
+}
+
 export type EventData =
   | {}
   | ListingCreatedEventData
@@ -94,7 +104,8 @@ export type Event =
   | ListingArchivedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent
-  | PaymentLinkCreatedEvent;
+  | PaymentLinkCreatedEvent
+  | UserCreated;
 
 export type ListingStatus =
   | EventType.LISTING_CREATED

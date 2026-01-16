@@ -18,7 +18,7 @@ import { PurchasesStateRepository } from "../repositories/purchasesStateReposito
 import {
   EnvDBSchema,
   EnvAWSSchema,
-  EnvPurchaseSchema,
+  EnvPaymentSchema,
 } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
 
@@ -38,7 +38,7 @@ export default () => {
     db: EnvDBSchema,
     auth: EnvAuthSchema,
     aws: EnvAWSSchema,
-    purchase: EnvPurchaseSchema,
+    purchase: EnvPaymentSchema,
   });
 
   const env = envSchema.parse({

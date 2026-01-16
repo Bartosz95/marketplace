@@ -5,7 +5,6 @@ import { ListingsDomain } from "./domain/listingsDomain";
 import multer from "multer";
 import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
 
-
 const fileSchema = z.object({
   fieldname: z.string(),
   originalname: z.string(),
@@ -45,9 +44,7 @@ export type UpdateListing = {
   images?: FileDetails[];
 };
 
-export const ListingsWriteRouter = (
-  listingsDomain: ListingsDomain,
-) => {
+export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   const router = Router();
 
   router.use(urlencoded({ limit: "50mb", extended: true }));
