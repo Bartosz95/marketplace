@@ -1,4 +1,3 @@
-
 CREATE USER default_user WITH PASSWORD 'password';
 CREATE DATABASE marketplace OWNER default_user;
 GRANT ALL PRIVILEGES ON DATABASE marketplace TO default_user;
@@ -60,11 +59,27 @@ CREATE INDEX idx_state_purchases_status ON states.purchases (status);
 ALTER TABLE states.purchases OWNER TO default_user;
 
 CREATE TABLE IF NOT EXISTS states.bookmarks (
-  process_name  TEXT NOT NULL PRIMARY KEY,
+  process_name  TEXT PRIMARY KEY,
   bookmark      INTEGER NOT NULL
 );
 
 ALTER TABLE states.bookmarks OWNER TO default_user;
+
+CREATE TABLE IF NOT EXISTS states.users (    
+    userId                      UUID PRIMARY KEY,
+    authentication_provider_id  TEXT NOT NULL,
+    payment_provider_id         UUID,
+    name                        TEXT NOT NULL,
+    email                       TEXT NOT NULL,
+    address                     JSONB,
+    metadata                    JSONB,
+    created_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_states_users_authentication_provider_id ON states.users(authentication_provider_id);
+
+ALTER TABLE states.users OWNER TO default_user;
 
 INSERT INTO event_store.events (stream_id, version, event_type, data, metadata) VALUES 
     ('D8E31AB4-0D4F-4031-A9B9-2BC0A963A4B0', 1, 'LISTING_CREATED',

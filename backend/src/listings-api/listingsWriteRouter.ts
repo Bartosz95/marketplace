@@ -1,9 +1,10 @@
 import { Router, urlencoded } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { ListingsDomain } from "./domain/listingsDomain";
+import { ListingsDomain } from "./listingsDomain";
 import multer from "multer";
 import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
+import { UserDomain } from "../user-api/userDomain";
 
 const fileSchema = z.object({
   fieldname: z.string(),
@@ -44,7 +45,10 @@ export type UpdateListing = {
   images?: FileDetails[];
 };
 
-export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
+export const ListingsWriteRouter = (
+  listingsDomain: ListingsDomain,
+  userDomain: UserDomain,
+) => {
   const router = Router();
 
   router.use(urlencoded({ limit: "50mb", extended: true }));
@@ -53,63 +57,85 @@ export const ListingsWriteRouter = (listingsDomain: ListingsDomain) => {
   const upload = multer({ storage: storage });
 
   router.post("/", upload.array("images", 10), async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const data = await createListingReqBodySchema.parse({
+    console.log("req?.auth");
+    console.log(req?.auth);
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const data = createListingReqBodySchema.parse({
       ...req.body,
       images: req.files as Express.Multer.File[],
     });
-    await listingsDomain.create(userId, data);
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    await listingsDomain.create(user.userId, data);
     res.status(200).send();
   });
 
   router.post("/:listingId", async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
-    await listingsDomain.purchase(userId, listingId);
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    await listingsDomain.purchase(user.userId, listingId);
     res.status(200).send();
   });
 
   router.patch("/:listingId", upload.array("images", 10), async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
     const files = req.files as Express.Multer.File[];
     const images = files.length > 0 ? files : undefined;
-    const data = await updateListingReqBodySchema.parse({
+    const data = updateListingReqBodySchema.parse({
       ...req.body,
       images,
     });
-    await listingsDomain.update(userId, listingId, data);
+    await listingsDomain.update(user.userId, listingId, data);
     res.status(200).send();
   });
 
   router.delete("/:listingId", async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
-    await listingsDomain.deleteListing(userId, listingId);
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    await listingsDomain.deleteListing(user.userId, listingId);
     res.status(200).send();
   });
 
   router.patch("/archive/:listingId", async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
-    await listingsDomain.archive(userId, listingId);
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    await listingsDomain.archive(user.userId, listingId);
     res.status(200).send();
   });
 
   router.patch("/restore/:listingId", async (req, res) => {
-    const userId = await userIdSchema.parse(req?.auth?.payload?.sub);
-    const listingId = (await listingIdSchema.parse(
-      req.params.listingId
-    )) as UUID;
-    await listingsDomain.restore(userId, listingId);
+    const authenticationProviderId = userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    );
+    const listingId = listingIdSchema.parse(req.params.listingId) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    await listingsDomain.restore(user.userId, listingId);
     res.status(200).send();
   });
 

@@ -1,26 +1,32 @@
 import express from "express";
 import cors from "cors";
 import z from "zod";
-
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ImagesRepository } from "../repositories/imagesRepository";
-import { ListingsDomain } from "./domain/listingsDomain";
+import { ListingsDomain } from "./listingsDomain";
 import { ListingsReadRouter } from "./listingsReadRouter";
 import { ListingsWriteRouter } from "./listingsWriteRouter";
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
-import { Authorization, EnvAuthSchema } from "../libs/authorization";
-import { UserListingsDomain } from "./domain/userListingsDomain";
-import { UserListingsReadRouter } from "./userListingRouter";
-import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
+import {
+  AuthenticationReadRoute,
+  AuthenticationWriteRoute,
+  EnvAuthenticationMiddlewareSchema,
+} from "../libs/authentication";
 import {
   EnvDBSchema,
   EnvAWSSchema,
   EnvPaymentSchema,
 } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
+import { SynchronizeUserMiddleware } from "../libs/syncUserMiddleware";
+import { UserStateRepository } from "../repositories/userStateRepository";
+import { UserListingsReadDomain } from "./userListingsDomain";
+import { UserListingsReadRouter } from "./userListingReadRouter";
+import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
+import { UserDomain } from "../user-api/userDomain";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -36,7 +42,7 @@ export default () => {
   const envSchema = z.object({
     app: EnvAppSchema,
     db: EnvDBSchema,
-    auth: EnvAuthSchema,
+    auth: EnvAuthenticationMiddlewareSchema,
     aws: EnvAWSSchema,
     purchase: EnvPaymentSchema,
   });
@@ -79,43 +85,71 @@ export default () => {
   const logger = Logger(env.app.logLevel);
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
-  const authorization = Authorization(env.auth);
+  const authenticationRead = AuthenticationReadRoute(env.auth);
+  const authenticationWrite = AuthenticationWriteRoute(env.auth);
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
+  const userStateRepository = UserStateRepository(env.db);
+  const purchasesStateRepository = PurchasesStateRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws);
+
+  const userDomain = UserDomain(userStateRepository);
+
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
     eventSourceRepository,
-    imagesRepository
-  );
-  const purchasesStateRepository = PurchasesStateRepository(env.db);
-  const userListingsDomain = UserListingsDomain(
-    listingsStateRepository,
-    purchasesStateRepository,
-    imagesRepository
+    imagesRepository,
   );
 
-  const listingReadRouter = ListingsReadRouter(listingsDomain);
-  const listingWriteRouter = ListingsWriteRouter(listingsDomain);
-  const userListingReadRouter = UserListingsReadRouter(userListingsDomain);
+  const userListingsReadDomain = UserListingsReadDomain(
+    listingsStateRepository,
+    purchasesStateRepository,
+    imagesRepository,
+  );
+
+  const synchronizeUserMiddleware = SynchronizeUserMiddleware(
+    userStateRepository,
+    eventSourceRepository,
+  );
+
+  const listingsReadRouter = ListingsReadRouter(listingsDomain);
+  const listingsWriteRouter = ListingsWriteRouter(listingsDomain, userDomain);
+  const userListingsReadRouter = UserListingsReadRouter(
+    userListingsReadDomain,
+    userDomain,
+  );
 
   const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
   startMetricsServer(env.app.metricsPort);
 
   const app = express();
+  app.use(requestLogger);
   app.use(collectRequestMetrics);
   app.use(cors({ origin: "*" }));
-  app.use(requestLogger);
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(authenticationRead);
+  app.use(requestLogger);
+  // app.use(synchronizeUserMiddleware);
+  app.get("/auth-test", (req, res) => {
+    console.log("AUTH TEST");
+    console.log("Authorization:", req.headers.authorization);
+    console.log("req.auth:", req.auth);
+    console.log("payload:", req.auth?.payload);
 
-  app.use(`/api/v1/listings`, listingReadRouter);
-  app.use(`/api/v1/listings`, authorization, listingWriteRouter);
-  app.use(`/api/v1/listings/user`, authorization, userListingReadRouter);
+    res.json({
+      authenticated: !!req.auth,
+      auth: req.auth,
+    });
+  });
+
+  app.use(`/api/v1/listings`, listingsReadRouter);
+  app.use(authenticationWrite);
+  app.use(`/api/v1/listings`, listingsWriteRouter);
+  app.use(`/api/v1/listings/user`, userListingsReadRouter);
   app.use(errorHandler);
-
   app.listen(env.app.port, () =>
-    logger.info(`App server listening on port ${env.app.port}`)
+    logger.info(`App server listening on port ${env.app.port}`),
   );
 };

@@ -1,42 +1,44 @@
-import { sendApiV1Request } from "@/lib/sendApiV1Request";
-import { FilterBy } from "@/types";
-import {
-  setCountOfAll,
-  setLastFilteredBy,
-  setListings,
-  setShowListingView,
-} from "./listingsSlice";
+import { FilterBy, Listing } from "@/types";
 import * as yup from "yup";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
-import { AppDispatch, AppGetState } from "./store";
+import { useAuth0 } from "@auth0/auth0-react";
+import { setListings, setCountOfAll, setLastFilteredBy } from "./listingsSlice";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import type { RootState } from "./store";
+import { apiRequest } from "../apiRequest";
 
-export const getListings =
-  (filterBy?: FilterBy) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { lastFilterBy, limit, offset, token } = state.listingsStore;
+export const getListings = createAsyncThunk(
+  "getListings",
 
-    const filter = filterBy ? filterBy : lastFilterBy;
-    const params = new URLSearchParams();
-    params.append("limit", limit.toString());
-    params.append("offset", offset.toString());
-    const { listings, countOfAll } = await sendApiV1Request(
-      `/listings${filter}?${params.toString()}`,
-      {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      }
-    );
+  async (filterBy: FilterBy | undefined, { getState, dispatch }) => {
+    console.log("getListings called with filterBy:", filterBy);
+    const { lastFilterBy, limit, offset } = (getState() as RootState)
+      .listingsStore;
+
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+
+    const filter = filterBy ?? lastFilterBy;
+
+    const { listings, countOfAll } = await apiRequest.get<{
+      listings: Listing[];
+      countOfAll: number;
+    }>(`/listings${filter}?${params.toString()}`);
+
+    console.log("Fetched listings:", listings);
     dispatch(setListings(listings));
     dispatch(setCountOfAll(countOfAll));
     dispatch(setLastFilteredBy(filter));
-  };
+  },
+);
 
-export const createListing =
-  ({ title, price, description, images }: CreateListingDetails) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
+export const createListing = createAsyncThunk(
+  "createListing",
+  async ({ title, price, description, images }: CreateListingDetails) => {
+    console.log({ title, price, description, images });
     if (!title || !price || !description || !images) return;
     const formData = new FormData();
     images.forEach((image) => {
@@ -45,24 +47,21 @@ export const createListing =
     formData.append("title", title);
     formData.append("price", price.toString());
     formData.append("description", description);
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-  };
+
+    console.log(formData.getAll("images"));
+    await apiRequest.postFormData<Listing>("/listings", formData);
+  },
+);
 
 export type UpdateListingThunksProp = Partial<
   yup.InferType<typeof UpdateListingSchema>
 > & { listingId: string };
 
-export const updateListing =
-  ({ listingId, title, price, description, images }: UpdateListingThunksProp) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
+export const updateListing = createAsyncThunk(
+  "updateListing",
+  async (updateListingThunksProp: UpdateListingThunksProp) => {
+    const { listingId, title, price, description, images } =
+      updateListingThunksProp;
     const formData = new FormData();
     if (images)
       images.forEach((image) => {
@@ -72,66 +71,18 @@ export const updateListing =
     if (title) formData.append("title", title);
     if (price) formData.append("price", price.toString());
     if (description) formData.append("description", description);
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings/${listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    dispatch(setShowListingView(undefined));
-  };
+    await apiRequest.patchFormData<Listing>(`/listings/${listingId}`, formData);
+  },
+);
 
-export const purchaseListing =
-  (listingId: string) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings/${listingId}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  };
+export const purchaseListing = async (listingId: string) =>
+  await apiRequest.post<Listing>(`/listings/${listingId}`);
 
-export const deleteListing =
-  (listingId: string) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings/${listingId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  };
+export const deleteListing = async (listingId: string) =>
+  await apiRequest.delete<Listing>(`/listings/${listingId}`);
 
-export const archiveListing =
-  (listingId: string) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings/archive/${listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  };
+export const archiveListing = async (listingId: string) =>
+  await apiRequest.patch<Listing>(`/listings/archive/${listingId}`);
 
-export const restoreListing =
-  (listingId: string) =>
-  async (dispatch: AppDispatch, getState: AppGetState) => {
-    const state = getState();
-    const { token } = state.listingsStore;
-    await sendApiV1Request(`/listings/restore/${listingId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  };
+export const restoreListing = async (listingId: string) =>
+  await apiRequest.patch<Listing>(`/listings/restore/${listingId}`);

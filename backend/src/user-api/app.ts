@@ -1,22 +1,18 @@
 import express from "express";
 import cors from "cors";
 import z from "zod";
-
 import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
-import { Authorization, EnvAuthSchema } from "../libs/authorization";
 import {
-  EnvDBSchema,
-  EnvAWSSchema,
-  EnvPaymentSchema,
-} from "../libs/validationSchemas";
+  Authentication,
+  EnvAuthenticationMiddlewareSchema,
+} from "../libs/authentication";
+import { EnvDBSchema } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
 import { UserRouter } from "./userRouter";
 import { UserStateRepository } from "../repositories/userStateRepository";
-import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
-import { AuthenticationProviderRepository } from "../repositories/AuthenticationProviderRepository";
-import { UserDomain } from "../domain/userListingsDomain";
+import { UserDomain } from "./userDomain";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -32,9 +28,7 @@ export default () => {
   const envSchema = z.object({
     app: EnvAppSchema,
     db: EnvDBSchema,
-    auth: EnvAuthSchema,
-    aws: EnvAWSSchema,
-    payment: EnvPaymentSchema,
+    authentication: EnvAuthenticationMiddlewareSchema,
   });
 
   const env = envSchema.parse({
@@ -52,33 +46,20 @@ export default () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     },
-    auth: {
+    authentication: {
       audience: process.env.AUTH_AUDIENCE,
       issuerBaseURL: process.env.AUTH_ISSUER_BASE_URL,
-    },
-    payment: {
-      secretKey: process.env.STRIPE_SECRET_KEY,
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
     },
   });
 
   const logger = Logger(env.app.logLevel);
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
-  const authorization = Authorization(env.auth);
+
+  const authentication = Authentication(env.authentication);
 
   const userStateRepository = UserStateRepository(env.db);
-  const paymentProviderRepository = PaymentProviderRepository(env.payment);
-  const authenticationProviderRepository = AuthenticationProviderRepository(
-    env.auth
-  );
-
-  const userDomain = UserDomain(
-    userStateRepository,
-    paymentProviderRepository,
-    authenticationProviderRepository
-  );
-
+  const userDomain = UserDomain(userStateRepository);
   const userRouter = UserRouter(userDomain);
 
   const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
@@ -90,11 +71,10 @@ export default () => {
   app.use(requestLogger);
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
+  app.use(authentication);
   app.use(`/api/v1/user`, userRouter);
   app.use(errorHandler);
-
   app.listen(env.app.port, () =>
-    logger.info(`App server listening on port ${env.app.port}`)
+    logger.info(`App server listening on port ${env.app.port}`),
   );
 };

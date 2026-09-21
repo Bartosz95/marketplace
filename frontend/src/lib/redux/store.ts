@@ -1,17 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { listingsSlice } from "./listingsSlice";
+import listingReducer from "./listingsSlice";
 
-export const makeStore = () => {
-  return configureStore({
+const makeStore = () =>
+  configureStore({
     reducer: {
-      listingsStore: listingsSlice.reducer,
+      listingsStore: listingReducer,
     },
   });
-};
 
-// Infer the type of makeStore
+export default makeStore();
+
 export type AppStore = ReturnType<typeof makeStore>;
-// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<AppStore["getState"]>;
 export type AppDispatch = AppStore["dispatch"];
 export type AppGetState = AppStore["getState"];

@@ -8,14 +8,14 @@ import { PaymentProviderRepository } from "../repositories/paymentProviderReposi
 import { PaymentProcessManager } from "./paymentProcessManager";
 import {
   EnvDBSchema,
-  envPMSchema,
+  EnvPMSchema,
   EnvPaymentSchema,
 } from "../libs/validationSchemas";
 import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 
 export default () => {
   const envSchema = z.object({
-    app: envPMSchema.extend({ imagesUrl: z.string() }),
+    app: EnvPMSchema.extend({ imagesUrl: z.string() }),
     db: EnvDBSchema,
     purchaseProvider: EnvPaymentSchema,
   });
@@ -45,13 +45,13 @@ export default () => {
   const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
   const eventSourceRepository = EventSourceRepository(env.db);
   const paymentProviderRepository = PaymentProviderRepository(
-    env.purchaseProvider
+    env.purchaseProvider,
   );
   const modifyImagesUrls = ModifyImagesUrls(env.app.imagesUrl);
   const paymentProcessManager = PaymentProcessManager(
     paymentProviderRepository,
     eventSourceRepository,
-    modifyImagesUrls
+    modifyImagesUrls,
   );
   const iterationMetrics = IterationMetrics(env.app.name, logger);
   iterationMetrics.startMetricsServer();
@@ -60,7 +60,7 @@ export default () => {
     eventSourceRepository,
     paymentProcessManager,
     env.app.numberOfEventsPerIteration,
-    iterationMetrics
+    iterationMetrics,
   );
 
   const delay = (timeout: number) =>

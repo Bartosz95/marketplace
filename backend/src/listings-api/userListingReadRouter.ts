@@ -1,0 +1,102 @@
+import { Router } from "express";
+import z from "zod";
+import { UUID } from "crypto";
+import { UserDomain } from "../user-api/userDomain";
+import { UserListingsReadDomain } from "./userListingsDomain";
+
+const listingsQuerySchema = z.object({
+  limit: z.coerce.number().int(),
+  offset: z.coerce.number().int(),
+});
+
+const userIdSchema = z.string();
+
+export const UserListingsReadRouter = (
+  userListingsReadDomain: UserListingsReadDomain,
+  userDomain: UserDomain,
+) => {
+  const router = Router();
+
+  router.get("/", async (req, res) => {
+    const authenticationProviderId = (await userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    )) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const data = await userListingsReadDomain.getAll(
+      user.userId,
+      limit,
+      offset,
+    );
+    res.status(200).send(data);
+  });
+
+  router.get("/active", async (req, res) => {
+    const authenticationProviderId = (await userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    )) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const data = await userListingsReadDomain.getActive(
+      user.userId,
+      limit,
+      offset,
+    );
+    res.status(200).send(data);
+  });
+
+  router.get("/sold", async (req, res) => {
+    const authenticationProviderId = (await userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    )) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const data = await userListingsReadDomain.getSold(
+      user.userId,
+      limit,
+      offset,
+    );
+    res.status(200).send(data);
+  });
+
+  router.get("/purchased", async (req, res) => {
+    const authenticationProviderId = (await userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    )) as UUID;
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const data = await userListingsReadDomain.getPurchased(
+      user.userId,
+      limit,
+      offset,
+    );
+    res.status(200).send(data);
+  });
+
+  router.get("/archived", async (req, res) => {
+    const authenticationProviderId = (await userIdSchema.parse(
+      req?.auth?.payload?.sub,
+    )) as UUID;
+
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const data = await userListingsReadDomain.getArchived(
+      user.userId,
+      limit,
+      offset,
+    );
+    res.status(200).send(data);
+  });
+
+  return router;
+};

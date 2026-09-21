@@ -1,21 +1,22 @@
 import Stripe from "stripe";
 import { EnvPurchase } from "../libs/validationSchemas";
+import { UUID } from "crypto";
 
 export interface PaymentProviderRepository {
   createProduct: (id: string, name: string, price: number) => Promise<string>;
   updateProductName: (id: string, price: string) => Promise<void>;
   updateProductPrice: (id: string, price: number) => Promise<string>;
   updateProductImages: (id: string, images: string[]) => Promise<void>;
-  createUser: (name: string, email: string) => Promise<string>;
+  createUser: (email: string) => Promise<UUID>;
   createUserOnbordingLink: (accountId: string) => Promise<string>;
   getUserStatus: (accountId: string) => Promise<Stripe.V2.Core.Account>;
   getUserProducts: (
-    accountId: string
+    accountId: string,
   ) => Promise<Stripe.ApiList<Stripe.Product>>;
 }
 
 export const PaymentProviderRepository = (
-  env: EnvPurchase
+  env: EnvPurchase,
 ): PaymentProviderRepository => {
   const stripe = new Stripe(env.secretKey);
 
@@ -130,40 +131,13 @@ export const PaymentProviderRepository = (
     await stripe.products.update(id, updateProductParams);
   };
 
-  const createUser = async (name: string, email: string) => {
-    const customerCreateParams: Stripe.CustomerCreateParams = {
-      name,
+  const createUser = async (email: string) => {
+    const account = await stripe.accounts.create({
       email,
-    };
-
-    const account = await stripe.v2.core.accounts.create({
-      display_name: name,
-      contact_email: email,
-      dashboard: "express",
-      defaults: {
-        responsibilities: {
-          fees_collector: "application",
-          losses_collector: "application",
-        },
-      },
-      identity: {
-        country: "AU",
-        entity_type: "company",
-      },
-      configuration: {
-        recipient: {
-          capabilities: {
-            stripe_balance: {
-              stripe_transfers: {
-                requested: true,
-              },
-            },
-          },
-        },
-      },
+      type: "express",
+      country: "AU",
     });
-    const customer = await stripe.customers.create(customerCreateParams);
-    return customer.id;
+    return account.id as UUID;
   };
 
   const createUserOnbordingLink = async (accountId: string) => {

@@ -1,9 +1,11 @@
 "use client";
-import { ChangeEvent, useState } from "react";
+
+import { ChangeEvent, useEffect, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
 import Image from "react-bootstrap/Image";
+import Card from "react-bootstrap/Card";
+import Container from "react-bootstrap/Container";
 import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
@@ -13,172 +15,214 @@ import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { useRouter } from "next/navigation";
 
-export const UpdateListingSchema = yup.object().shape({
+export const UpdateListingSchema = yup.object({
   title: yup.string().min(1).max(20),
   price: yup.number().min(0),
   description: yup.string().min(10).max(255),
   images: yup
     .array()
+    .of(yup.mixed<File>().required())
     .min(1, "You must upload at least one image")
     .max(5, "You can upload up to 5 images")
     .test("fileType", "Only JPG/PNG files are allowed", (files) =>
       files
         ? files.every((file) => ["image/jpeg", "image/png"].includes(file.type))
-        : true
+        : true,
     ),
 });
 
-type UpdateListingDetails = Partial<yup.InferType<typeof UpdateListingSchema>>;
+type UpdateListingDetails = {
+  title?: string;
+  price?: number;
+  description?: string;
+  images?: File[];
+};
 
-function UpdateListingModal() {
+function UpdateListing() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+
   const { showListingUpdate } = useAppSelector(listingStoreSelector);
+
   const [imagesUrls, setImagesUrls] = useState<string[]>(
-    showListingUpdate?.imagesUrls || []
+    showListingUpdate?.imagesUrls || [],
   );
 
-  if (!showListingUpdate) return router.push("/");
+  useEffect(() => {
+    if (!showListingUpdate) {
+      router.push("/");
+    }
+  }, [showListingUpdate, router]);
 
-  const handleUpdate = async (updateListingDetails: UpdateListingDetails) => {
-    dispatch(
+  if (!showListingUpdate) {
+    return null;
+  }
+
+  const handleUpdate = async (data: UpdateListingDetails) => {
+    await dispatch(
       updateListing({
-        ...updateListingDetails,
+        ...data,
         listingId: showListingUpdate.listingId,
-      })
-    );
+      }),
+    ).unwrap();
+
+    dispatch(setShowListingUpdate(undefined));
     router.push("/");
   };
 
-  const imagePreview = (
-    <Carousel className="mb-3 w-50 set-center">
-      {imagesUrls?.map((imageUrl) => (
-        <Carousel.Item key={imageUrl}>
-          <Image alt="listing image" src={imageUrl} fluid />
-        </Carousel.Item>
-      ))}
-    </Carousel>
-  );
-
   return (
-    <Modal
-      show={!!showListingUpdate}
-      onHide={() => {
-        dispatch(setShowListingUpdate(undefined));
-        router.push(`/`);
-      }}
-      backdrop="static"
-      aria-labelledby="contained-modal-title-vcenter"
-      dialogClassName="custom-modal-dialog"
-      className="blure m-auto"
-      centered
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>Enter listing details</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {imagePreview}
-        <Formik
-          validationSchema={UpdateListingSchema}
-          onSubmit={handleUpdate}
-          initialValues={{
-            title: undefined,
-            price: undefined,
-            description: undefined,
-            images: undefined,
-          }}
-        >
-          {({ handleSubmit, handleChange, touched, errors, setFieldValue }) => (
-            <Form noValidate onSubmit={handleSubmit}>
-              <Form.Group controlId="images" className="mb-3">
-                <Form.Label htmlFor="images">Select images</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept="image/*"
-                  name="images"
-                  id="images"
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    handleChange(event);
-                    const images = Array.from(event.currentTarget.files || []);
-                    if (images.length > 0) {
-                      setFieldValue("images", images);
-                      setImagesUrls(
-                        images.map((image) => URL.createObjectURL(image))
-                      );
-                    }
-                  }}
-                  multiple
-                  required
-                  isInvalid={touched.images && !!errors.images}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.images}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group controlId="title" className="mb-3">
-                <Form.Label htmlFor="title">Add title</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="title"
-                  id="title"
-                  placeholder="Title"
-                  onChange={handleChange}
-                  isInvalid={touched.title && !!errors.title}
-                  defaultValue={showListingUpdate.title}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.title}
-                </Form.Control.Feedback>
-              </Form.Group>
+    <Container className="py-5">
+      <div className="mx-auto" style={{ maxWidth: "700px" }}>
+        <Card>
+          <Card.Header>
+            <Card.Title className="mb-0">Update listing</Card.Title>
+          </Card.Header>
 
-              <Form.Group controlId="price" className="mb-3">
-                <Form.Label htmlFor="price">Set price</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="price"
-                  id="price"
-                  placeholder="Price"
-                  onChange={handleChange}
-                  isInvalid={touched.price && !!errors.price}
-                  defaultValue={showListingUpdate.price}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.price}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Form.Group controlId="description" className="mb-3">
-                <Form.Label htmlFor="description">
-                  Describe your item
-                </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  type="text"
-                  name="description"
-                  id="description"
-                  placeholder="Description"
-                  maxLength={255}
-                  onChange={handleChange}
-                  isInvalid={touched.description && !!errors.description}
-                  defaultValue={showListingUpdate.description}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.description}
-                </Form.Control.Feedback>
-              </Form.Group>
-              <Button
-                variant="primary"
-                type="submit"
-                className="button-style set-center"
-              >
-                Update
-              </Button>
-            </Form>
-          )}
-        </Formik>
-      </Modal.Body>
-    </Modal>
+          <Card.Body>
+            {imagesUrls.length > 0 && (
+              <Carousel className="mb-4">
+                {imagesUrls.map((imageUrl) => (
+                  <Carousel.Item key={imageUrl}>
+                    <Image
+                      alt="listing image"
+                      src={imageUrl}
+                      fluid
+                      className="d-block mx-auto"
+                    />
+                  </Carousel.Item>
+                ))}
+              </Carousel>
+            )}
+
+            <Formik<UpdateListingDetails>
+              validationSchema={UpdateListingSchema}
+              onSubmit={handleUpdate}
+              initialValues={{
+                title: showListingUpdate.title,
+                price: showListingUpdate.price,
+                description: showListingUpdate.description,
+                images: [],
+              }}
+            >
+              {({
+                handleSubmit,
+                handleChange,
+                touched,
+                errors,
+                values,
+                setFieldValue,
+              }) => (
+                <Form noValidate onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Select new images</Form.Label>
+
+                    <Form.Control
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      name="images"
+                      id="images"
+                      multiple
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        const images = Array.from(
+                          event.currentTarget.files || [],
+                        );
+
+                        if (images.length > 0) {
+                          setFieldValue("images", images);
+
+                          setImagesUrls(
+                            images.map((image) => URL.createObjectURL(image)),
+                          );
+                        }
+                      }}
+                      isInvalid={touched.images && !!errors.images}
+                    />
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.images as string}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Title</Form.Label>
+
+                    <Form.Control
+                      type="text"
+                      name="title"
+                      id="title"
+                      placeholder="Title"
+                      value={values.title || ""}
+                      onChange={handleChange}
+                      isInvalid={touched.title && !!errors.title}
+                    />
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.title}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Price</Form.Label>
+
+                    <Form.Control
+                      type="number"
+                      name="price"
+                      id="price"
+                      placeholder="Price"
+                      value={values.price ?? ""}
+                      onChange={handleChange}
+                      isInvalid={touched.price && !!errors.price}
+                    />
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.price}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+
+                  <Form.Group className="mb-4">
+                    <Form.Label>Description</Form.Label>
+
+                    <Form.Control
+                      as="textarea"
+                      rows={5}
+                      name="description"
+                      id="description"
+                      placeholder="Description"
+                      maxLength={255}
+                      value={values.description || ""}
+                      onChange={handleChange}
+                      isInvalid={touched.description && !!errors.description}
+                    />
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.description}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+
+                  <div className="d-flex justify-content-between">
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      onClick={() => {
+                        dispatch(setShowListingUpdate(undefined));
+                        router.push("/");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button variant="primary" type="submit">
+                      Update listing
+                    </Button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </Card.Body>
+        </Card>
+      </div>
+    </Container>
   );
 }
 
-export default UpdateListingModal;
+export default UpdateListing;

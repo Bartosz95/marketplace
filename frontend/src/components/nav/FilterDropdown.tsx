@@ -27,25 +27,33 @@ function FilterDropdown() {
 
   return (
     <NavDropdown title={mapFilterBy(lastFilterBy)}>
-      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.All))}>
+      <NavDropdown.Item
+        onClick={async () => await dispatch(getListings(FilterBy.All))}
+      >
         All
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.UserAll))}>
+      <NavDropdown.Item
+        onClick={async () => await dispatch(getListings(FilterBy.UserAll))}
+      >
         {mapFilterBy(FilterBy.UserAll)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.Active))}>
+      <NavDropdown.Item
+        onClick={async () => await dispatch(getListings(FilterBy.Active))}
+      >
         {mapFilterBy(FilterBy.Active)}
       </NavDropdown.Item>
-      <NavDropdown.Item onClick={() => dispatch(getListings(FilterBy.Sold))}>
+      <NavDropdown.Item
+        onClick={async () => await dispatch(getListings(FilterBy.Sold))}
+      >
         {mapFilterBy(FilterBy.Sold)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={() => dispatch(getListings(FilterBy.Purchased))}
+        onClick={async () => await dispatch(getListings(FilterBy.Purchased))}
       >
         {mapFilterBy(FilterBy.Purchased)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={() => dispatch(getListings(FilterBy.Archived))}
+        onClick={async () => await dispatch(getListings(FilterBy.Archived))}
       >
         {mapFilterBy(FilterBy.Archived)}
       </NavDropdown.Item>

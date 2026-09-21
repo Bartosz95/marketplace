@@ -3,7 +3,7 @@ import z from "zod";
 export const listingIdSchema = z.uuid();
 export const userIdSchema = z.string();
 
-export const envPMSchema = z.object({
+export const EnvPMSchema = z.object({
   name: z.string(),
   logLevel: z.string(),
   timeout: z.coerce.number(),

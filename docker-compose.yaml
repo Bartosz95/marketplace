@@ -1,65 +1,98 @@
-version: "3.9"
-
 services:
-  ui:
+  # ui:
+  #   build:
+  #     context: frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 80:80
+  #   env_file:
+  #     - frontend/.env
+  #   environment:
+  #     - NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost
+  #   depends_on:
+  #     - listings-api
+  #     - user-api
+  #   networks:
+  #     - monitoring
+  #     - app
+
+  # listings-api:
+  #   build:
+  #     context: backend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 3000:3000
+  #   env_file:
+  #     - backend/.env
+  #   environment:
+  #     - APP_NAME=listings-api
+  #     - APP_HOST=localhost
+  #     - APP_PORT=3000
+  #     - DB_HOST=db
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - monitoring
+  #     - app
+
+  listings-pm:
     build:
-      context: frontend
+      context: backend
       dockerfile: Dockerfile
-    ports:
-      - 80:3000
     env_file:
-      - frontend/.env
+      - backend/.env
     environment:
-      - NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost
+      - DB_HOST=db
+      - APP_NAME=listings-pm
+      - DB_HOST=db
     depends_on:
-      - listings-api
+      - db
     networks:
       - monitoring
       - app
-  listings-api:
+
+  user-api:
     build:
       context: backend
       dockerfile: Dockerfile
     ports:
-      - 3000:3000
+      - 3001:3000
     env_file:
       - backend/.env
     environment:
-      - APP_NAME=listings-api
+      - APP_NAME=user-api
       - APP_HOST=localhost
       - APP_PORT=3000
-      - APP_LOG_LEVEL=info
-      - APP_LOOP_TIMEOUT=2000
       - DB_HOST=db
     depends_on:
       - db
     networks:
       - monitoring
       - app
-  listings-state-pm:
-    build:
-      context: backend
-      dockerfile: Dockerfile
-    env_file:
-      - backend/.env
-    environment:
-      - DB_HOST=db
-      - APP_NAME=listings-state-pm
-      - DB_HOST=db
-    depends_on:
-      - db
-    networks:
-      - monitoring
-      - app
+  # user-pm:
+  #   build:
+  #     context: backend
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - backend/.env
+  #   environment:
+  #     - DB_HOST=db
+  #     - APP_NAME=user-pm
+  #     - DB_HOST=db
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - monitoring
+  #     - app
 
-  purchases-state-pm:
+  purchases-pm:
     build:
       context: backend
       dockerfile: Dockerfile
     env_file:
       - backend/.env
     environment:
-      - APP_NAME=purchases-state-pm
+      - APP_NAME=purchases-pm
       - DB_HOST=db
     depends_on:
       - db
@@ -95,62 +128,62 @@ services:
     networks:
       - app
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: node-exporter
-    ports:
-      - 9100:9100
-    command:
-      - "--path.rootfs=/"
-    restart: unless-stopped
-    networks:
-      - monitoring
+  # node-exporter:
+  #   image: prom/node-exporter:latest
+  #   container_name: node-exporter
+  #   ports:
+  #     - 9100:9100
+  #   command:
+  #     - "--path.rootfs=/"
+  #   restart: unless-stopped
+  #   networks:
+  #     - monitoring
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    restart: always
-    privileged: true
-    ports:
-      - 8080:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command:
-      - --docker_only
-    networks:
-      - monitoring
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest
+  #   container_name: cadvisor
+  #   restart: always
+  #   privileged: true
+  #   ports:
+  #     - 8080:8080
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command:
+  #     - --docker_only
+  #   networks:
+  #     - monitoring
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - 9090:9090
-    volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yaml"
-      - "--storage.tsdb.path=/prometheus"
-    networks:
-      - monitoring
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - 9090:9090
+  #   volumes:
+  #     - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+  #   command:
+  #     - "--config.file=/etc/prometheus/prometheus.yaml"
+  #     - "--storage.tsdb.path=/prometheus"
+  #   networks:
+  #     - monitoring
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    restart: unless-stopped
-    ports:
-      - 3002:3000
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=password
-      - GF_LOG_LEVEL=warn
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-    volumes:
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-      - grafana-storage:/var/lib/grafana
-    networks:
-      - monitoring
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - 3002:3000
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=password
+  #     - GF_LOG_LEVEL=warn
+  #     - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+  #   volumes:
+  #     - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+  #     - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+  #     - ./grafana/dashboards:/var/lib/grafana/dashboards
+  #     - grafana-storage:/var/lib/grafana
+  #   networks:
+  #     - monitoring
 
 volumes:
   postgres-storage:

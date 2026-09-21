@@ -8,7 +8,7 @@ function LoginButton() {
   const [showProfile, setShowProfile] = useState(false);
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
   return !isAuthenticated ? (
-    <Button onClick={() => loginWithRedirect()}>Login to add listing</Button>
+    <Button onClick={() => loginWithRedirect()}>Login</Button>
   ) : (
     <>
       <NavDropdown title={user?.nickname}>

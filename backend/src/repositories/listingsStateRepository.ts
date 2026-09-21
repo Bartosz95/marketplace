@@ -13,25 +13,25 @@ export interface ListingsStateRepository {
   getListings: (
     statuses: EventType[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetListingsResponse>;
-  getListingById: (listingId: UUID) => Promise<ListingState | undefined>;
+  getListing: (listingId: UUID) => Promise<ListingState | undefined>;
   getListingsByIds: (
     listingId: UUID[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetListingsResponse>;
   getListingsByUserId: (
     userId: UUID,
     statuses: EventType[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetListingsResponse>;
   updateListing: (listing: ListingState) => Promise<void>;
 }
 
 export const ListingsStateRepository = (
-  env: EnvDB
+  env: EnvDB,
 ): ListingsStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,
@@ -59,7 +59,7 @@ export const ListingsStateRepository = (
           listing.imagesUrls,
           listing.paymentLink,
           listing.modifiedAt,
-        ]
+        ],
       );
     } catch (error) {
       throw error;
@@ -71,7 +71,7 @@ export const ListingsStateRepository = (
   const getListings = async (
     statuses: EventType[],
     limit = 10,
-    offset = 0
+    offset = 0,
   ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -81,13 +81,13 @@ export const ListingsStateRepository = (
         ORDER BY modified_at DESC
         LIMIT $2 OFFSET $3;
         `,
-        [statuses, limit, offset]
+        [statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
         WHERE status = ANY($1::text[]);
         `,
-        [statuses]
+        [statuses],
       );
       return {
         listings: results.rows.map(mapListing),
@@ -100,14 +100,14 @@ export const ListingsStateRepository = (
     }
   };
 
-  const getListingById = async (
-    listingId: UUID
+  const getListing = async (
+    listingId: UUID,
   ): Promise<ListingState | undefined> => {
     const dbClient = await pool.connect();
     try {
       const result = await dbClient.query(
         `SELECT * FROM states.listings WHERE listing_id = $1 limit 1;`,
-        [listingId]
+        [listingId],
       );
       return result.rows.map(mapListing).shift();
     } catch (error) {
@@ -120,7 +120,7 @@ export const ListingsStateRepository = (
   const getListingsByIds = async (
     listingsIds: UUID[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -128,13 +128,13 @@ export const ListingsStateRepository = (
         `SELECT * FROM states.listings 
         WHERE listing_id = ANY($1::UUID[])
         LIMIT $2 OFFSET $3;`,
-        [listingsIds, limit, offset]
+        [listingsIds, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
         WHERE listing_id = ANY($1::UUID[]);
         `,
-        [listingsIds]
+        [listingsIds],
       );
       return {
         listings: results.rows.map(mapListing),
@@ -151,7 +151,7 @@ export const ListingsStateRepository = (
     userId: UUID,
     statuses: EventType[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<GetListingsResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -162,14 +162,14 @@ export const ListingsStateRepository = (
         ORDER BY modified_at DESC
         LIMIT $3 OFFSET $4;
         `,
-        [userId, statuses, limit, offset]
+        [userId, statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
         WHERE user_id = $1
         AND status = ANY($2::text[]);
         `,
-        [userId, statuses]
+        [userId, statuses],
       );
       return {
         listings: results.rows.map(mapListing),
@@ -200,7 +200,7 @@ export const ListingsStateRepository = (
 
   return {
     getListings,
-    getListingById,
+    getListing,
     getListingsByIds,
     getListingsByUserId,
     updateListing,

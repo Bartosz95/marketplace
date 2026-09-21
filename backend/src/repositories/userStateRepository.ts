@@ -1,27 +1,66 @@
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
 import { EnvDB } from "../libs/validationSchemas";
-import { UserState } from "../domain/userListingsDomain";
 
-interface UserTableRow {
-  id: UUID;
-  created_at: Date;
-  updated_at: Date;
+export interface User {
+  userId: UUID;
+  authenticationProviderId: string;
+  paymentProviderId: UUID | undefined;
   name: string;
   email: string;
-  address_street: string;
-  address_city: string;
-  address_state: string;
-  address_zip_code: string;
-  address_country: string;
-  auth_id: string;
-  payment_id: string;
+  address: Address | undefined;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface AddressRow {
+  street: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  country: string;
+}
+
+interface UserTableRow {
+  user_id: UUID;
+  authentication_provider_id: string;
+  payment_provider_id: UUID;
+  name: string;
+  email: string;
+  address: AddressRow;
+  metadata: any;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface UserStateRepository {
-  createUser: (user: UserState) => Promise<void>;
-  updateUser: (user: UserState) => Promise<void>;
-  getUser: (id: UUID) => Promise<UserState | undefined>;
+  createUser: (
+    userId: UUID,
+    authenticationProviderId: string,
+    name: string,
+    email: string,
+  ) => Promise<void>;
+  updateUser: (
+    userId: UUID,
+    name: string,
+    email: string,
+    address: Address,
+  ) => Promise<void>;
+  getUser: (userId: UUID) => Promise<User | undefined>;
+  getUserByAuthenticationId: (
+    authenticationProviderId: string,
+  ) => Promise<User | undefined>;
+  userExistsWithAuthenticationId: (
+    authenticationProviderId: string,
+  ) => Promise<boolean>;
 }
 
 export const UserStateRepository = (env: EnvDB): UserStateRepository => {
@@ -31,38 +70,21 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
 
   const pool = new Pool(dbConfig);
 
-  const createUser = async (user: UserState): Promise<void> => {
+  const createUser = async (
+    userId: UUID,
+    authenticationProviderId: string,
+    name: string,
+    email: string,
+  ): Promise<void> => {
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.Users (id, name, email, created_at, updated_at, payment_id, auth_id, address_street, address_city, address_state, address_zip_code, address_country) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT (id) DO UPDATE
-        SET name = $2,
-            email = $3,
-            updated_at = $5,
-            payment_id = $6,
-            auth_id = $7,
-            address_street = $8,
-            address_city = $9,
-            address_state = $10,
-            address_zip_code = $11,
-            address_country = $12;
+        `INSERT INTO states.users (userId, authentication_provider_id, name, email)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (authentication_provider_id) DO UPDATE
+        SET user_id = $1, authentication_provider_id = $2, name = $3, email = $4
         `,
-        [
-          user.id,
-          user.name,
-          user.email,
-          user.createdAt,
-          user.updatedAt,
-          user.paymentId,
-          user.authId,
-          user.address.street,
-          user.address.city,
-          user.address.state,
-          user.address.zipCode,
-          user.address.country,
-        ]
+        [userId, authenticationProviderId, name, email],
       );
     } catch (error) {
       throw error;
@@ -71,38 +93,24 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
     }
   };
 
-  const updateUser = async (user: UserState): Promise<void> => {
+  const updateUser = async (
+    userId: UUID,
+    name: string,
+    email: string,
+    address: Address,
+  ): Promise<void> => {
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.Users (id, name, email, created_at, updated_at, payment_id, auth_id, address_street, address_city, address_state, address_zip_code, address_country) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT (id) DO UPDATE
+        `INSERT INTO states.users (user_id, name, email, address) 
+        VALUES ($1, $2, $3, $4) 
+        ON CONFLICT (user_id) DO UPDATE
         SET name = $2,
             email = $3,
-            updated_at = $5,
-            payment_id = $6,
-            auth_id = $7,
-            address_street = $8,
-            address_city = $9,
-            address_state = $10,
-            address_zip_code = $11,
-            address_country = $12;
+            address = $4,
+            updated_at = NOW();
         `,
-        [
-          user.id,
-          user.name,
-          user.email,
-          user.createdAt,
-          user.updatedAt,
-          user.paymentId,
-          user.authId,
-          user.address.street,
-          user.address.city,
-          user.address.state,
-          user.address.zipCode,
-          user.address.country,
-        ]
+        [userId, name, email, address],
       );
     } catch (error) {
       throw error;
@@ -111,28 +119,13 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
     }
   };
 
-  const getUserById = async (userId: UUID): Promise<UserState | undefined> => {
-    const dbClient = await pool.connect();
-    try {
-      const result = await dbClient.query(
-        `SELECT * FROM states.Users WHERE user_id = $1 limit 1;`,
-        [userId]
-      );
-      return result.rows.map(mapUser).shift();
-    } catch (error) {
-      throw error;
-    } finally {
-      dbClient.release();
-    }
-  };
-
-  const getUser = async (id: UUID): Promise<UserState | undefined> => {
+  const getUser = async (userId: UUID): Promise<User | undefined> => {
     const dbClient = await pool.connect();
     try {
       const results = await dbClient.query(
-        `SELECT * FROM states.Users 
-        WHERE id = $1;`,
-        [id]
+        `SELECT * FROM states.users  
+        WHERE user_id = $1;`,
+        [userId],
       );
 
       return mapUser(results.rows[0]);
@@ -143,26 +136,73 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
     }
   };
 
-  const mapUser = (row: UserTableRow): UserState => ({
-    id: row.id as UUID,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+  const getUserByAuthenticationId = async (
+    authenticationProviderId: string,
+  ): Promise<User | undefined> => {
+    const dbClient = await pool.connect();
+    try {
+      console.log("Checking user existence for ID:", authenticationProviderId);
+      const results = await dbClient.query(
+        `SELECT * FROM states.users 
+        WHERE authentication_provider_id = $1;`,
+        [authenticationProviderId],
+      );
+
+      if (results.rowCount === null) {
+        throw Error();
+      }
+      if (results.rowCount < 1) return undefined;
+      return mapUser(results.rows[0]);
+    } catch (error) {
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const userExistsWithAuthenticationId = async (
+    authenticationProviderId: string,
+  ): Promise<boolean> => {
+    const dbClient = await pool.connect();
+    try {
+      console.log("Checking user existence for ID:", authenticationProviderId);
+      const results = await dbClient.query(
+        `SELECT 1 FROM states.users 
+        WHERE authentication_provider_id = $1 LIMIT 1;`,
+        [authenticationProviderId],
+      );
+
+      if (results.rowCount === null) throw Error();
+
+      return results.rowCount > 0;
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const mapUser = (row: UserTableRow): User => ({
+    userId: row.user_id,
+    authenticationProviderId: row.authentication_provider_id,
+    paymentProviderId: row.payment_provider_id,
     name: row.name,
     email: row.email,
     address: {
-      street: row.address_street,
-      city: row.address_city,
-      state: row.address_state,
-      zipCode: row.address_zip_code,
-      country: row.address_country,
+      street: row.address.street,
+      city: row.address.city,
+      state: row.address.state,
+      zipCode: row.address.zip_code,
+      country: row.address.country,
     },
-    paymentId: row.payment_id,
-    authId: row.auth_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   });
 
   return {
     createUser,
     updateUser,
     getUser,
+    getUserByAuthenticationId,
+    userExistsWithAuthenticationId,
   };
 };

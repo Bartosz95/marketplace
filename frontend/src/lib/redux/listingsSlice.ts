@@ -13,9 +13,7 @@ interface State {
   limit: number;
   offset: number;
   lastFilterBy: FilterBy;
-  token?: string;
   user?: User;
-  isAuthenticated: boolean;
   apiURL?: string;
 }
 
@@ -30,14 +28,12 @@ const initialState: State = {
   limit: 12,
   offset: 0,
   lastFilterBy: FilterBy.All,
-  token: undefined,
   user: undefined,
-  isAuthenticated: false,
   apiURL: undefined,
 };
 
 export const listingsSlice = createSlice({
-  name: "listings",
+  name: 'listings',
   initialState,
   reducers: {
     setShowListingView: (state, actions) => {
@@ -56,7 +52,7 @@ export const listingsSlice = createSlice({
       state.countOfAll = actions.payload;
       state.pagesNumbers = Array.from(
         { length: Math.ceil(state.countOfAll / state.limit) },
-        (_, i) => i + 1
+        (_, i) => i + 1,
       );
     },
     setActivePage: (state, actions) => {
@@ -71,12 +67,6 @@ export const listingsSlice = createSlice({
     setLastFilteredBy: (state, actions) => {
       state.lastFilterBy = actions.payload;
     },
-    setToken: (state, actions) => {
-      state.token = actions.payload;
-    },
-    setApiURL: (state, actions) => {
-      state.apiURL = actions.payload;
-    },
   },
 });
 
@@ -90,6 +80,6 @@ export const {
   setLimit,
   setOffset,
   setLastFilteredBy,
-  setToken,
-  setApiURL,
 } = listingsSlice.actions;
+
+export default listingsSlice.reducer;

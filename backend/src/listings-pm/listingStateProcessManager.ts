@@ -4,7 +4,7 @@ import { Event, EventType, ListingState } from "../types";
 export const ListingsStateProcessManager =
   (listingStateRepository: ListingsStateRepository) => async (event: Event) => {
     const { eventType, streamId } = event;
-    const previousState = await listingStateRepository.getListingById(streamId);
+    const previousState = await listingStateRepository.getListing(streamId);
 
     switch (eventType) {
       case EventType.LISTING_CREATED:

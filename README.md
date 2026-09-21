@@ -140,9 +140,9 @@ In `<project_dir>/ui/` directory create a `.env` file with _AUTH_AUDIENCE_ and _
 
 ```
 NEXT_PUBLIC_AUTH0_DOMAIN=<your Auth0 Domain URL>
-NEXT_PUBLIC_AUTH0_CLIENT_ID=<your Client ID>
+NEXT_PUBLIC_AUTH_CLIENT_ID=<your Client ID>
 NEXT_PUBLIC_AUTH0_AUDIENCE=<your api identifier>
-NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost/
+NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost/
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_IMAGES_URL=http://localhost:3002/images
 ```
@@ -153,9 +153,9 @@ Example:
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_IMAGES_URL=http://localhost:3002/images
 NEXT_PUBLIC_AUTH0_DOMAIN=dev-e857rf6yf68r.us.auth0.com
-NEXT_PUBLIC_AUTH0_CLIENT_ID=2352356264366346
+NEXT_PUBLIC_AUTH_CLIENT_ID=2352356264366346
 NEXT_PUBLIC_AUTH0_AUDIENCE=http://marketplace/api
-NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost:3000
+NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost:3000
 ```
 
 ### Build and run the project
