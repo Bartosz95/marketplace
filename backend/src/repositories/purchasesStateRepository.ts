@@ -11,27 +11,32 @@ import { EnvDB } from "../libs/validationSchemas";
 
 export interface PurchasesStateRepository {
   updatePurchase: (purchase: PurchaseState) => Promise<void>;
+  updatePurchaseStatus: (
+    listingId: UUID,
+    status: PurchaseStatus,
+    modifiedAt: Date,
+  ) => Promise<void>;
   getPurchases: (
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetPurchasesResponse>;
   getPurchasesBySellerId: (
     sellerId: string,
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetPurchasesResponse>;
   getPurchasesByBuyerId: (
     buyerId: string,
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit: number,
-    offset: number
+    offset: number,
   ) => Promise<GetPurchasesResponse>;
 }
 
 export const PurchasesStateRepository = (
-  env: EnvDB
+  env: EnvDB,
 ): PurchasesStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,
@@ -56,7 +61,28 @@ export const PurchasesStateRepository = (
           purchase.status,
           purchase.version,
           purchase.modifiedAt,
-        ]
+        ],
+      );
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const updatePurchaseStatus = async (
+    listingId: UUID,
+    status: PurchaseStatus,
+    modifiedAt: Date = new Date(),
+  ): Promise<void> => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query(
+        `UPDATE states.purchases
+        SET status = $2, modified_at = $3
+        WHERE listing_id = $1;
+        `,
+        [listingId, status, modifiedAt],
       );
     } catch (error) {
       throw error;
@@ -66,9 +92,9 @@ export const PurchasesStateRepository = (
   };
 
   const getPurchases = async (
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit = 10,
-    offset = 0
+    offset = 0,
   ): Promise<GetPurchasesResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -78,13 +104,13 @@ export const PurchasesStateRepository = (
         ORDER BY modified_at DESC
         LIMIT $2 OFFSET $3;
         `,
-        [statuses, limit, offset]
+        [statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.listings
         WHERE status = ANY($1::text[]);
         `,
-        [statuses]
+        [statuses],
       );
       return {
         purchases: results.rows.map(mapPurchase),
@@ -99,9 +125,9 @@ export const PurchasesStateRepository = (
 
   const getPurchasesBySellerId = async (
     sellerId: string,
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<GetPurchasesResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -112,14 +138,14 @@ export const PurchasesStateRepository = (
         ORDER BY modified_at DESC
         LIMIT $3 OFFSET $4;
         `,
-        [sellerId, statuses, limit, offset]
+        [sellerId, statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.purchases
         WHERE seller_id = $1
         AND status = ANY($2::text[]);
         `,
-        [sellerId, statuses]
+        [sellerId, statuses],
       );
       return {
         purchases: results.rows.map(mapPurchase),
@@ -134,9 +160,9 @@ export const PurchasesStateRepository = (
 
   const getPurchasesByBuyerId = async (
     buyerId: string,
-    statuses: EventType[],
+    statuses: PurchaseStatus[],
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<GetPurchasesResponse> => {
     const dbClient = await pool.connect();
     try {
@@ -147,14 +173,14 @@ export const PurchasesStateRepository = (
         ORDER BY modified_at DESC
         LIMIT $3 OFFSET $4;
         `,
-        [buyerId, statuses, limit, offset]
+        [buyerId, statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
         `SELECT count(*) FROM states.purchases
         WHERE buyer_id = $1
         AND status = ANY($2::text[]);
         `,
-        [buyerId, statuses]
+        [buyerId, statuses],
       );
       return {
         purchases: results.rows.map(mapPurchase),
@@ -182,6 +208,7 @@ export const PurchasesStateRepository = (
 
   return {
     updatePurchase,
+    updatePurchaseStatus,
     getPurchases,
     getPurchasesBySellerId,
     getPurchasesByBuyerId,

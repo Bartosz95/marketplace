@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { EnvPurchase } from "../libs/validationSchemas";
 import { UUID } from "crypto";
+import { PurchaseRequestedEventData } from "../types";
 
 export interface PaymentProviderRepository {
   createProduct: (id: string, name: string, price: number) => Promise<string>;
@@ -13,6 +14,11 @@ export interface PaymentProviderRepository {
   getUserProducts: (
     accountId: string,
   ) => Promise<Stripe.ApiList<Stripe.Product>>;
+  createCheckoutSession: (
+    purchaseId: UUID,
+    purchase: PurchaseRequestedEventData,
+    idempotencyKey: string,
+  ) => Promise<{ checkoutSessionId: string; checkoutUrl: string }>;
 }
 
 export const PaymentProviderRepository = (
@@ -169,6 +175,33 @@ export const PaymentProviderRepository = (
     return products;
   };
 
+  const createCheckoutSession = async (
+    purchaseId: UUID,
+    purchase: PurchaseRequestedEventData,
+    idempotencyKey: string,
+  ) => {
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        client_reference_id: purchaseId,
+        metadata: { purchaseId, listingId: purchase.listingId, buyerId: purchase.buyerId },
+        line_items: [{
+          price_data: {
+            currency: purchase.currency,
+            unit_amount: Math.round(purchase.price * 100),
+            product_data: { name: `Marketplace listing ${purchase.listingId}` },
+          },
+          quantity: 1,
+        }],
+        success_url: `${env.frontendUrl ?? "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.frontendUrl ?? "http://localhost:3000"}/payment/cancel`,
+      },
+      { idempotencyKey },
+    );
+    if (!session.url) throw new Error("Stripe did not return a Checkout URL");
+    return { checkoutSessionId: session.id, checkoutUrl: session.url };
+  };
+
   return {
     createProduct,
     updateProductName,
@@ -178,5 +211,6 @@ export const PaymentProviderRepository = (
     createUserOnbordingLink,
     getUserStatus,
     getUserProducts,
+    createCheckoutSession,
   };
 };

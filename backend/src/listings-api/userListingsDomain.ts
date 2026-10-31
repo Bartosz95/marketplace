@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
-import { EventType, GetListingsResponse } from "../types";
+import { GetListingsResponse, ListingStatus, PurchaseStatus } from "../types";
 import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 import { ImagesRepository } from "../repositories/imagesRepository";
 
@@ -47,7 +47,7 @@ export const UserListingsReadDomain = (
   ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
-      [EventType.LISTING_CREATED, EventType.LISTING_UPDATED],
+      [ListingStatus.ACTIVE],
       limit,
       offset,
     );
@@ -61,7 +61,7 @@ export const UserListingsReadDomain = (
   ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
-      [EventType.LISTING_PURCHASED],
+      [ListingStatus.SOLD],
       limit,
       offset,
     );
@@ -75,7 +75,7 @@ export const UserListingsReadDomain = (
   ): Promise<GetListingsResponse> => {
     const purchases = await purchasesStateRepository.getPurchasesByBuyerId(
       userId,
-      [EventType.LISTING_PURCHASED],
+      [PurchaseStatus.COMPLETED],
       limit,
       offset,
     );
@@ -97,7 +97,7 @@ export const UserListingsReadDomain = (
   ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
-      [EventType.LISTING_ARCHIVED],
+      [ListingStatus.ARCHIVED],
       limit,
       offset,
     );
@@ -111,12 +111,7 @@ export const UserListingsReadDomain = (
   ): Promise<GetListingsResponse> => {
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
-      [
-        EventType.LISTING_CREATED,
-        EventType.LISTING_UPDATED,
-        EventType.LISTING_PURCHASED,
-        EventType.LISTING_ARCHIVED,
-      ],
+      [ListingStatus.ACTIVE, ListingStatus.SOLD, ListingStatus.ARCHIVED],
       limit,
       offset,
     );

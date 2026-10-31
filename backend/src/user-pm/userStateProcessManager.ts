@@ -14,6 +14,8 @@ export const UserStateProcessManager =
 
     switch (eventType) {
       case EventType.USER_FIRST_REQUEST:
+        console.log("UserStateProcessManager");
+        console.log(event);
         const { authenticationProviderId } = event.data;
         const userCurrentState =
           await userStateRepository.getUserByAuthenticationId(
@@ -23,20 +25,18 @@ export const UserStateProcessManager =
           console.log("User already exists in the database.");
           break;
         }
-
-        console.log(event);
-
-        console.log(authenticationProviderId);
-
-        authenticationProviderRepository
-          .getUser(authenticationProviderId)
-          .then((user) => {
-            console.log(user.data);
-          });
+        console.log("User not found in the database.");
+        console.log({ userCurrentState });
 
         const response = await authenticationProviderRepository.getUser(
           authenticationProviderId,
         );
+
+        if (!response) {
+          throw new Error(
+            `Auth0 user ${authenticationProviderId} was not found`,
+          );
+        }
 
         const {
           name,
@@ -45,17 +45,16 @@ export const UserStateProcessManager =
           email_verified: emailVerified,
         } = response.data;
 
-        console.log("user from db");
-        console.log({ name, email, nickname, email_verified: emailVerified });
-
         const id = event.streamId;
 
-        await userStateRepository.createUser(
+        const userCreated = await userStateRepository.createUser(
           id,
           authenticationProviderId,
           name,
           email,
         );
+
+        if (!userCreated) break;
 
         await eventSourceRepository.insertEvent(EventType.USER_CREATED, {
           id,

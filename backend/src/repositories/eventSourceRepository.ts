@@ -14,6 +14,8 @@ export interface EventSourceRepository {
     position: number,
     eventsNumber: number
   ) => Promise<Event[]>;
+  getEventByCheckoutSessionId: (checkoutSessionId: string) => Promise<Event | undefined>;
+  getLatestEventInStream: (streamId: UUID, eventType: EventType) => Promise<Event | undefined>;
 }
 
 export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
@@ -85,6 +87,32 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
     }
   };
 
+  const getEventByCheckoutSessionId = async (checkoutSessionId: string) => {
+    const dbClient = await pool.connect();
+    try {
+      const result = await dbClient.query(
+        "SELECT * FROM event_store.events WHERE data->>'checkoutSessionId' = $1 LIMIT 1",
+        [checkoutSessionId],
+      );
+      return result.rowCount ? mapEvent(result.rows[0]) : undefined;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const getLatestEventInStream = async (streamId: UUID, eventType: EventType) => {
+    const dbClient = await pool.connect();
+    try {
+      const result = await dbClient.query(
+        "SELECT * FROM event_store.events WHERE stream_id = $1 AND event_type = $2 ORDER BY version DESC LIMIT 1",
+        [streamId, eventType],
+      );
+      return result.rowCount ? mapEvent(result.rows[0]) : undefined;
+    } finally {
+      dbClient.release();
+    }
+  };
+
   const mapEvent = (row: any): Event => ({
     position: row.position,
     streamId: row.stream_id,
@@ -98,5 +126,7 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
     insertEvent,
     insertEventByStreamId,
     getEventsFromPosition,
+    getEventByCheckoutSessionId,
+    getLatestEventInStream,
   };
 };

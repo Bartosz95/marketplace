@@ -1,7 +1,6 @@
 import { UUID } from "crypto";
 import { Pool, PoolConfig } from "pg";
 import {
-  EventType,
   GetListingsResponse,
   ListingState,
   ListingStateTableRow,
@@ -11,7 +10,7 @@ import { EnvDB } from "../libs/validationSchemas";
 
 export interface ListingsStateRepository {
   getListings: (
-    statuses: EventType[],
+    statuses: ListingStatus[],
     limit: number,
     offset: number,
   ) => Promise<GetListingsResponse>;
@@ -23,11 +22,16 @@ export interface ListingsStateRepository {
   ) => Promise<GetListingsResponse>;
   getListingsByUserId: (
     userId: UUID,
-    statuses: EventType[],
+    statuses: ListingStatus[],
     limit: number,
     offset: number,
   ) => Promise<GetListingsResponse>;
   updateListing: (listing: ListingState) => Promise<void>;
+  updateListingStatus: (
+    listingId: UUID,
+    status: ListingStatus,
+    modifiedAt: Date,
+  ) => Promise<void>;
 }
 
 export const ListingsStateRepository = (
@@ -68,8 +72,26 @@ export const ListingsStateRepository = (
     }
   };
 
+  const updateListingStatus = async (
+    listingId: UUID,
+    status: ListingStatus,
+    modifiedAt: Date = new Date(),
+  ): Promise<void> => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query(
+        `UPDATE states.listings SET status = $1, modified_at = $3 WHERE listing_id = $2`,
+        [status, listingId, modifiedAt],
+      );
+    } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
   const getListings = async (
-    statuses: EventType[],
+    statuses: ListingStatus[],
     limit = 10,
     offset = 0,
   ): Promise<GetListingsResponse> => {
@@ -149,7 +171,7 @@ export const ListingsStateRepository = (
 
   const getListingsByUserId = async (
     userId: UUID,
-    statuses: EventType[],
+    statuses: ListingStatus[],
     limit: number,
     offset: number,
   ): Promise<GetListingsResponse> => {
@@ -204,5 +226,6 @@ export const ListingsStateRepository = (
     getListingsByIds,
     getListingsByUserId,
     updateListing,
+    updateListingStatus,
   };
 };

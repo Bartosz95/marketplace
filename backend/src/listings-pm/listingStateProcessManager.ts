@@ -1,10 +1,11 @@
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
-import { Event, EventType, ListingState } from "../types";
+import { Event, EventType, ListingState, ListingStatus } from "../types";
 
 export const ListingsStateProcessManager =
   (listingStateRepository: ListingsStateRepository) => async (event: Event) => {
-    const { eventType, streamId } = event;
+    const { eventType, streamId, createdAt } = event;
     const previousState = await listingStateRepository.getListing(streamId);
+    console.log(event);
 
     switch (eventType) {
       case EventType.LISTING_CREATED:
@@ -13,8 +14,8 @@ export const ListingsStateProcessManager =
           imagesUrls: [],
           paymentLink: "",
           listingId: streamId,
-          status: EventType.LISTING_CREATED,
-          modifiedAt: event.createdAt,
+          status: ListingStatus.ACTIVE,
+          modifiedAt: createdAt,
           version: event.version,
         };
         await listingStateRepository.updateListing(created);
@@ -24,26 +25,8 @@ export const ListingsStateProcessManager =
         const updated: ListingState = {
           ...previousState,
           ...event.data,
-          status: EventType.LISTING_UPDATED,
         };
         await listingStateRepository.updateListing(updated);
-        break;
-      case EventType.LISTING_PURCHASED:
-        if (!previousState) throw new Error(`previousState undefined`);
-        const purchased: ListingState = {
-          ...previousState,
-          status: EventType.LISTING_PURCHASED,
-        };
-        await listingStateRepository.updateListing(purchased);
-        break;
-      case EventType.LISTING_ARCHIVED:
-      case EventType.LISTING_DELETED:
-        if (!previousState) throw new Error(`previousState undefined`);
-        const archived: ListingState = {
-          ...previousState,
-          status: eventType,
-        };
-        await listingStateRepository.updateListing(archived);
         break;
       case EventType.IMAGES_UPLOADED:
         if (!previousState) throw new Error(`previousState undefined`);
@@ -54,14 +37,45 @@ export const ListingsStateProcessManager =
         };
         await listingStateRepository.updateListing(imagesUploaded);
         break;
-      case EventType.PAYMENT_LINK_CREATED:
+      case EventType.LISTING_ARCHIVED:
         if (!previousState) throw new Error(`previousState undefined`);
-        const paymentLink = event.data.paymentLink;
-        const paymentLinkCreated: ListingState = {
-          ...previousState,
-          paymentLink,
-        };
-        await listingStateRepository.updateListing(paymentLinkCreated);
+        if (previousState.status !== ListingStatus.ACTIVE) {
+          throw new Error(
+            `Cannot archive listing ${streamId} because its status is: ${previousState.status}`,
+          );
+        }
+        await listingStateRepository.updateListingStatus(
+          streamId,
+          ListingStatus.ARCHIVED,
+          createdAt,
+        );
+        break;
+      case EventType.LISTING_DELETED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        if (previousState.status === ListingStatus.DELETED) {
+          throw new Error(
+            `Cannot delete listing ${streamId} because its status is: ${previousState.status}`,
+          );
+        }
+
+        await listingStateRepository.updateListingStatus(
+          streamId,
+          ListingStatus.DELETED,
+          createdAt,
+        );
+        break;
+      case EventType.PURCHASE_REQUESTED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        if (previousState.status !== ListingStatus.ACTIVE) {
+          throw new Error(
+            `Cannot reserve listing ${streamId} because its status is: ${previousState.status}`,
+          );
+        }
+        await listingStateRepository.updateListingStatus(
+          streamId,
+          ListingStatus.RESERVED,
+          createdAt,
+        );
         break;
     }
   };

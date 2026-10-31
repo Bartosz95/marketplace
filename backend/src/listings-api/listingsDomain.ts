@@ -4,8 +4,9 @@ import {
   EventType,
   GetListingsResponse,
   ListingCreatedEventData,
-  ListingPurchasedEventData,
+  PurchaseRequestedEventData,
   ListingState,
+  ListingStatus,
 } from "../types";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "./listingsWriteRouter";
@@ -19,7 +20,7 @@ export interface ListingsDomain {
     listing_id: UUID,
     data: UpdateListing,
   ) => Promise<void>;
-  purchase: (userId: UUID, listing_id: UUID) => Promise<void>;
+  purchaseRequested: (userId: UUID, listing_id: UUID) => Promise<void>;
   archive: (userId: UUID, listing_id: UUID) => Promise<void>;
   restore: (userId: UUID, listing_id: UUID) => Promise<void>;
   deleteListing: (userId: UUID, listing_id: UUID) => Promise<void>;
@@ -70,8 +71,8 @@ export const ListingsDomain = (
     if (userId !== currentState.userId)
       throw new Error(`User ${userId} try modify not his listing ${listingId}`);
     if (
-      currentState.status === EventType.LISTING_DELETED ||
-      currentState.status === EventType.LISTING_PURCHASED
+      currentState.status !== ListingStatus.ACTIVE &&
+      currentState.status !== ListingStatus.ARCHIVED
     )
       throw new Error(
         `Cannot update listing ${listingId} because is ${currentState.status}`,
@@ -93,21 +94,28 @@ export const ListingsDomain = (
     }
   };
 
-  const purchase = async (userId: UUID, listingId: UUID) => {
+  const purchaseRequested = async (userId: UUID, listingId: UUID) => {
     const listing = await listingsStateRepository.getListing(listingId);
     if (!listing) throw new Error(`listing undefined`);
     if (userId === listing.userId)
-      throw Error(`User ${userId} try to purchase its own item`);
+      throw Error(`User ${userId} requested to purchase its own item`);
 
-    const purchaseEventData: ListingPurchasedEventData = {
+    if (listing.status !== ListingStatus.ACTIVE)
+      throw new Error(
+        `Listing ${listingId} is not available for purchase. Current status: ${listing.status}`,
+      );
+
+    const purchaseEventData: PurchaseRequestedEventData = {
       sellerId: listing.userId,
       buyerId: userId,
       price: listing.price,
+      listingId,
+      currency: "aud",
     };
 
     await eventSourceRepository.insertEventByStreamId(
       listingId,
-      EventType.LISTING_PURCHASED,
+      EventType.PURCHASE_REQUESTED,
       purchaseEventData,
     );
   };
@@ -117,12 +125,9 @@ export const ListingsDomain = (
     if (!currentState) throw new Error(`currentState undefined`);
     if (userId !== currentState.userId)
       throw new Error(`User ${userId} try modify not his listing ${listingId}`);
-    if (
-      currentState.status === EventType.LISTING_DELETED ||
-      currentState.status === EventType.LISTING_PURCHASED
-    )
+    if (currentState.status !== ListingStatus.ACTIVE)
       throw new Error(
-        `Cannot update listing ${listingId} because is ${currentState.status}`,
+        `Cannot update listing ${listingId} because is status is: ${currentState.status}`,
       );
 
     await eventSourceRepository.insertEventByStreamId(
@@ -137,12 +142,9 @@ export const ListingsDomain = (
     if (!currentState) throw new Error(`currentState undefined`);
     if (userId !== currentState.userId)
       throw new Error(`User ${userId} try modify not his listing ${listingId}`);
-    if (
-      currentState.status === EventType.LISTING_DELETED ||
-      currentState.status === EventType.LISTING_PURCHASED
-    )
+    if (currentState.status !== ListingStatus.ARCHIVED)
       throw new Error(
-        `Cannot update listing ${listingId} because is ${currentState.status}`,
+        `Cannot update listing ${listingId} because is status is: ${currentState.status}`,
       );
 
     await eventSourceRepository.insertEventByStreamId(
@@ -157,6 +159,9 @@ export const ListingsDomain = (
     if (!listing) throw new Error(`listing undefined`);
     if (userId !== listing.userId)
       throw Error(`User ${userId} try to modify listing ${listingId}`);
+    if (listing.status === ListingStatus.DELETED) {
+      throw new Error(`Listing ${listingId} has already been deleted`);
+    }
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_DELETED,
@@ -176,10 +181,7 @@ export const ListingsDomain = (
     limit = 8,
     offset = 0,
   ): Promise<GetListingsResponse> => {
-    const statuses: EventType[] = [
-      EventType.LISTING_CREATED,
-      EventType.LISTING_UPDATED,
-    ];
+    const statuses: ListingStatus[] = [ListingStatus.ACTIVE];
     const listings = await listingsStateRepository.getListings(
       statuses,
       limit,
@@ -194,9 +196,9 @@ export const ListingsDomain = (
     limit = 8,
     offset = 0,
   ): Promise<GetListingsResponse> => {
-    const statuses: EventType[] = [
-      EventType.LISTING_CREATED,
-      EventType.LISTING_UPDATED,
+    const statuses: ListingStatus[] = [
+      ListingStatus.ACTIVE,
+      ListingStatus.ARCHIVED,
     ];
     const listings = await listingsStateRepository.getListingsByUserId(
       userId,
@@ -210,7 +212,7 @@ export const ListingsDomain = (
   return {
     create,
     update,
-    purchase,
+    purchaseRequested,
     archive,
     restore,
     deleteListing,

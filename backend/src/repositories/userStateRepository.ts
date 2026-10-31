@@ -47,7 +47,7 @@ export interface UserStateRepository {
     authenticationProviderId: string,
     name: string,
     email: string,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   updateUser: (
     userId: UUID,
     name: string,
@@ -75,17 +75,18 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
     authenticationProviderId: string,
     name: string,
     email: string,
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     const dbClient = await pool.connect();
     try {
-      await dbClient.query(
-        `INSERT INTO states.users (userId, authentication_provider_id, name, email)
+      const result = await dbClient.query(
+        `INSERT INTO states.users (user_id, authentication_provider_id, name, email)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT (authentication_provider_id) DO UPDATE
-        SET user_id = $1, authentication_provider_id = $2, name = $3, email = $4
+        ON CONFLICT (authentication_provider_id) DO NOTHING
+        RETURNING user_id
         `,
         [userId, authenticationProviderId, name, email],
       );
+      return result.rowCount === 1;
     } catch (error) {
       throw error;
     } finally {
@@ -141,7 +142,6 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
   ): Promise<User | undefined> => {
     const dbClient = await pool.connect();
     try {
-      console.log("Checking user existence for ID:", authenticationProviderId);
       const results = await dbClient.query(
         `SELECT * FROM states.users 
         WHERE authentication_provider_id = $1;`,
@@ -154,6 +154,7 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
       if (results.rowCount < 1) return undefined;
       return mapUser(results.rows[0]);
     } catch (error) {
+      throw error;
     } finally {
       dbClient.release();
     }
@@ -164,7 +165,10 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
   ): Promise<boolean> => {
     const dbClient = await pool.connect();
     try {
-      console.log("Checking user existence for ID:", authenticationProviderId);
+      console.log(
+        "Checking authentication provioder for ID:",
+        authenticationProviderId,
+      );
       const results = await dbClient.query(
         `SELECT 1 FROM states.users 
         WHERE authentication_provider_id = $1 LIMIT 1;`,
@@ -187,13 +191,15 @@ export const UserStateRepository = (env: EnvDB): UserStateRepository => {
     paymentProviderId: row.payment_provider_id,
     name: row.name,
     email: row.email,
-    address: {
-      street: row.address.street,
-      city: row.address.city,
-      state: row.address.state,
-      zipCode: row.address.zip_code,
-      country: row.address.country,
-    },
+    address: row.address
+      ? {
+          street: row.address.street,
+          city: row.address.city,
+          state: row.address.state,
+          zipCode: row.address.zip_code,
+          country: row.address.country,
+        }
+      : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });

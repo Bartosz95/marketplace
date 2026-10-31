@@ -7,15 +7,38 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useAuth0 } from "@auth0/auth0-react";
 import { setShowListingView } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { useRouter } from "next/navigation";
+import { apiRequest } from "@/lib/apiRequest";
+
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 function ViewListingModal() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, loginWithRedirect } = useAuth0();
   const { showListingView } = useAppSelector(listingStoreSelector);
-  const router = useRouter();
 
   if (!showListingView) return;
-  const { title, description, price, imagesUrls } = showListingView;
+  const { listingId, title, description, price, imagesUrls } = showListingView;
+
+  const beginCheckout = async () => {
+    const { purchaseId } = await apiRequest.post<{ purchaseId: string }>(
+      `/listings/${listingId}`,
+    );
+
+    // The payment process manager creates the Checkout Session asynchronously.
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const response = await apiRequest.get<{
+        status?: string;
+        checkoutUrl?: string;
+      }>(`/listings/purchases/${purchaseId}/checkout`);
+      if (response.checkoutUrl) {
+        window.location.assign(response.checkoutUrl);
+        return;
+      }
+      await wait(500);
+    }
+    throw new Error("Checkout session was not created in time");
+  };
 
   const imagePreview = (
     <Carousel className="mb-3">
@@ -57,7 +80,7 @@ function ViewListingModal() {
           <Button
             variant="primary"
             className="button-style set-center"
-            onClick={() => router.push(showListingView.paymentLink)}
+            onClick={() => beginCheckout()}
           >
             Buy
           </Button>

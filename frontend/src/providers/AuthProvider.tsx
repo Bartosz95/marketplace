@@ -8,6 +8,7 @@ type Props = { children: ReactNode };
 function AuthApiSetup() {
   const { getAccessTokenSilently } = useAuth0();
   useEffect(() => {
+    console.log("Configuring API with Auth0 token getter");
     configureApi(getAccessTokenSilently);
   }, [getAccessTokenSilently]);
   return null;

@@ -18,11 +18,6 @@ export interface AuthenticationProviderRepository {
 export const AuthenticationProviderRepository = (
   env: EnvAuthenticationprovider,
 ): AuthenticationProviderRepository => {
-  console.log({
-    domain: env.domain,
-    clientId: env.clientId,
-    clientSecret: env.clientSecret,
-  });
   const management = new ManagementClient({
     domain: env.domain,
     clientId: env.clientId,

@@ -5,7 +5,7 @@ import { Logger } from "../libs/logger";
 import { ErrorHandler } from "../libs/errorHandler";
 import { RequestLogger } from "../libs/requestLogger";
 import {
-  Authentication,
+  AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
 } from "../libs/authentication";
 import { EnvDBSchema } from "../libs/validationSchemas";
@@ -56,7 +56,7 @@ export default () => {
   const requestLogger = RequestLogger(logger);
   const errorHandler = ErrorHandler(logger);
 
-  const authentication = Authentication(env.authentication);
+  const authentication = AuthenticationWriteRoute(env.authentication);
 
   const userStateRepository = UserStateRepository(env.db);
   const userDomain = UserDomain(userStateRepository);

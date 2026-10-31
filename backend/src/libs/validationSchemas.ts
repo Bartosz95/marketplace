@@ -37,6 +37,8 @@ export type EnvAWS = z.infer<typeof EnvAWSSchema>;
 export const EnvPaymentSchema = z.object({
   secretKey: z.string(),
   publishableKey: z.string().optional(),
+  webhookSecret: z.string().optional(),
+  frontendUrl: z.url().optional(),
 });
 
 export type EnvPurchase = z.infer<typeof EnvPaymentSchema>;

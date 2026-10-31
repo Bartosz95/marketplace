@@ -69,21 +69,21 @@ services:
     networks:
       - monitoring
       - app
-  # user-pm:
-  #   build:
-  #     context: backend
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - backend/.env
-  #   environment:
-  #     - DB_HOST=db
-  #     - APP_NAME=user-pm
-  #     - DB_HOST=db
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - monitoring
-  #     - app
+  user-pm:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      - DB_HOST=db
+      - APP_NAME=user-pm
+      - DB_HOST=db
+    depends_on:
+      - db
+    networks:
+      - monitoring
+      - app
 
   purchases-pm:
     build:

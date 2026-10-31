@@ -2,7 +2,6 @@ import { FilterBy, Listing } from "@/types";
 import * as yup from "yup";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
-import { useAuth0 } from "@auth0/auth0-react";
 import { setListings, setCountOfAll, setLastFilteredBy } from "./listingsSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
@@ -11,8 +10,26 @@ import { apiRequest } from "../apiRequest";
 export const getListings = createAsyncThunk(
   "getListings",
 
+  async (_, { getState, dispatch }) => {
+    const { limit, offset } = (getState() as RootState).listingsStore;
+
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+
+    const { listings, countOfAll } = await apiRequest.get<{
+      listings: Listing[];
+      countOfAll: number;
+    }>(`/listings?${params.toString()}`);
+    dispatch(setListings(listings));
+    dispatch(setCountOfAll(countOfAll));
+  },
+);
+
+export const getUserListings = createAsyncThunk(
+  "getUserListings",
   async (filterBy: FilterBy | undefined, { getState, dispatch }) => {
-    console.log("getListings called with filterBy:", filterBy);
     const { lastFilterBy, limit, offset } = (getState() as RootState)
       .listingsStore;
 
@@ -26,9 +43,8 @@ export const getListings = createAsyncThunk(
     const { listings, countOfAll } = await apiRequest.get<{
       listings: Listing[];
       countOfAll: number;
-    }>(`/listings${filter}?${params.toString()}`);
+    }>(`/userlistings/${filter}?${params.toString()}`);
 
-    console.log("Fetched listings:", listings);
     dispatch(setListings(listings));
     dispatch(setCountOfAll(countOfAll));
     dispatch(setLastFilteredBy(filter));
@@ -38,7 +54,6 @@ export const getListings = createAsyncThunk(
 export const createListing = createAsyncThunk(
   "createListing",
   async ({ title, price, description, images }: CreateListingDetails) => {
-    console.log({ title, price, description, images });
     if (!title || !price || !description || !images) return;
     const formData = new FormData();
     images.forEach((image) => {
@@ -47,8 +62,6 @@ export const createListing = createAsyncThunk(
     formData.append("title", title);
     formData.append("price", price.toString());
     formData.append("description", description);
-
-    console.log(formData.getAll("images"));
     await apiRequest.postFormData<Listing>("/listings", formData);
   },
 );

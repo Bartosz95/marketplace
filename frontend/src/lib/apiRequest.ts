@@ -14,15 +14,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error("Auth0 token getter is not configured");
   }
   const token = await getToken();
-  console.log("Resolved access token:", token);
   const headers = new Headers(options.headers);
-  console.log(
-    "Making API request to:",
-    `${API_URL}${path}`,
-    "with options:",
-    token,
-    options,
-  );
   headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -44,7 +36,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const apiRequest = {
   get<T>(path: string, options?: RequestInit): Promise<T> {
-    console.log("apiRequest.get called");
     return request<T>(path, {
       ...options,
       method: "GET",
@@ -73,7 +64,6 @@ export const apiRequest = {
     body: FormData,
     options?: RequestInit,
   ): Promise<T> {
-    console.log("apiRequest.postFormData called");
     return request<T>(path, {
       ...options,
       method: "POST",

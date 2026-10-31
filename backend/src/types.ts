@@ -10,6 +10,10 @@ export enum EventType {
   PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
   USER_FIRST_REQUEST = "USER_FIRST_REQUEST",
   USER_CREATED = "USER_CREATED",
+  PURCHASE_REQUESTED = "PURCHASE_REQUESTED",
+  CHECKOUT_SESSION_CREATED = "CHECKOUT_SESSION_CREATED",
+  PAYMENT_SUCCEEDED = "PAYMENT_SUCCEEDED",
+  PAYMENT_FAILED = "PAYMENT_FAILED",
 }
 
 interface EventBaseInfo {
@@ -100,12 +104,47 @@ export interface UserCreatedEventData {
   name: string[];
 }
 
+export interface PurchaseRequestedEventData {
+  listingId: UUID;
+  sellerId: string;
+  buyerId: string;
+  price: number;
+  currency: string;
+}
+
+export interface CheckoutSessionCreatedEventData extends PurchaseRequestedEventData {
+  checkoutSessionId: string;
+  checkoutUrl: string;
+}
+
+export interface PaymentSucceededEventData extends CheckoutSessionCreatedEventData {
+  stripeEventId: string;
+}
+
+export interface PurchaseRequestedEvent extends EventBaseInfo {
+  eventType: EventType.PURCHASE_REQUESTED;
+  data: PurchaseRequestedEventData;
+}
+
+export interface CheckoutSessionCreatedEvent extends EventBaseInfo {
+  eventType: EventType.CHECKOUT_SESSION_CREATED;
+  data: CheckoutSessionCreatedEventData;
+}
+
+export interface PaymentSucceededEvent extends EventBaseInfo {
+  eventType: EventType.PAYMENT_SUCCEEDED;
+  data: PaymentSucceededEventData;
+}
+
 export type EventData =
   | {}
   | ListingCreatedEventData
   | ImagesUploadedEventData
   | ListingUpdatedEventData
-  | ListingPurchasedEventData;
+  | ListingPurchasedEventData
+  | PurchaseRequestedEventData
+  | CheckoutSessionCreatedEventData
+  | PaymentSucceededEventData;
 
 export type Event =
   | ListingCreatedEvent
@@ -116,14 +155,18 @@ export type Event =
   | ImagesUploadedEvent
   | PaymentLinkCreatedEvent
   | UserFirstRequest
-  | UserCreated;
+  | UserCreated
+  | PurchaseRequestedEvent
+  | CheckoutSessionCreatedEvent
+  | PaymentSucceededEvent;
 
-export type ListingStatus =
-  | EventType.LISTING_CREATED
-  | EventType.LISTING_UPDATED
-  | EventType.LISTING_PURCHASED
-  | EventType.LISTING_ARCHIVED
-  | EventType.LISTING_DELETED;
+export enum ListingStatus {
+  ACTIVE = "ACTIVE",
+  RESERVED = "RESERVED",
+  SOLD = "SOLD",
+  ARCHIVED = "ARCHIVED",
+  DELETED = "DELETED",
+}
 
 export interface ListingStateTableRow {
   listing_id: string;
@@ -166,7 +209,15 @@ export interface PurchaseStateTableRow {
   version: number;
 }
 
-export type PurchaseStatus = EventType.LISTING_PURCHASED;
+export enum PurchaseStatus {
+  REQUESTED = "REQUESTED",
+  CHECKOUT_CREATED = "CHECKOUT_CREATED",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  EXPIRED = "EXPIRED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
+}
 
 export interface PurchaseState {
   listingId: UUID;

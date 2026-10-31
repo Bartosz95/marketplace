@@ -35,12 +35,12 @@ export interface Listing {
 }
 
 export enum FilterBy {
-  All = "/",
-  Active = "/user/active",
-  Sold = "/user/sold",
-  Purchased = "/user/purchased",
-  Archived = "/user/archived",
-  UserAll = "/user",
+  All = "all",
+  UserAll = "",
+  Active = "active",
+  Sold = "sold",
+  Purchased = "purchased",
+  Archived = "archived",
 }
 
 export enum RequestAction {

@@ -21,10 +21,22 @@ export const PaymentProcessManager =
           created_name,
           created_price
         );
-        eventSourceRepository.insertEventByStreamId(
+        await eventSourceRepository.insertEventByStreamId(
           created_id,
           EventType.PAYMENT_LINK_CREATED,
           { paymentLink }
+        );
+        break;
+      case EventType.PURCHASE_REQUESTED:
+        const checkout = await paymentProvider.createCheckoutSession(
+          event.streamId,
+          event.data,
+          `checkout:${event.position}`,
+        );
+        await eventSourceRepository.insertEventByStreamId(
+          event.streamId,
+          EventType.CHECKOUT_SESSION_CREATED,
+          { ...event.data, ...checkout },
         );
         break;
       case EventType.LISTING_UPDATED:

@@ -5,6 +5,8 @@ import { ListingsDomain } from "./listingsDomain";
 import multer from "multer";
 import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
 import { UserDomain } from "../user-api/userDomain";
+import { EventSourceRepository } from "../repositories/eventSourceRepository";
+import { CheckoutSessionCreatedEvent, EventType } from "../types";
 
 const fileSchema = z.object({
   fieldname: z.string(),
@@ -48,6 +50,7 @@ export type UpdateListing = {
 export const ListingsWriteRouter = (
   listingsDomain: ListingsDomain,
   userDomain: UserDomain,
+  eventSourceRepository: EventSourceRepository,
 ) => {
   const router = Router();
 
@@ -57,8 +60,6 @@ export const ListingsWriteRouter = (
   const upload = multer({ storage: storage });
 
   router.post("/", upload.array("images", 10), async (req, res) => {
-    console.log("req?.auth");
-    console.log(req?.auth);
     const authenticationProviderId = userIdSchema.parse(
       req?.auth?.payload?.sub,
     );
@@ -70,7 +71,7 @@ export const ListingsWriteRouter = (
       authenticationProviderId,
     );
     await listingsDomain.create(user.userId, data);
-    res.status(200).send();
+    res.sendStatus(204);
   });
 
   router.post("/:listingId", async (req, res) => {
@@ -81,8 +82,28 @@ export const ListingsWriteRouter = (
     const user = await userDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
-    await listingsDomain.purchase(user.userId, listingId);
-    res.status(200).send();
+    const purchaseId = await listingsDomain.purchaseRequested(
+      user.userId,
+      listingId,
+    );
+    res.status(202).send({ purchaseId });
+  });
+
+  router.get("/purchases/:purchaseId/checkout", async (req, res) => {
+    const authenticationProviderId = userIdSchema.parse(req.auth?.payload?.sub);
+    const user = await userDomain.getUserByAuthenticationId(
+      authenticationProviderId,
+    );
+    const purchaseId = listingIdSchema.parse(req.params.purchaseId) as UUID;
+
+    const checkoutEvent = await eventSourceRepository.getLatestEventInStream(
+      purchaseId,
+      EventType.CHECKOUT_SESSION_CREATED,
+    );
+    if (!checkoutEvent) return res.status(202).send({ status: "pending" });
+    const checkout = checkoutEvent as CheckoutSessionCreatedEvent;
+    if (checkout.data.buyerId !== user.userId) return res.sendStatus(403);
+    return res.send({ checkoutUrl: checkout.data.checkoutUrl });
   });
 
   router.patch("/:listingId", upload.array("images", 10), async (req, res) => {
@@ -100,7 +121,7 @@ export const ListingsWriteRouter = (
       images,
     });
     await listingsDomain.update(user.userId, listingId, data);
-    res.status(200).send();
+    res.sendStatus(204);
   });
 
   router.delete("/:listingId", async (req, res) => {
@@ -112,7 +133,7 @@ export const ListingsWriteRouter = (
       authenticationProviderId,
     );
     await listingsDomain.deleteListing(user.userId, listingId);
-    res.status(200).send();
+    res.sendStatus(204);
   });
 
   router.patch("/archive/:listingId", async (req, res) => {
@@ -124,7 +145,7 @@ export const ListingsWriteRouter = (
       authenticationProviderId,
     );
     await listingsDomain.archive(user.userId, listingId);
-    res.status(200).send();
+    res.sendStatus(204);
   });
 
   router.patch("/restore/:listingId", async (req, res) => {
@@ -136,7 +157,7 @@ export const ListingsWriteRouter = (
       authenticationProviderId,
     );
     await listingsDomain.restore(user.userId, listingId);
-    res.status(200).send();
+    res.sendStatus(204);
   });
 
   return router;
