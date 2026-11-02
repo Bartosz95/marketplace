@@ -10,10 +10,16 @@ import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import { updateListing } from "@/lib/redux/thunks";
+import {
+  archiveListing,
+  deleteListing,
+  restoreListing,
+  updateListing,
+} from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { useRouter } from "next/navigation";
+import { ListingStatus } from "@/types";
 
 export const UpdateListingSchema = yup.object({
   title: yup.string().min(1).max(20),
@@ -22,7 +28,6 @@ export const UpdateListingSchema = yup.object({
   images: yup
     .array()
     .of(yup.mixed<File>().required())
-    .min(1, "You must upload at least one image")
     .max(5, "You can upload up to 5 images")
     .test("fileType", "Only JPG/PNG files are allowed", (files) =>
       files
@@ -66,6 +71,39 @@ function UpdateListing() {
   if (!showListingUpdate) {
     return null;
   }
+
+  const archiveRestoreButton =
+    showListingUpdate.status === ListingStatus.ARCHIVED ? (
+      <Button
+        className="button-style set-center"
+        variant="secondary"
+        type="button"
+        onClick={() => {
+          void dispatch(restoreListing(showListingUpdate.listingId))
+            .unwrap()
+            .catch((error) =>
+              console.error("Failed to restore listing", error),
+            );
+        }}
+      >
+        Restore
+      </Button>
+    ) : (
+      <Button
+        className="button-style set-center"
+        variant="secondary"
+        type="button"
+        onClick={() => {
+          void dispatch(archiveListing(showListingUpdate.listingId))
+            .unwrap()
+            .catch((error) =>
+              console.error("Failed to archive listing", error),
+            );
+        }}
+      >
+        Archive
+      </Button>
+    );
 
   const handleUpdate = async (data: UpdateListingDetails) => {
     await dispatch(
@@ -208,10 +246,32 @@ function UpdateListing() {
                     </Form.Control.Feedback>
                   </Form.Group>
 
+                  <div className="d-flex justify-content-between mb-4">
+                    {archiveRestoreButton}
+
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      className="button-style set-center"
+                      onClick={() => {
+                        void dispatch(
+                          deleteListing(showListingUpdate.listingId),
+                        )
+                          .unwrap()
+                          .catch((error) =>
+                            console.error("Failed to delete listing", error),
+                          );
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+
                   <div className="d-flex justify-content-between">
                     <Button
                       variant="secondary"
                       type="button"
+                      className="button-style set-center"
                       onClick={() => {
                         dispatch(setShowListingUpdate(undefined));
                         router.push("/");
@@ -220,7 +280,11 @@ function UpdateListing() {
                       Cancel
                     </Button>
 
-                    <Button variant="primary" type="submit">
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      className="button-style set-center"
+                    >
                       Update listing
                     </Button>
                   </div>

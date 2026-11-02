@@ -1,9 +1,8 @@
 import Card from "react-bootstrap/Card";
-import { EventType, Listing } from "@/types";
-import { useAuth0 } from "@auth0/auth0-react";
-import ModifyListingDropdown from "./ModifyListingDropdown";
+import { Listing } from "@/types";
 import ViewButton from "./ViewButton";
 import { User } from "@/lib/redux/listingsSlice";
+import UpdateButton from "./UpdateButton";
 
 interface ListingCellProps {
   listing: Listing;
@@ -14,7 +13,7 @@ function ListingCell({ listing, user }: ListingCellProps) {
 
   const listingActionButton =
     user?.userId === userId ? (
-      <ModifyListingDropdown listing={listing} />
+      <UpdateButton listing={listing} />
     ) : (
       <ViewButton listing={listing} />
     );
