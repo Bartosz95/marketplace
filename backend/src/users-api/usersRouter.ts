@@ -1,14 +1,14 @@
 import { Router } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { UserDomain } from "./userDomain";
+import { UsersDomain } from "./usersDomain";
 
-const userQuerySchema = z.object({
+const usersQuerySchema = z.object({
   limit: z.coerce.number().optional(),
   offset: z.coerce.number().optional(),
 });
 
-const updateUserSchema = z.object({
+const updateUsersSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.email().optional(),
   street: z.string().min(1).optional(),
@@ -18,23 +18,28 @@ const updateUserSchema = z.object({
   country: z.string().min(1).optional(),
 });
 
-export const userIdSchema = z.string();
+export const usersIdSchema = z.string();
 
-export const UserRouter = (userDomain: UserDomain) => {
+export const UsersRouter = (userDomain: UsersDomain) => {
   const router = Router();
 
-  router.get("/", async (req, res) => {
-    const authenticationProviderId = userIdSchema.parse(
+  router.get("/me", async (req, res) => {
+    const authenticationProviderId = usersIdSchema.parse(
       req?.auth?.payload?.sub,
     ) as UUID;
     const user = await userDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
+
     const responseBody = {
       userId: user?.userId,
+      authenticationProviderId: user?.authenticationProviderId,
+      paymentProviderId: user?.paymentProviderId,
       name: user?.name,
       email: user?.email,
       address: user?.address,
+      createdAt: user?.createdAt,
+      updatedAt: user?.updatedAt,
     };
     res.status(200).send(responseBody);
   });

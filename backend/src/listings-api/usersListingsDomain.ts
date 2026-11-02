@@ -5,7 +5,7 @@ import { GetListingsResponse, ListingStatus, PurchaseStatus } from "../types";
 import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
 import { ImagesRepository } from "../repositories/imagesRepository";
 
-export interface UserListingsReadDomain {
+export interface UsersListingsReadDomain {
   getActive: (
     userId: UUID,
     limit?: number,
@@ -33,11 +33,11 @@ export interface UserListingsReadDomain {
   ) => Promise<GetListingsResponse>;
 }
 
-export const UserListingsReadDomain = (
+export const UsersListingsReadDomain = (
   listingsStateRepository: ListingsStateRepository,
   purchasesStateRepository: PurchasesStateRepository,
   imagesRepository: ImagesRepository,
-): UserListingsReadDomain => {
+): UsersListingsReadDomain => {
   const modifyImagesUrls = ModifyImagesUrls(imagesRepository.imagesUrl);
 
   const getActive = async (

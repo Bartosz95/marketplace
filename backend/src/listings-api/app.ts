@@ -23,11 +23,11 @@ import {
 } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
 import { SynchronizeUserMiddleware } from "../libs/syncUserMiddleware";
-import { UserStateRepository } from "../repositories/userStateRepository";
-import { UserListingsReadDomain } from "./userListingsDomain";
-import { UserListingsReadRouter } from "./userListingsReadRouter";
+import { UsersStateRepository } from "../repositories/usersStateRepository";
+import { UsersListingsReadDomain } from "./usersListingsDomain";
+import { UsersListingsReadRouter } from "./usersListingsReadRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
-import { UserDomain } from "../user-api/userDomain";
+import { UsersDomain } from "../users-api/usersDomain";
 import { StripeWebhookRouter } from "../payment-api/stripeWebhookRouter";
 import { StripeWebhookRepository } from "../repositories/stripeWebhookRepository";
 
@@ -95,12 +95,12 @@ export default () => {
 
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const userStateRepository = UserStateRepository(env.db);
+  const usersStateRepository = UsersStateRepository(env.db);
   const purchasesStateRepository = PurchasesStateRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws);
   const stripeWebhookRepository = StripeWebhookRepository(env.db);
 
-  const userDomain = UserDomain(userStateRepository);
+  const userDomain = UsersDomain(usersStateRepository);
 
   const listingsDomain = ListingsDomain(
     listingsStateRepository,
@@ -108,14 +108,14 @@ export default () => {
     imagesRepository,
   );
 
-  const userListingsReadDomain = UserListingsReadDomain(
+  const userListingsReadDomain = UsersListingsReadDomain(
     listingsStateRepository,
     purchasesStateRepository,
     imagesRepository,
   );
 
   const synchronizeUserMiddleware = SynchronizeUserMiddleware(
-    userStateRepository,
+    usersStateRepository,
     eventSourceRepository,
   );
 
@@ -125,7 +125,7 @@ export default () => {
     userDomain,
     eventSourceRepository,
   );
-  const userListingsReadRouter = UserListingsReadRouter(
+  const userListingsReadRouter = UsersListingsReadRouter(
     userListingsReadDomain,
     userDomain,
   );

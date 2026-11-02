@@ -6,7 +6,7 @@ import { Iteration } from "../libs/iteration";
 import { IterationMetrics } from "../libs/iterationMetrics";
 import { EnvDBSchema, EnvPMSchema } from "../libs/validationSchemas";
 import { UserStateProcessManager } from "./userStateProcessManager";
-import { UserStateRepository } from "../repositories/userStateRepository";
+import { UsersStateRepository } from "../repositories/usersStateRepository";
 import {
   AuthenticationProviderRepository,
   EnvAuthenticationProviderSchema,
@@ -45,7 +45,7 @@ export default () => {
   const logger = Logger(env.app.logLevel);
   const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
   const eventSourceRepository = EventSourceRepository(env.db);
-  const userStateRepository = UserStateRepository(env.db);
+  const userStateRepository = UsersStateRepository(env.db);
   const authenticationProviderRepository = AuthenticationProviderRepository(
     env.auth,
   );

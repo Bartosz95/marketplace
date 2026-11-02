@@ -41,7 +41,7 @@ interface UserTableRow {
   updated_at: Date;
 }
 
-export interface UserStateRepository {
+export interface UsersStateRepository {
   createUser: (
     userId: UUID,
     authenticationProviderId: string,
@@ -63,7 +63,7 @@ export interface UserStateRepository {
   ) => Promise<boolean>;
 }
 
-export const UserStateRepository = (env: EnvDB): UserStateRepository => {
+export const UsersStateRepository = (env: EnvDB): UsersStateRepository => {
   const dbConfig: PoolConfig = {
     ...env,
   };

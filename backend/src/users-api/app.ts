@@ -10,9 +10,9 @@ import {
 } from "../libs/authentication";
 import { EnvDBSchema } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
-import { UserRouter } from "./userRouter";
-import { UserStateRepository } from "../repositories/userStateRepository";
-import { UserDomain } from "./userDomain";
+import { UsersRouter } from "./usersRouter";
+import { UsersStateRepository } from "../repositories/usersStateRepository";
+import { UsersDomain } from "./usersDomain";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -58,9 +58,9 @@ export default () => {
 
   const authentication = AuthenticationWriteRoute(env.authentication);
 
-  const userStateRepository = UserStateRepository(env.db);
-  const userDomain = UserDomain(userStateRepository);
-  const userRouter = UserRouter(userDomain);
+  const usersStateRepository = UsersStateRepository(env.db);
+  const usersDomain = UsersDomain(usersStateRepository);
+  const usersRouter = UsersRouter(usersDomain);
 
   const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
   startMetricsServer(env.app.metricsPort);
@@ -72,7 +72,7 @@ export default () => {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   app.use(authentication);
-  app.use(`/api/v1/user`, userRouter);
+  app.use(`/api/v1/users`, usersRouter);
   app.use(errorHandler);
   app.listen(env.app.port, () =>
     logger.info(`App server listening on port ${env.app.port}`),

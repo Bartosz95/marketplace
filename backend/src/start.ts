@@ -1,6 +1,6 @@
 import listingsAPI from "./listings-api/app";
 import listingsStateProcessManager from "./listings-pm/app";
-import userAPI from "./user-api/app";
+import usersAPI from "./users-api/app";
 import userStateProcessManager from "./user-pm/app";
 import purchasesStateProcessManager from "./purchases-pm/app";
 import paymentProcessManager from "./payment-pm/app";
@@ -13,8 +13,8 @@ switch (process.env.APP_NAME) {
   case `listings-pm`:
     listingsStateProcessManager();
     break;
-  case `user-api`:
-    userAPI();
+  case `users-api`:
+    usersAPI();
     break;
   case `user-pm`:
     userStateProcessManager();

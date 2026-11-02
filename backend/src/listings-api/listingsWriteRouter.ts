@@ -4,7 +4,7 @@ import { UUID } from "crypto";
 import { ListingsDomain } from "./listingsDomain";
 import multer from "multer";
 import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
-import { UserDomain } from "../user-api/userDomain";
+import { UsersDomain } from "../users-api/usersDomain";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { CheckoutSessionCreatedEvent, EventType } from "../types";
 
@@ -49,7 +49,7 @@ export type UpdateListing = {
 
 export const ListingsWriteRouter = (
   listingsDomain: ListingsDomain,
-  userDomain: UserDomain,
+  userDomain: UsersDomain,
   eventSourceRepository: EventSourceRepository,
 ) => {
   const router = Router();

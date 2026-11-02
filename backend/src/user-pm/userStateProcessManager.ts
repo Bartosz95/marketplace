@@ -1,12 +1,12 @@
 import { AuthenticationProviderRepository } from "../repositories/authenticationProviderRepository";
-import { UserStateRepository } from "../repositories/userStateRepository";
+import { UsersStateRepository } from "../repositories/usersStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Event, EventType } from "../types";
 
 export const UserStateProcessManager =
   (
     eventSourceRepository: EventSourceRepository,
-    userStateRepository: UserStateRepository,
+    usersStateRepository: UsersStateRepository,
     authenticationProviderRepository: AuthenticationProviderRepository,
   ) =>
   async (event: Event) => {
@@ -18,7 +18,7 @@ export const UserStateProcessManager =
         console.log(event);
         const { authenticationProviderId } = event.data;
         const userCurrentState =
-          await userStateRepository.getUserByAuthenticationId(
+          await usersStateRepository.getUserByAuthenticationId(
             authenticationProviderId,
           );
         if (userCurrentState) {
@@ -47,7 +47,7 @@ export const UserStateProcessManager =
 
         const id = event.streamId;
 
-        const userCreated = await userStateRepository.createUser(
+        const userCreated = await usersStateRepository.createUser(
           id,
           authenticationProviderId,
           name,

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { UserDomain } from "../user-api/userDomain";
-import { UserListingsReadDomain } from "./userListingsDomain";
+import { UsersDomain } from "../users-api/usersDomain";
+import { UsersListingsReadDomain } from "./usersListingsDomain";
 
 const listingsQuerySchema = z.object({
   limit: z.coerce.number().int(),
@@ -11,9 +11,9 @@ const listingsQuerySchema = z.object({
 
 const userIdSchema = z.string();
 
-export const UserListingsReadRouter = (
-  userListingsReadDomain: UserListingsReadDomain,
-  userDomain: UserDomain,
+export const UsersListingsReadRouter = (
+  userListingsReadDomain: UsersListingsReadDomain,
+  usersDomain: UsersDomain,
 ) => {
   const router = Router();
 
@@ -21,7 +21,7 @@ export const UserListingsReadRouter = (
     const authenticationProviderId = (await userIdSchema.parse(
       req?.auth?.payload?.sub,
     )) as UUID;
-    const user = await userDomain.getUserByAuthenticationId(
+    const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
@@ -37,7 +37,7 @@ export const UserListingsReadRouter = (
     const authenticationProviderId = (await userIdSchema.parse(
       req?.auth?.payload?.sub,
     )) as UUID;
-    const user = await userDomain.getUserByAuthenticationId(
+    const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
@@ -53,7 +53,7 @@ export const UserListingsReadRouter = (
     const authenticationProviderId = (await userIdSchema.parse(
       req?.auth?.payload?.sub,
     )) as UUID;
-    const user = await userDomain.getUserByAuthenticationId(
+    const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
@@ -69,7 +69,7 @@ export const UserListingsReadRouter = (
     const authenticationProviderId = (await userIdSchema.parse(
       req?.auth?.payload?.sub,
     )) as UUID;
-    const user = await userDomain.getUserByAuthenticationId(
+    const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
@@ -86,7 +86,7 @@ export const UserListingsReadRouter = (
       req?.auth?.payload?.sub,
     )) as UUID;
 
-    const user = await userDomain.getUserByAuthenticationId(
+    const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
