@@ -4,18 +4,12 @@ import ViewListingModal from "@/components/cell/ViewListingModal";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { getListings } from "@/lib/redux/thunks";
-import { useEffect } from "react";
 import { Container, Pagination } from "react-bootstrap";
 
 export default function Page() {
   const dispatch = useAppDispatch();
   const { listings, limit, activePage, pagesNumbers, user } =
     useAppSelector(listingStoreSelector);
-
-  useEffect(() => {
-    dispatch(getListings());
-  }, [activePage, dispatch]);
 
   const Pages = (
     <Container className="d-flex justify-content-center mt-3">

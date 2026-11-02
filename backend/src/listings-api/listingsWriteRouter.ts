@@ -136,7 +136,7 @@ export const ListingsWriteRouter = (
     res.sendStatus(204);
   });
 
-  router.patch("/archive/:listingId", async (req, res) => {
+  router.patch("/:listingId/archive", async (req, res) => {
     const authenticationProviderId = userIdSchema.parse(
       req?.auth?.payload?.sub,
     );
@@ -148,7 +148,7 @@ export const ListingsWriteRouter = (
     res.sendStatus(204);
   });
 
-  router.patch("/restore/:listingId", async (req, res) => {
+  router.patch("/:listingId/restore", async (req, res) => {
     const authenticationProviderId = userIdSchema.parse(
       req?.auth?.payload?.sub,
     );

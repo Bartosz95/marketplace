@@ -5,7 +5,7 @@ import {
   deleteListing,
   restoreListing,
 } from "@/lib/redux/thunks";
-import { EventType, Listing } from "@/types";
+import { Listing, ListingStatus } from "@/types";
 import { useRouter } from "next/navigation";
 import { Dropdown } from "react-bootstrap";
 
@@ -18,13 +18,16 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
   const router = useRouter();
   const { listingId, status } = listing;
 
+  console.log("listingId ", status);
   const archiveButton =
-    status === EventType.LISTING_ARCHIVED ? (
+    status === ListingStatus.ARCHIVED ? (
       <Dropdown.Item
         onClick={() => {
           void dispatch(restoreListing(listingId))
             .unwrap()
-            .catch((error) => console.error("Failed to restore listing", error));
+            .catch((error) =>
+              console.error("Failed to restore listing", error),
+            );
         }}
       >
         Restore
@@ -34,7 +37,9 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
         onClick={() => {
           void dispatch(archiveListing(listingId))
             .unwrap()
-            .catch((error) => console.error("Failed to archive listing", error));
+            .catch((error) =>
+              console.error("Failed to archive listing", error),
+            );
         }}
       >
         Archive
@@ -60,7 +65,9 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
           onClick={() => {
             void dispatch(deleteListing(listingId))
               .unwrap()
-              .catch((error) => console.error("Failed to delete listing", error));
+              .catch((error) =>
+                console.error("Failed to delete listing", error),
+              );
           }}
         >
           Delete

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { configureApi } from "@/lib/apiRequest";
-import { getUsersMe } from "@/lib/redux/thunks";
+import { getCurrentUserInfo } from "@/lib/redux/thunks";
 
 export default function CurrentUserLoader() {
   const dispatch = useAppDispatch();
@@ -16,7 +16,7 @@ export default function CurrentUserLoader() {
 
     if (isLoading || !isAuthenticated) return;
 
-    dispatch(getUsersMe())
+    dispatch(getCurrentUserInfo())
       .unwrap()
       .catch((error) => {
         console.error("Failed to load the current user", error);

@@ -9,12 +9,13 @@ export enum EventType {
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
 }
 
-export type ListingStatus =
-  | EventType.LISTING_CREATED
-  | EventType.LISTING_UPDATED
-  | EventType.LISTING_PURCHASED
-  | EventType.LISTING_ARCHIVED
-  | EventType.LISTING_DELETED;
+export enum ListingStatus {
+  ACTIVE = "ACTIVE",
+  RESERVED = "RESERVED",
+  SOLD = "SOLD",
+  ARCHIVED = "ARCHIVED",
+  DELETED = "DELETED",
+}
 
 export interface ListingDetails {
   title: string;
@@ -35,12 +36,12 @@ export interface Listing {
 }
 
 export enum FilterBy {
-  All = "all",
-  UserAll = "",
-  Active = "active",
-  Sold = "sold",
-  Purchased = "purchased",
-  Archived = "archived",
+  All = "/",
+  UserAll = "/user/all",
+  UserActive = "/user/active",
+  UserSold = "/user/sold",
+  UserPurchased = "/user/purchased",
+  UserArchived = "/user/archived",
 }
 
 export enum RequestAction {

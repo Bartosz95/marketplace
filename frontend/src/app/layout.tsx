@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./global.css";
 import CurrentUserLoader from "@/components/CurrentUserLoader";
+import ListingsLoader from "@/components/ListingsLoader";
 
 type Props = { children: ReactNode };
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: Props) {
         <AuthProvider>
           <StoreProvider>
             <CurrentUserLoader />
+            <ListingsLoader />
             <header>
               <NavigationBar />
             </header>

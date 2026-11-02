@@ -149,7 +149,7 @@ export const ListingsDomain = (
 
     await eventSourceRepository.insertEventByStreamId(
       listingId,
-      EventType.LISTING_UPDATED,
+      EventType.LISTING_RESTORED,
       {},
     );
   };

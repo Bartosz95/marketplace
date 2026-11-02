@@ -1,6 +1,5 @@
 import { Router } from "express";
 import z from "zod";
-import { UUID } from "crypto";
 import { UsersDomain } from "../users-api/usersDomain";
 import { UsersListingsReadDomain } from "./usersListingsDomain";
 
@@ -17,14 +16,16 @@ export const UsersListingsReadRouter = (
 ) => {
   const router = Router();
 
-  router.get("/", async (req, res) => {
-    const authenticationProviderId = (await userIdSchema.parse(
+  router.get("/all", async (req, res) => {
+    console.log("req.query: ", req.query);
+    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+    const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
-    )) as UUID;
+    );
     const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
-    const { limit, offset } = await listingsQuerySchema.parse(req.query);
+
     const data = await userListingsReadDomain.getAll(
       user.userId,
       limit,
@@ -34,9 +35,10 @@ export const UsersListingsReadRouter = (
   });
 
   router.get("/active", async (req, res) => {
-    const authenticationProviderId = (await userIdSchema.parse(
+    console.log("Actived req.query: ", req.query);
+    const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
-    )) as UUID;
+    );
     const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
@@ -50,9 +52,9 @@ export const UsersListingsReadRouter = (
   });
 
   router.get("/sold", async (req, res) => {
-    const authenticationProviderId = (await userIdSchema.parse(
+    const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
-    )) as UUID;
+    );
     const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
@@ -66,9 +68,9 @@ export const UsersListingsReadRouter = (
   });
 
   router.get("/purchased", async (req, res) => {
-    const authenticationProviderId = (await userIdSchema.parse(
+    const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
-    )) as UUID;
+    );
     const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,
     );
@@ -82,9 +84,9 @@ export const UsersListingsReadRouter = (
   });
 
   router.get("/archived", async (req, res) => {
-    const authenticationProviderId = (await userIdSchema.parse(
+    const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
-    )) as UUID;
+    );
 
     const user = await usersDomain.getUserByAuthenticationId(
       authenticationProviderId,

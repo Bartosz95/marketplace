@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
-import { getListings, getUserListings } from "@/lib/redux/thunks";
+import { getListings } from "@/lib/redux/thunks";
 import { FilterBy } from "@/types";
 import { NavDropdown } from "react-bootstrap";
 
@@ -10,13 +11,13 @@ const mapFilterBy = (filterBy: FilterBy) => {
       return "Filter By";
     case FilterBy.UserAll:
       return "All Yours";
-    case FilterBy.Active:
+    case FilterBy.UserActive:
       return "Your Active";
-    case FilterBy.Archived:
+    case FilterBy.UserArchived:
       return "Your Archived";
-    case FilterBy.Purchased:
+    case FilterBy.UserPurchased:
       return "Your Purchased";
-    case FilterBy.Sold:
+    case FilterBy.UserSold:
       return "Your Sold";
   }
 };
@@ -27,35 +28,53 @@ function FilterDropdown() {
 
   return (
     <NavDropdown title={mapFilterBy(lastFilterBy)}>
-      <NavDropdown.Item onClick={async () => await dispatch(getListings())}>
+      <NavDropdown.Item
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.All));
+        }}
+      >
         All
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={async () => await dispatch(getUserListings(FilterBy.UserAll))}
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.UserAll));
+        }}
       >
         {mapFilterBy(FilterBy.UserAll)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={async () => await dispatch(getUserListings(FilterBy.Active))}
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.UserActive));
+        }}
       >
-        {mapFilterBy(FilterBy.Active)}
+        {mapFilterBy(FilterBy.UserActive)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={async () => await dispatch(getUserListings(FilterBy.Sold))}
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.UserSold));
+        }}
       >
-        {mapFilterBy(FilterBy.Sold)}
+        {mapFilterBy(FilterBy.UserSold)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={async () =>
-          await dispatch(getUserListings(FilterBy.Purchased))
-        }
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.UserPurchased));
+        }}
       >
-        {mapFilterBy(FilterBy.Purchased)}
+        {mapFilterBy(FilterBy.UserPurchased)}
       </NavDropdown.Item>
       <NavDropdown.Item
-        onClick={async () => await dispatch(getUserListings(FilterBy.Archived))}
+        onClick={async () => {
+          await setActivePage(1);
+          await dispatch(getListings(FilterBy.UserArchived));
+        }}
       >
-        {mapFilterBy(FilterBy.Archived)}
+        {mapFilterBy(FilterBy.UserArchived)}
       </NavDropdown.Item>
     </NavDropdown>
   );

@@ -5,6 +5,7 @@ export enum EventType {
   LISTING_UPDATED = "LISTING_UPDATED",
   LISTING_PURCHASED = "LISTING_PURCHASED",
   LISTING_ARCHIVED = "LISTING_ARCHIVED",
+  LISTING_RESTORED = "LISTING_RESTORED",
   LISTING_DELETED = "LISTING_DELETED",
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
   PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
@@ -65,6 +66,11 @@ export interface ListingDeletedEvent extends EventBaseInfo {
 
 export interface ListingArchivedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_ARCHIVED;
+  data: {};
+}
+
+export interface ListingRestoredEvent extends EventBaseInfo {
+  eventType: EventType.LISTING_RESTORED;
   data: {};
 }
 
@@ -151,6 +157,7 @@ export type Event =
   | ListingUpdatedEvent
   | ListingPurchasedEvent
   | ListingArchivedEvent
+  | ListingRestoredEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent
   | PaymentLinkCreatedEvent

@@ -15,26 +15,6 @@ import { apiRequest } from "../apiRequest";
 
 export const getListings = createAsyncThunk(
   "getListings",
-
-  async (_, { getState, dispatch }) => {
-    const { limit, offset } = (getState() as RootState).listingsStore;
-
-    const params = new URLSearchParams({
-      limit: limit.toString(),
-      offset: offset.toString(),
-    });
-
-    const { listings, countOfAll } = await apiRequest.get<{
-      listings: Listing[];
-      countOfAll: number;
-    }>(`/listings?${params.toString()}`);
-    dispatch(setListings(listings));
-    dispatch(setCountOfAll(countOfAll));
-  },
-);
-
-export const getUserListings = createAsyncThunk(
-  "getUserListings",
   async (filterBy: FilterBy | undefined, { getState, dispatch }) => {
     const { lastFilterBy, limit, offset } = (getState() as RootState)
       .listingsStore;
@@ -49,7 +29,7 @@ export const getUserListings = createAsyncThunk(
     const { listings, countOfAll } = await apiRequest.get<{
       listings: Listing[];
       countOfAll: number;
-    }>(`/listings/user/${filter}?${params.toString()}`);
+    }>(`/listings/${filter}?${params.toString()}`);
 
     dispatch(setListings(listings));
     dispatch(setCountOfAll(countOfAll));
@@ -111,19 +91,19 @@ export const deleteListing = createAsyncThunk(
 export const archiveListing = createAsyncThunk(
   "archiveListing",
   async (listingId: string) => {
-    await apiRequest.patch<Listing>(`/listings/archive/${listingId}`);
+    await apiRequest.patch<Listing>(`/listings/${listingId}/archive`);
   },
 );
 
 export const restoreListing = createAsyncThunk(
   "restoreListing",
   async (listingId: string) => {
-    await apiRequest.patch<Listing>(`/listings/restore/${listingId}`);
+    await apiRequest.patch<Listing>(`/listings/${listingId}/restore`);
   },
 );
 
-export const getUsersMe = createAsyncThunk(
-  "getUsersMe",
+export const getCurrentUserInfo = createAsyncThunk(
+  "getCurrentUserInfo",
   async (_, { dispatch }) => {
     const user = await apiRequest.get<User>("/users/me");
     dispatch(setUser(user));

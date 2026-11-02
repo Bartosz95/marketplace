@@ -50,6 +50,19 @@ export const ListingsStateProcessManager =
           createdAt,
         );
         break;
+      case EventType.LISTING_RESTORED:
+        if (!previousState) throw new Error(`previousState undefined`);
+        if (previousState.status !== ListingStatus.ARCHIVED) {
+          throw new Error(
+            `Cannot restore listing ${streamId} because its status is: ${previousState.status}`,
+          );
+        }
+        await listingStateRepository.updateListingStatus(
+          streamId,
+          ListingStatus.ACTIVE,
+          createdAt,
+        );
+        break;
       case EventType.LISTING_DELETED:
         if (!previousState) throw new Error(`previousState undefined`);
         if (previousState.status === ListingStatus.DELETED) {
