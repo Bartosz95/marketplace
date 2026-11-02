@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Image from "react-bootstrap/Image";
@@ -45,6 +45,15 @@ function CreateListing() {
   const [imagesUrls, setImagesUrls] = useState<string[]>([
     "/images/no-image.png",
   ]);
+
+  useEffect(
+    () => () => {
+      imagesUrls.forEach((imageUrl) => {
+        if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
+      });
+    },
+    [imagesUrls],
+  );
 
   const handleCreate = async (data: CreateListingDetails) => {
     try {

@@ -1,0 +1,9 @@
+{
+  "chat.tools.terminal.autoApprove": {
+    
+    "/^npx --prefix frontend tsc --noEmit -p frontend/tsconfig\\.json$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
+}

@@ -7,12 +7,11 @@ import {
   setCountOfAll,
   setLastFilteredBy,
   setUser,
-  User,
 } from "./listingsSlice";
+import type { User } from "./listingsSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
 import { apiRequest } from "../apiRequest";
-import { UUID } from "crypto";
 
 export const getListings = createAsyncThunk(
   "getListings",
@@ -50,7 +49,7 @@ export const getUserListings = createAsyncThunk(
     const { listings, countOfAll } = await apiRequest.get<{
       listings: Listing[];
       countOfAll: number;
-    }>(`/userlistings/${filter}?${params.toString()}`);
+    }>(`/listings/user/${filter}?${params.toString()}`);
 
     dispatch(setListings(listings));
     dispatch(setCountOfAll(countOfAll));
@@ -89,30 +88,44 @@ export const updateListing = createAsyncThunk(
       });
 
     if (title) formData.append("title", title);
-    if (price) formData.append("price", price.toString());
+    if (price !== undefined) formData.append("price", price.toString());
     if (description) formData.append("description", description);
     await apiRequest.patchFormData<Listing>(`/listings/${listingId}`, formData);
   },
 );
 
-export const purchaseListing = async (listingId: string) =>
-  await apiRequest.post<Listing>(`/listings/${listingId}`);
+export const purchaseListing = createAsyncThunk(
+  "purchaseListing",
+  async (listingId: string) => {
+    await apiRequest.post<Listing>(`/listings/${listingId}`);
+  },
+);
 
-export const deleteListing = async (listingId: string) =>
-  await apiRequest.delete<Listing>(`/listings/${listingId}`);
+export const deleteListing = createAsyncThunk(
+  "deleteListing",
+  async (listingId: string) => {
+    await apiRequest.delete<Listing>(`/listings/${listingId}`);
+  },
+);
 
-export const archiveListing = async (listingId: string) =>
-  await apiRequest.patch<Listing>(`/listings/archive/${listingId}`);
+export const archiveListing = createAsyncThunk(
+  "archiveListing",
+  async (listingId: string) => {
+    await apiRequest.patch<Listing>(`/listings/archive/${listingId}`);
+  },
+);
 
-export const restoreListing = async (listingId: string) =>
-  await apiRequest.patch<Listing>(`/listings/restore/${listingId}`);
+export const restoreListing = createAsyncThunk(
+  "restoreListing",
+  async (listingId: string) => {
+    await apiRequest.patch<Listing>(`/listings/restore/${listingId}`);
+  },
+);
 
 export const getUsersMe = createAsyncThunk(
   "getUsersMe",
-  async (_, { getState, dispatch }) => {
-    const user = await apiRequest.get<{
-      user: User;
-    }>(`/users/me`);
+  async (_, { dispatch }) => {
+    const user = await apiRequest.get<User>("/users/me");
     dispatch(setUser(user));
   },
 );

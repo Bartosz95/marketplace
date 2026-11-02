@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import z from "zod";
-import Stripe from "stripe";
 import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { ImagesRepository } from "../repositories/imagesRepository";
@@ -16,11 +15,7 @@ import {
   AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
 } from "../libs/authentication";
-import {
-  EnvDBSchema,
-  EnvAWSSchema,
-  EnvPaymentSchema,
-} from "../libs/validationSchemas";
+import { EnvDBSchema, EnvAWSSchema } from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
 import { SynchronizeUserMiddleware } from "../libs/syncUserMiddleware";
 import { UsersStateRepository } from "../repositories/usersStateRepository";
@@ -28,8 +23,6 @@ import { UsersListingsReadDomain } from "./usersListingsDomain";
 import { UsersListingsReadRouter } from "./usersListingsReadRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 import { UsersDomain } from "../users-api/usersDomain";
-import { StripeWebhookRouter } from "../payment-api/stripeWebhookRouter";
-import { StripeWebhookRepository } from "../repositories/stripeWebhookRepository";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -47,7 +40,6 @@ export default () => {
     db: EnvDBSchema,
     auth: EnvAuthenticationMiddlewareSchema,
     aws: EnvAWSSchema,
-    purchase: EnvPaymentSchema,
   });
 
   const env = envSchema.parse({
@@ -79,12 +71,6 @@ export default () => {
         url: process.env.AWS_BUCKET_URL,
       },
     },
-    purchase: {
-      secretKey: process.env.STRIPE_SECRET_KEY,
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-      frontendUrl: process.env.FRONTEND_URL,
-    },
   });
 
   const logger = Logger(env.app.logLevel);
@@ -98,7 +84,6 @@ export default () => {
   const usersStateRepository = UsersStateRepository(env.db);
   const purchasesStateRepository = PurchasesStateRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws);
-  const stripeWebhookRepository = StripeWebhookRepository(env.db);
 
   const userDomain = UsersDomain(usersStateRepository);
 
@@ -137,39 +122,15 @@ export default () => {
   app.use(requestLogger);
   app.use(collectRequestMetrics);
   app.use(cors({ origin: "*" }));
-  if (env.purchase.webhookSecret) {
-    app.use(
-      "/api/v1/stripe/webhook",
-      express.raw({ type: "application/json" }),
-      StripeWebhookRouter(
-        new Stripe(env.purchase.secretKey),
-        env.purchase.webhookSecret,
-        eventSourceRepository,
-        stripeWebhookRepository,
-      ),
-    );
-  }
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   app.use(authenticationRead);
   app.use(requestLogger);
-  app.use(synchronizeUserMiddleware);
-  app.get("/auth-test", (req, res) => {
-    console.log("AUTH TEST");
-    console.log("Authorization:", req.headers.authorization);
-    console.log("req.auth:", req.auth);
-    console.log("payload:", req.auth?.payload);
-
-    res.json({
-      authenticated: !!req.auth,
-      auth: req.auth,
-    });
-  });
-
   app.use(`/api/v1/listings`, listingsReadRouter);
   app.use(authenticationWrite);
+  app.use(synchronizeUserMiddleware);
   app.use(`/api/v1/listings`, listingsWriteRouter);
-  app.use(`/api/v1/userlistings`, userListingsReadRouter);
+  app.use(`/api/v1/listings/user`, userListingsReadRouter);
   app.use(errorHandler);
   app.listen(env.app.port, () =>
     logger.info(`App server listening on port ${env.app.port}`),

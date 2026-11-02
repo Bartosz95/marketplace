@@ -48,6 +48,15 @@ function UpdateListing() {
     showListingUpdate?.imagesUrls || [],
   );
 
+  useEffect(
+    () => () => {
+      imagesUrls.forEach((imageUrl) => {
+        if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
+      });
+    },
+    [imagesUrls],
+  );
+
   useEffect(() => {
     if (!showListingUpdate) {
       router.push("/");

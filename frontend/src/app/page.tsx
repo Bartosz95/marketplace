@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setOffset, setActivePage } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { getListings } from "@/lib/redux/thunks";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Container, Pagination } from "react-bootstrap";
 
 export default function Page() {
@@ -16,23 +16,6 @@ export default function Page() {
   useEffect(() => {
     dispatch(getListings());
   }, [activePage, dispatch]);
-
-  const ListingsCells = useMemo(
-    () => (
-      <Container
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        {listings.map((listing) => (
-          <ListingCell listing={listing} key={listing.listingId} user={user} />
-        ))}
-      </Container>
-    ),
-    [listings],
-  );
 
   const Pages = (
     <Container className="d-flex justify-content-center mt-3">
@@ -58,7 +41,17 @@ export default function Page() {
   return (
     <>
       <ViewListingModal />
-      {ListingsCells}
+      <Container
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        {listings.map((listing) => (
+          <ListingCell listing={listing} key={listing.listingId} user={user} />
+        ))}
+      </Container>
       {Pages}
     </>
   );

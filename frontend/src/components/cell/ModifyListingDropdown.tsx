@@ -6,7 +6,7 @@ import {
   restoreListing,
 } from "@/lib/redux/thunks";
 import { EventType, Listing } from "@/types";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Dropdown } from "react-bootstrap";
 
 interface ModifyListingDropdownProps {
@@ -15,15 +15,28 @@ interface ModifyListingDropdownProps {
 
 function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { listingId, status } = listing;
 
   const archiveButton =
     status === EventType.LISTING_ARCHIVED ? (
-      <Dropdown.Item onClick={() => dispatch(restoreListing(listingId))}>
+      <Dropdown.Item
+        onClick={() => {
+          void dispatch(restoreListing(listingId))
+            .unwrap()
+            .catch((error) => console.error("Failed to restore listing", error));
+        }}
+      >
         Restore
       </Dropdown.Item>
     ) : (
-      <Dropdown.Item onClick={() => dispatch(archiveListing(listingId))}>
+      <Dropdown.Item
+        onClick={() => {
+          void dispatch(archiveListing(listingId))
+            .unwrap()
+            .catch((error) => console.error("Failed to archive listing", error));
+        }}
+      >
         Archive
       </Dropdown.Item>
     );
@@ -37,13 +50,19 @@ function ModifyListingDropdown({ listing }: ModifyListingDropdownProps) {
         <Dropdown.Item
           onClick={() => {
             dispatch(setShowListingUpdate(listing));
-            redirect("/update");
+            router.push("/update");
           }}
         >
           Update
         </Dropdown.Item>
         {archiveButton}
-        <Dropdown.Item onClick={() => dispatch(deleteListing(listingId))}>
+        <Dropdown.Item
+          onClick={() => {
+            void dispatch(deleteListing(listingId))
+              .unwrap()
+              .catch((error) => console.error("Failed to delete listing", error));
+          }}
+        >
           Delete
         </Dropdown.Item>
       </Dropdown.Menu>
