@@ -4,6 +4,7 @@ import StoreProvider from "@/providers/StoreProvider";
 import { ReactNode } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./global.css";
+import CurrentUserLoader from "@/components/CurrentUserLoader";
 
 type Props = { children: ReactNode };
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: Props) {
       <body>
         <AuthProvider>
           <StoreProvider>
+            <CurrentUserLoader />
             <header>
               <NavigationBar />
             </header>

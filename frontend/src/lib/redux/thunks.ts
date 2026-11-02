@@ -2,10 +2,17 @@ import { FilterBy, Listing } from "@/types";
 import * as yup from "yup";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
-import { setListings, setCountOfAll, setLastFilteredBy } from "./listingsSlice";
+import {
+  setListings,
+  setCountOfAll,
+  setLastFilteredBy,
+  setUser,
+  User,
+} from "./listingsSlice";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
 import { apiRequest } from "../apiRequest";
+import { UUID } from "crypto";
 
 export const getListings = createAsyncThunk(
   "getListings",
@@ -99,3 +106,13 @@ export const archiveListing = async (listingId: string) =>
 
 export const restoreListing = async (listingId: string) =>
   await apiRequest.patch<Listing>(`/listings/restore/${listingId}`);
+
+export const getUsersMe = createAsyncThunk(
+  "getUsersMe",
+  async (_, { getState, dispatch }) => {
+    const user = await apiRequest.get<{
+      user: User;
+    }>(`/users/me`);
+    dispatch(setUser(user));
+  },
+);

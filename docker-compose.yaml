@@ -1,4 +1,26 @@
 services:
+  kong:
+    image: kong:latest
+    container_name: kong-apigateway
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    ports:
+      - "3000:8000"
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - ./gateway-kong.yaml:/kong/kong.yml:ro
+    depends_on:
+      - users-api
+      - listings-api
+    networks:
+      - monitoring
+      - app
   # ui:
   #   build:
   #     context: frontend
@@ -16,24 +38,22 @@ services:
   #     - monitoring
   #     - app
 
-  # listings-api:
-  #   build:
-  #     context: backend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 3000:3000
-  #   env_file:
-  #     - backend/.env
-  #   environment:
-  #     - APP_NAME=listings-api
-  #     - APP_HOST=localhost
-  #     - APP_PORT=3000
-  #     - DB_HOST=db
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - monitoring
-  #     - app
+  listings-api:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      - APP_NAME=listings-api
+      - APP_HOST=localhost
+      - APP_PORT=3000
+      - DB_HOST=db
+    depends_on:
+      - db
+    networks:
+      - monitoring
+      - app
 
   listings-pm:
     build:
@@ -51,16 +71,14 @@ services:
       - monitoring
       - app
 
-  user-api:
+  users-api:
     build:
       context: backend
       dockerfile: Dockerfile
-    ports:
-      - 3001:3000
     env_file:
       - backend/.env
     environment:
-      - APP_NAME=user-api
+      - APP_NAME=users-api
       - APP_HOST=localhost
       - APP_PORT=3000
       - DB_HOST=db

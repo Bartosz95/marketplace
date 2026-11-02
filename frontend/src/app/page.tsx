@@ -10,7 +10,7 @@ import { Container, Pagination } from "react-bootstrap";
 
 export default function Page() {
   const dispatch = useAppDispatch();
-  const { listings, limit, activePage, pagesNumbers } =
+  const { listings, limit, activePage, pagesNumbers, user } =
     useAppSelector(listingStoreSelector);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function Page() {
         }}
       >
         {listings.map((listing) => (
-          <ListingCell listing={listing} key={listing.listingId} />
+          <ListingCell listing={listing} key={listing.listingId} user={user} />
         ))}
       </Container>
     ),

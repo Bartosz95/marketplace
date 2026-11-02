@@ -1,7 +1,25 @@
 import { FilterBy, Listing } from "@/types";
-import { User } from "@auth0/auth0-react";
 import { createSlice } from "@reduxjs/toolkit";
+import { UUID } from "crypto";
 
+export interface User {
+  userId: UUID;
+  authenticationProviderId: string;
+  paymentProviderId?: UUID;
+  name: string;
+  email: string;
+  address?: Address;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
 interface State {
   showListingView?: Listing;
   showListingUpdate?: Listing;
@@ -33,7 +51,7 @@ const initialState: State = {
 };
 
 export const listingsSlice = createSlice({
-  name: 'listings',
+  name: "listings",
   initialState,
   reducers: {
     setShowListingView: (state, actions) => {
@@ -67,6 +85,9 @@ export const listingsSlice = createSlice({
     setLastFilteredBy: (state, actions) => {
       state.lastFilterBy = actions.payload;
     },
+    setUser: (state, actions) => {
+      state.user = actions.payload;
+    },
   },
 });
 
@@ -80,6 +101,7 @@ export const {
   setLimit,
   setOffset,
   setLastFilteredBy,
+  setUser,
 } = listingsSlice.actions;
 
 export default listingsSlice.reducer;

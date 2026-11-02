@@ -11,7 +11,7 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import { useRouter } from "next/navigation";
 
-import { createListing } from "@/redux/thunks";
+import { createListing } from "@/lib/redux/thunks";
 import { useAppDispatch } from "@/lib/redux/hooks";
 
 const CreateListingSchema = yup.object({
