@@ -94,12 +94,14 @@ function UpdateListing() {
               <Carousel className="mb-4">
                 {imagesUrls.map((imageUrl) => (
                   <Carousel.Item key={imageUrl}>
-                    <Image
-                      alt="listing image"
-                      src={imageUrl}
-                      fluid
-                      className="d-block mx-auto"
-                    />
+                    <div className="listing-carousel-frame">
+                      <Image
+                        alt="listing image"
+                        src={imageUrl}
+                        fluid
+                        className="d-block listing-carousel-image"
+                      />
+                    </div>
                   </Carousel.Item>
                 ))}
               </Carousel>

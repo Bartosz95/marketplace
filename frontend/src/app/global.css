@@ -16,6 +16,17 @@
   width: 18rem;
 }
 
+.listing-carousel-frame {
+  aspect-ratio: 1 / 1;
+  background-color: transparent;
+}
+
+.listing-carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .profile-modal-image {
   width: 14rem;
 }

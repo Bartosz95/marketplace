@@ -44,12 +44,14 @@ function ViewListingModal() {
     <Carousel className="mb-3">
       {imagesUrls.map((imageUrl) => (
         <Carousel.Item key={imageUrl}>
-          <Image
-            src={imageUrl}
-            alt="listing image"
-            className="set-center mb-3"
-            fluid
-          />
+          <div className="listing-carousel-frame mb-3">
+            <Image
+              src={imageUrl}
+              alt="listing image"
+              className="d-block listing-carousel-image"
+              fluid
+            />
+          </div>
         </Carousel.Item>
       ))}
     </Carousel>
