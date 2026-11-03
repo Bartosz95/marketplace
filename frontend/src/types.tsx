@@ -43,12 +43,3 @@ export enum FilterBy {
   UserPurchased = "/user/purchased",
   UserArchived = "/user/archived",
 }
-
-export enum RequestAction {
-  Create = "CREATE",
-  Update = "UPDATE",
-  Purchase = "PURCHASE",
-  Archive = "ARCHIVE",
-  Restore = "RESTORE",
-  Delete = "DELETE",
-}

@@ -105,11 +105,7 @@ export default () => {
   );
 
   const listingsReadRouter = ListingsReadRouter(listingsDomain);
-  const listingsWriteRouter = ListingsWriteRouter(
-    listingsDomain,
-    userDomain,
-    eventSourceRepository,
-  );
+  const listingsWriteRouter = ListingsWriteRouter(listingsDomain, userDomain);
   const userListingsReadRouter = UsersListingsReadRouter(
     userListingsReadDomain,
     userDomain,

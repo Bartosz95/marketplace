@@ -94,7 +94,7 @@ export const apiRequest = {
   ): Promise<T> {
     return request<T>(path, {
       ...options,
-      method: "POST",
+      method: "PATCH",
       headers: {
         Accept: "application/json",
         ...options?.headers,

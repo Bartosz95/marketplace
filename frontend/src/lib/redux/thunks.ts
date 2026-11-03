@@ -1,4 +1,4 @@
-import { FilterBy, Listing } from "@/types";
+import { FilterBy, Listing, ListingStatus } from "@/types";
 import * as yup from "yup";
 import { CreateListingDetails } from "@/app/create/page";
 import { UpdateListingSchema } from "@/app/update/page";
@@ -59,7 +59,7 @@ export type UpdateListingThunksProp = Partial<
 export const updateListing = createAsyncThunk(
   "updateListing",
   async (updateListingThunksProp: UpdateListingThunksProp) => {
-    const { listingId, title, price, description, images } =
+    const { listingId, title, price, description, images, status } =
       updateListingThunksProp;
     const formData = new FormData();
     if (images)
@@ -70,6 +70,7 @@ export const updateListing = createAsyncThunk(
     if (title) formData.append("title", title);
     if (price !== undefined) formData.append("price", price.toString());
     if (description) formData.append("description", description);
+    if (status) formData.append("status", status.toString());
     await apiRequest.patchFormData<Listing>(`/listings/${listingId}`, formData);
   },
 );
@@ -85,20 +86,6 @@ export const deleteListing = createAsyncThunk(
   "deleteListing",
   async (listingId: string) => {
     await apiRequest.delete<Listing>(`/listings/${listingId}`);
-  },
-);
-
-export const archiveListing = createAsyncThunk(
-  "archiveListing",
-  async (listingId: string) => {
-    await apiRequest.patch<Listing>(`/listings/${listingId}/archive`);
-  },
-);
-
-export const restoreListing = createAsyncThunk(
-  "restoreListing",
-  async (listingId: string) => {
-    await apiRequest.patch<Listing>(`/listings/${listingId}/restore`);
   },
 );
 

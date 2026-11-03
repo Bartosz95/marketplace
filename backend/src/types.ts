@@ -3,15 +3,13 @@ import { UUID } from "crypto";
 export enum EventType {
   LISTING_CREATED = "LISTING_CREATED",
   LISTING_UPDATED = "LISTING_UPDATED",
-  LISTING_PURCHASED = "LISTING_PURCHASED",
-  LISTING_ARCHIVED = "LISTING_ARCHIVED",
-  LISTING_RESTORED = "LISTING_RESTORED",
-  LISTING_DELETED = "LISTING_DELETED",
   IMAGES_UPLOADED = "IMAGES_UPLOADED",
-  PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
+  LISTING_PURCHASED = "LISTING_PURCHASED",
+  LISTING_DELETED = "LISTING_DELETED",
   USER_FIRST_REQUEST = "USER_FIRST_REQUEST",
   USER_CREATED = "USER_CREATED",
   PURCHASE_REQUESTED = "PURCHASE_REQUESTED",
+  PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
   CHECKOUT_SESSION_CREATED = "CHECKOUT_SESSION_CREATED",
   PAYMENT_SUCCEEDED = "PAYMENT_SUCCEEDED",
   PAYMENT_FAILED = "PAYMENT_FAILED",
@@ -61,16 +59,6 @@ export interface ListingPurchasedEventData {
 
 export interface ListingDeletedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_DELETED;
-  data: {};
-}
-
-export interface ListingArchivedEvent extends EventBaseInfo {
-  eventType: EventType.LISTING_ARCHIVED;
-  data: {};
-}
-
-export interface ListingRestoredEvent extends EventBaseInfo {
-  eventType: EventType.LISTING_RESTORED;
   data: {};
 }
 
@@ -156,8 +144,6 @@ export type Event =
   | ListingCreatedEvent
   | ListingUpdatedEvent
   | ListingPurchasedEvent
-  | ListingArchivedEvent
-  | ListingRestoredEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent
   | PaymentLinkCreatedEvent

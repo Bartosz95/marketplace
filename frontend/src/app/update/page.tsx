@@ -10,12 +10,7 @@ import { Carousel } from "react-bootstrap";
 import { Formik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import {
-  archiveListing,
-  deleteListing,
-  restoreListing,
-  updateListing,
-} from "@/lib/redux/thunks";
+import { deleteListing, updateListing } from "@/lib/redux/thunks";
 import { setShowListingUpdate } from "@/lib/redux/listingsSlice";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { useRouter } from "next/navigation";
@@ -34,6 +29,7 @@ export const UpdateListingSchema = yup.object({
         ? files.every((file) => ["image/jpeg", "image/png"].includes(file.type))
         : true,
     ),
+  status: yup.mixed<ListingStatus>(),
 });
 
 type UpdateListingDetails = {
@@ -41,6 +37,7 @@ type UpdateListingDetails = {
   price?: number;
   description?: string;
   images?: File[];
+  status?: ListingStatus;
 };
 
 function UpdateListing() {
@@ -71,39 +68,6 @@ function UpdateListing() {
   if (!showListingUpdate) {
     return null;
   }
-
-  const archiveRestoreButton =
-    showListingUpdate.status === ListingStatus.ARCHIVED ? (
-      <Button
-        className="button-style set-center"
-        variant="secondary"
-        type="button"
-        onClick={() => {
-          void dispatch(restoreListing(showListingUpdate.listingId))
-            .unwrap()
-            .catch((error) =>
-              console.error("Failed to restore listing", error),
-            );
-        }}
-      >
-        Restore
-      </Button>
-    ) : (
-      <Button
-        className="button-style set-center"
-        variant="secondary"
-        type="button"
-        onClick={() => {
-          void dispatch(archiveListing(showListingUpdate.listingId))
-            .unwrap()
-            .catch((error) =>
-              console.error("Failed to archive listing", error),
-            );
-        }}
-      >
-        Archive
-      </Button>
-    );
 
   const handleUpdate = async (data: UpdateListingDetails) => {
     await dispatch(
@@ -149,6 +113,7 @@ function UpdateListing() {
                 price: showListingUpdate.price,
                 description: showListingUpdate.description,
                 images: [],
+                status: showListingUpdate.status,
               }}
             >
               {({
@@ -246,8 +211,34 @@ function UpdateListing() {
                     </Form.Control.Feedback>
                   </Form.Group>
 
-                  <div className="d-flex justify-content-between mb-4">
-                    {archiveRestoreButton}
+                  <Form.Check
+                    className="mb-4"
+                    type="checkbox"
+                    id={`status`}
+                    label={`Archived`}
+                    checked={values.status === ListingStatus.ARCHIVED}
+                    onChange={(event) => {
+                      setFieldValue(
+                        "status",
+                        event.target.checked
+                          ? ListingStatus.ARCHIVED
+                          : ListingStatus.ACTIVE,
+                      );
+                    }}
+                  />
+
+                  <div className="d-flex justify-content-between">
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      className="button-style set-center"
+                      onClick={() => {
+                        dispatch(setShowListingUpdate(undefined));
+                        router.push("/");
+                      }}
+                    >
+                      Cancel
+                    </Button>
 
                     <Button
                       variant="secondary"
@@ -265,27 +256,13 @@ function UpdateListing() {
                     >
                       Delete
                     </Button>
-                  </div>
-
-                  <div className="d-flex justify-content-between">
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      className="button-style set-center"
-                      onClick={() => {
-                        dispatch(setShowListingUpdate(undefined));
-                        router.push("/");
-                      }}
-                    >
-                      Cancel
-                    </Button>
 
                     <Button
                       variant="primary"
                       type="submit"
                       className="button-style set-center"
                     >
-                      Update listing
+                      Save
                     </Button>
                   </div>
                 </Form>

@@ -20,9 +20,6 @@ export interface ListingsDomain {
     listing_id: UUID,
     data: UpdateListing,
   ) => Promise<void>;
-  purchaseRequested: (userId: UUID, listing_id: UUID) => Promise<void>;
-  archive: (userId: UUID, listing_id: UUID) => Promise<void>;
-  restore: (userId: UUID, listing_id: UUID) => Promise<void>;
   deleteListing: (userId: UUID, listing_id: UUID) => Promise<void>;
   getListing: (listingId: UUID) => Promise<ListingState | undefined>;
   getListings: (
@@ -65,7 +62,7 @@ export const ListingsDomain = (
   };
 
   const update = async (userId: UUID, listingId: UUID, data: UpdateListing) => {
-    const { title, price, description, images } = data;
+    const { title, price, description, images, status } = data;
     const currentState = await listingsStateRepository.getListing(listingId);
     if (!currentState) throw new Error(`currentState undefined`);
     if (userId !== currentState.userId)
@@ -81,7 +78,7 @@ export const ListingsDomain = (
     await eventSourceRepository.insertEventByStreamId(
       listingId,
       EventType.LISTING_UPDATED,
-      { title, price, description },
+      { title, price, description, status },
     );
     if (images) {
       await imagesRepository.deleteImages(listingId);
@@ -117,40 +114,6 @@ export const ListingsDomain = (
       listingId,
       EventType.PURCHASE_REQUESTED,
       purchaseEventData,
-    );
-  };
-
-  const archive = async (userId: UUID, listingId: UUID) => {
-    const currentState = await listingsStateRepository.getListing(listingId);
-    if (!currentState) throw new Error(`currentState undefined`);
-    if (userId !== currentState.userId)
-      throw new Error(`User ${userId} try modify not his listing ${listingId}`);
-    if (currentState.status !== ListingStatus.ACTIVE)
-      throw new Error(
-        `Cannot update listing ${listingId} because is status is: ${currentState.status}`,
-      );
-
-    await eventSourceRepository.insertEventByStreamId(
-      listingId,
-      EventType.LISTING_ARCHIVED,
-      {},
-    );
-  };
-
-  const restore = async (userId: UUID, listingId: UUID) => {
-    const currentState = await listingsStateRepository.getListing(listingId);
-    if (!currentState) throw new Error(`currentState undefined`);
-    if (userId !== currentState.userId)
-      throw new Error(`User ${userId} try modify not his listing ${listingId}`);
-    if (currentState.status !== ListingStatus.ARCHIVED)
-      throw new Error(
-        `Cannot update listing ${listingId} because is status is: ${currentState.status}`,
-      );
-
-    await eventSourceRepository.insertEventByStreamId(
-      listingId,
-      EventType.LISTING_RESTORED,
-      {},
     );
   };
 
@@ -212,9 +175,6 @@ export const ListingsDomain = (
   return {
     create,
     update,
-    purchaseRequested,
-    archive,
-    restore,
     deleteListing,
     getListing,
     getListings,
