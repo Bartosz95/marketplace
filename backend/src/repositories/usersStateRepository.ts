@@ -5,7 +5,7 @@ import { EnvDB } from "../libs/validationSchemas";
 export interface User {
   userId: UUID;
   authenticationProviderId: string;
-  paymentProviderId: UUID | undefined;
+  paymentProviderId: string | undefined;
   name: string;
   email: string;
   address: Address | undefined;
@@ -32,7 +32,7 @@ interface AddressRow {
 interface UserTableRow {
   user_id: UUID;
   authentication_provider_id: string;
-  payment_provider_id: UUID;
+  payment_provider_id: string | null;
   name: string;
   email: string;
   address: AddressRow;
@@ -61,6 +61,8 @@ export interface UsersStateRepository {
   userExistsWithAuthenticationId: (
     authenticationProviderId: string,
   ) => Promise<boolean>;
+  setPaymentProviderId: (userId: UUID, paymentProviderId: string) => Promise<void>;
+  getPaymentProviderId: (userId: string) => Promise<string | undefined>;
 }
 
 export const UsersStateRepository = (env: EnvDB): UsersStateRepository => {
@@ -185,10 +187,42 @@ export const UsersStateRepository = (env: EnvDB): UsersStateRepository => {
     }
   };
 
+  const setPaymentProviderId = async (
+    userId: UUID,
+    paymentProviderId: string,
+  ): Promise<void> => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query(
+        `UPDATE states.users
+        SET payment_provider_id = $2, updated_at = NOW()
+        WHERE user_id = $1`,
+        [userId, paymentProviderId],
+      );
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const getPaymentProviderId = async (
+    userId: string,
+  ): Promise<string | undefined> => {
+    const dbClient = await pool.connect();
+    try {
+      const result = await dbClient.query(
+        `SELECT payment_provider_id FROM states.users WHERE user_id = $1`,
+        [userId],
+      );
+      return result.rows[0]?.payment_provider_id ?? undefined;
+    } finally {
+      dbClient.release();
+    }
+  };
+
   const mapUser = (row: UserTableRow): User => ({
     userId: row.user_id,
     authenticationProviderId: row.authentication_provider_id,
-    paymentProviderId: row.payment_provider_id,
+    paymentProviderId: row.payment_provider_id ?? undefined,
     name: row.name,
     email: row.email,
     address: row.address
@@ -210,5 +244,7 @@ export const UsersStateRepository = (env: EnvDB): UsersStateRepository => {
     getUser,
     getUserByAuthenticationId,
     userExistsWithAuthenticationId,
+    setPaymentProviderId,
+    getPaymentProviderId,
   };
 };

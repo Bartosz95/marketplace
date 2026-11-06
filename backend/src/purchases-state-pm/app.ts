@@ -2,21 +2,27 @@ import z from "zod";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
+import { PurchasesStateProcessManager } from "./purchasesStateProcessManager";
+import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 import { Iteration } from "../libs/iteration";
 import { IterationMetrics } from "../libs/iterationMetrics";
-import { EnvDBSchema, EnvPMSchema } from "../libs/validationSchemas";
-import { UserStateProcessManager } from "./userStateProcessManager";
-import { UsersStateRepository } from "../repositories/usersStateRepository";
-import {
-  AuthenticationProviderRepository,
-  EnvAuthenticationProviderSchema,
-} from "../repositories/authenticationProviderRepository";
 
 export default () => {
   const envSchema = z.object({
-    app: EnvPMSchema.extend({ imagesUrl: z.string() }),
-    db: EnvDBSchema,
-    auth: EnvAuthenticationProviderSchema,
+    app: z.object({
+      name: z.string(),
+      logLevel: z.string(),
+      timeout: z.coerce.number(),
+      numberOfEventsPerIteration: z.number().default(100),
+      metricsPort: z.coerce.number().default(4001),
+    }),
+    db: z.object({
+      host: z.string(),
+      port: z.coerce.number(),
+      user: z.string(),
+      password: z.string(),
+      database: z.string(),
+    }),
   });
 
   const env = envSchema.parse({
@@ -26,7 +32,6 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
-      imagesUrl: process.env.AWS_BUCKET_URL,
     },
     db: {
       host: process.env.DB_HOST,
@@ -35,34 +40,21 @@ export default () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     },
-    auth: {
-      domain: process.env.AUTH_MANAGEMENT_DOMAIN,
-      clientId: process.env.AUTH_MANAGEMENT_CLIENT_ID,
-      clientSecret: process.env.AUTH_MANAGEMENT_CLIENT_SECRET,
-    },
   });
 
   const logger = Logger(env.app.logLevel);
-  const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
+  const bookmarkRepository = BookmarkRepository(env.db, "purchases-state-pm");
   const eventSourceRepository = EventSourceRepository(env.db);
-  const userStateRepository = UsersStateRepository(env.db);
-  const authenticationProviderRepository = AuthenticationProviderRepository(
-    env.auth,
-  );
-
-  const userStateProcessManager = UserStateProcessManager(
-    eventSourceRepository,
-    userStateRepository,
-    authenticationProviderRepository,
-  );
+  const purchasesStateRepository = PurchasesStateRepository(env.db);
+  const processManager = PurchasesStateProcessManager(purchasesStateRepository);
   const iterationMetrics = IterationMetrics(env.app.name, logger);
   iterationMetrics.startMetricsServer();
   const iterate = Iteration(
     bookmarkRepository,
     eventSourceRepository,
-    userStateProcessManager,
+    processManager,
     env.app.numberOfEventsPerIteration,
-    iterationMetrics,
+    iterationMetrics
   );
 
   const delay = (timeout: number) =>

@@ -30,7 +30,7 @@ function ViewListingModal() {
       const response = await apiRequest.get<{
         status?: string;
         checkoutUrl?: string;
-      }>(`/listings/purchases/${purchaseId}/checkout`);
+      }>(`/payments/purchases/${purchaseId}/checkout`);
       if (response.checkoutUrl) {
         window.location.assign(response.checkoutUrl);
         return;

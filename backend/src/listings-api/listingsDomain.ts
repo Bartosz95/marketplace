@@ -4,7 +4,6 @@ import {
   EventType,
   GetListingsResponse,
   ListingCreatedEventData,
-  PurchaseRequestedEventData,
   ListingState,
   ListingStatus,
 } from "../types";
@@ -12,9 +11,14 @@ import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { CreateListing, UpdateListing } from "./listingsWriteRouter";
 import { ImagesRepository } from "../repositories/imagesRepository";
 import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
+import { SellerPaymentReadinessRepository } from "../repositories/sellerPaymentReadinessRepository";
 
 export interface ListingsDomain {
-  create: (userId: UUID, data: CreateListing) => Promise<void>;
+  create: (
+    userId: UUID,
+    data: CreateListing,
+    authorization: string,
+  ) => Promise<void>;
   update: (
     userId: UUID,
     listing_id: UUID,
@@ -33,14 +37,32 @@ export interface ListingsDomain {
   ) => Promise<GetListingsResponse>;
 }
 
+export class SellerPaymentsNotReadyError extends Error {}
+
 export const ListingsDomain = (
   listingsStateRepository: ListingsStateRepository,
   eventSourceRepository: EventSourceRepository,
   imagesRepository: ImagesRepository,
+  sellerPaymentReadinessRepository: SellerPaymentReadinessRepository,
 ): ListingsDomain => {
   const modifyImagesUrls = ModifyImagesUrls(imagesRepository.imagesUrl);
 
-  const create = async (userId: UUID, data: CreateListing) => {
+  const create = async (
+    userId: UUID,
+    data: CreateListing,
+    authorization: string,
+  ) => {
+    if (
+      !(await sellerPaymentReadinessRepository.canReceivePayments(
+        userId,
+        authorization,
+      ))
+    ) {
+      throw new SellerPaymentsNotReadyError(
+        `Seller ${userId} has not completed Stripe onboarding`,
+      );
+    }
+
     const { title, description, price, images } = data;
     const eventData: ListingCreatedEventData = {
       userId,
@@ -89,32 +111,6 @@ export const ListingsDomain = (
         { imagesUrls: modifyImagesUrls.removeImageHost(imagesUrls) },
       );
     }
-  };
-
-  const purchaseRequested = async (userId: UUID, listingId: UUID) => {
-    const listing = await listingsStateRepository.getListing(listingId);
-    if (!listing) throw new Error(`listing undefined`);
-    if (userId === listing.userId)
-      throw Error(`User ${userId} requested to purchase its own item`);
-
-    if (listing.status !== ListingStatus.ACTIVE)
-      throw new Error(
-        `Listing ${listingId} is not available for purchase. Current status: ${listing.status}`,
-      );
-
-    const purchaseEventData: PurchaseRequestedEventData = {
-      sellerId: listing.userId,
-      buyerId: userId,
-      price: listing.price,
-      listingId,
-      currency: "aud",
-    };
-
-    await eventSourceRepository.insertEventByStreamId(
-      listingId,
-      EventType.PURCHASE_REQUESTED,
-      purchaseEventData,
-    );
   };
 
   const deleteListing = async (userId: UUID, listingId: UUID) => {

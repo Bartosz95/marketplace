@@ -13,37 +13,36 @@ export const UserStateProcessManager =
     const { eventType } = event;
 
     switch (eventType) {
-      case EventType.USER_FIRST_REQUEST:
-        console.log("UserStateProcessManager");
-        console.log(event);
+      case EventType.USER_FIRST_REQUEST: {
         const { authenticationProviderId } = event.data;
         const userCurrentState =
           await usersStateRepository.getUserByAuthenticationId(
             authenticationProviderId,
           );
-        if (userCurrentState) {
-          console.log("User already exists in the database.");
-          break;
+        if (userCurrentState) break;
+
+        let { name, email, nickname, emailVerified } = event.data;
+        if (!name || !email) {
+          const response = await authenticationProviderRepository.getUser(
+            authenticationProviderId,
+          );
+          if (!response) {
+            throw new Error(
+              `Auth0 user ${authenticationProviderId} was not found`,
+            );
+          }
+          ({
+            name,
+            email,
+            nickname,
+            email_verified: emailVerified,
+          } = response.data);
         }
-        console.log("User not found in the database.");
-        console.log({ userCurrentState });
-
-        const response = await authenticationProviderRepository.getUser(
-          authenticationProviderId,
-        );
-
-        if (!response) {
+        if (!name || !email) {
           throw new Error(
-            `Auth0 user ${authenticationProviderId} was not found`,
+            `Auth0 user ${authenticationProviderId} is missing name or email`,
           );
         }
-
-        const {
-          name,
-          email,
-          nickname,
-          email_verified: emailVerified,
-        } = response.data;
 
         const id = event.streamId;
 
@@ -57,12 +56,20 @@ export const UserStateProcessManager =
         if (!userCreated) break;
 
         await eventSourceRepository.insertEvent(EventType.USER_CREATED, {
-          id,
+          userId: id,
           authenticationProviderId,
           name,
           email,
           nickname,
           emailVerified,
         });
+        break;
+      }
+      case EventType.PAYMENT_ACCOUNT_CREATED:
+        await usersStateRepository.setPaymentProviderId(
+          event.data.userId,
+          event.data.paymentProviderId,
+        );
+        break;
     }
   };

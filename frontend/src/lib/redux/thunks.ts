@@ -29,7 +29,9 @@ export const getListings = createAsyncThunk(
     const { listings, countOfAll } = await apiRequest.get<{
       listings: Listing[];
       countOfAll: number;
-    }>(`/listings/${filter}?${params.toString()}`);
+    }>(`/listings${filter}?${params.toString()}`, {
+      requiresAuth: filter !== FilterBy.All,
+    });
 
     dispatch(setListings(listings));
     dispatch(setCountOfAll(countOfAll));
@@ -92,7 +94,17 @@ export const deleteListing = createAsyncThunk(
 export const getCurrentUserInfo = createAsyncThunk(
   "getCurrentUserInfo",
   async (_, { dispatch }) => {
-    const user = await apiRequest.get<User>("/users/me");
-    dispatch(setUser(user));
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const response = await apiRequest.get<User | { status: "provisioning" }>(
+        "/users/me",
+      );
+      if (!("status" in response)) {
+        dispatch(setUser(response));
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    throw new Error("User account provisioning did not complete in time");
   },
 );

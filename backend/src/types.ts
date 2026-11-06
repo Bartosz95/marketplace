@@ -9,7 +9,8 @@ export enum EventType {
   USER_FIRST_REQUEST = "USER_FIRST_REQUEST",
   USER_CREATED = "USER_CREATED",
   PURCHASE_REQUESTED = "PURCHASE_REQUESTED",
-  PAYMENT_LINK_CREATED = "PAYMENT_LINK_CREATED",
+  PAYMENT_ACCOUNT_REQUESTED = "PAYMENT_ACCOUNT_REQUESTED",
+  PAYMENT_ACCOUNT_CREATED = "PAYMENT_ACCOUNT_CREATED",
   CHECKOUT_SESSION_CREATED = "CHECKOUT_SESSION_CREATED",
   PAYMENT_SUCCEEDED = "PAYMENT_SUCCEEDED",
   PAYMENT_FAILED = "PAYMENT_FAILED",
@@ -20,7 +21,7 @@ interface EventBaseInfo {
   position: number;
   version: number;
   createdAt: Date;
-  metadata: any;
+  metadata: unknown;
 }
 
 export interface ListingCreatedEvent extends EventBaseInfo {
@@ -59,7 +60,7 @@ export interface ListingPurchasedEventData {
 
 export interface ListingDeletedEvent extends EventBaseInfo {
   eventType: EventType.LISTING_DELETED;
-  data: {};
+  data: object;
 }
 
 export interface ImagesUploadedEvent extends EventBaseInfo {
@@ -71,15 +72,6 @@ export interface ImagesUploadedEventData {
   imagesUrls: string[];
 }
 
-export interface PaymentLinkCreatedEvent extends EventBaseInfo {
-  eventType: EventType.PAYMENT_LINK_CREATED;
-  data: PaymentLinkCreatedEventData;
-}
-
-export interface PaymentLinkCreatedEventData {
-  paymentLink: string;
-}
-
 export interface UserFirstRequest extends EventBaseInfo {
   eventType: EventType.USER_FIRST_REQUEST;
   data: UserFirstRequestEventData;
@@ -87,6 +79,10 @@ export interface UserFirstRequest extends EventBaseInfo {
 
 export interface UserFirstRequestEventData {
   authenticationProviderId: string;
+  name?: string;
+  email?: string;
+  nickname?: string;
+  emailVerified?: boolean;
 }
 
 export interface UserCreated extends EventBaseInfo {
@@ -95,13 +91,30 @@ export interface UserCreated extends EventBaseInfo {
 }
 
 export interface UserCreatedEventData {
-  name: string[];
+  userId?: UUID;
+  id?: UUID;
+  authenticationProviderId: string;
+  name: string;
+  email: string;
+  nickname?: string;
+  emailVerified?: boolean;
+}
+
+export interface PaymentAccountRequestedEventData {
+  userId: UUID;
+  email: string;
+}
+
+export interface PaymentAccountCreatedEventData {
+  userId: UUID;
+  paymentProviderId: string;
 }
 
 export interface PurchaseRequestedEventData {
   listingId: UUID;
   sellerId: string;
   buyerId: string;
+  buyerAuthenticationProviderId: string;
   price: number;
   currency: string;
 }
@@ -109,10 +122,27 @@ export interface PurchaseRequestedEventData {
 export interface CheckoutSessionCreatedEventData extends PurchaseRequestedEventData {
   checkoutSessionId: string;
   checkoutUrl: string;
+  sellerAccountId: string;
+  applicationFeeAmount: number;
 }
 
 export interface PaymentSucceededEventData extends CheckoutSessionCreatedEventData {
   stripeEventId: string;
+}
+
+export interface PaymentFailedEventData extends CheckoutSessionCreatedEventData {
+  stripeEventId: string;
+  failureReason?: string;
+}
+
+export interface PaymentAccountRequestedEvent extends EventBaseInfo {
+  eventType: EventType.PAYMENT_ACCOUNT_REQUESTED;
+  data: PaymentAccountRequestedEventData;
+}
+
+export interface PaymentAccountCreatedEvent extends EventBaseInfo {
+  eventType: EventType.PAYMENT_ACCOUNT_CREATED;
+  data: PaymentAccountCreatedEventData;
 }
 
 export interface PurchaseRequestedEvent extends EventBaseInfo {
@@ -130,15 +160,24 @@ export interface PaymentSucceededEvent extends EventBaseInfo {
   data: PaymentSucceededEventData;
 }
 
+export interface PaymentFailedEvent extends EventBaseInfo {
+  eventType: EventType.PAYMENT_FAILED;
+  data: PaymentFailedEventData;
+}
+
 export type EventData =
-  | {}
+  | object
   | ListingCreatedEventData
   | ImagesUploadedEventData
   | ListingUpdatedEventData
   | ListingPurchasedEventData
   | PurchaseRequestedEventData
+  | UserCreatedEventData
+  | PaymentAccountRequestedEventData
+  | PaymentAccountCreatedEventData
   | CheckoutSessionCreatedEventData
-  | PaymentSucceededEventData;
+  | PaymentSucceededEventData
+  | PaymentFailedEventData;
 
 export type Event =
   | ListingCreatedEvent
@@ -146,12 +185,14 @@ export type Event =
   | ListingPurchasedEvent
   | ListingDeletedEvent
   | ImagesUploadedEvent
-  | PaymentLinkCreatedEvent
   | UserFirstRequest
   | UserCreated
+  | PaymentAccountRequestedEvent
+  | PaymentAccountCreatedEvent
   | PurchaseRequestedEvent
   | CheckoutSessionCreatedEvent
-  | PaymentSucceededEvent;
+  | PaymentSucceededEvent
+  | PaymentFailedEvent;
 
 export enum ListingStatus {
   ACTIVE = "ACTIVE",
@@ -171,7 +212,6 @@ export interface ListingStateTableRow {
   description: string;
   price: number;
   images_urls: string[];
-  payment_link: string;
 }
 
 export interface ListingState {
@@ -184,7 +224,6 @@ export interface ListingState {
   description: string;
   price: number;
   imagesUrls: string[];
-  paymentLink: string;
 }
 
 export interface GetListingsResponse {
@@ -193,6 +232,7 @@ export interface GetListingsResponse {
 }
 
 export interface PurchaseStateTableRow {
+  purchase_id: string;
   listing_id: string;
   seller_id: string;
   buyer_id: string;
@@ -213,6 +253,7 @@ export enum PurchaseStatus {
 }
 
 export interface PurchaseState {
+  purchaseId: UUID;
   listingId: UUID;
   sellerId: string;
   buyerId: string;

@@ -32,7 +32,6 @@ export interface Listing {
   description: string;
   price: number;
   imagesUrls: string[];
-  paymentLink: string;
 }
 
 export enum FilterBy {

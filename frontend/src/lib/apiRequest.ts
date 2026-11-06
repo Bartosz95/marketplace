@@ -1,4 +1,5 @@
 type TokenGetter = () => Promise<string>;
+type ApiRequestOptions = RequestInit & { requiresAuth?: boolean };
 
 let getToken: TokenGetter | undefined;
 
@@ -9,15 +10,23 @@ export function configureApi(tokenGetter: TokenGetter): void {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  if (!getToken) {
-    throw new Error("Auth0 token getter is not configured");
+async function request<T>(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<T> {
+  const { requiresAuth = true, ...requestOptions } = options;
+  const headers = new Headers(requestOptions.headers);
+
+  if (requiresAuth) {
+    if (!getToken) {
+      throw new Error("Auth0 token getter is not configured");
+    }
+    const token = await getToken();
+    headers.set("Authorization", `Bearer ${token}`);
   }
-  const token = await getToken();
-  const headers = new Headers(options.headers);
-  headers.set("Authorization", `Bearer ${token}`);
+
   const response = await fetch(`${API_URL}${path}`, {
-    ...options,
+    ...requestOptions,
     headers,
   });
 
@@ -35,7 +44,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const apiRequest = {
-  get<T>(path: string, options?: RequestInit): Promise<T> {
+  get<T>(path: string, options?: ApiRequestOptions): Promise<T> {
     return request<T>(path, {
       ...options,
       method: "GET",
@@ -46,7 +55,7 @@ export const apiRequest = {
     });
   },
 
-  post<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  post<T>(path: string, body?: unknown, options?: ApiRequestOptions): Promise<T> {
     return request<T>(path, {
       ...options,
       method: "POST",
@@ -62,7 +71,7 @@ export const apiRequest = {
   postFormData<T>(
     path: string,
     body: FormData,
-    options?: RequestInit,
+    options?: ApiRequestOptions,
   ): Promise<T> {
     return request<T>(path, {
       ...options,
@@ -75,7 +84,7 @@ export const apiRequest = {
     });
   },
 
-  patch<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  patch<T>(path: string, body?: unknown, options?: ApiRequestOptions): Promise<T> {
     return request<T>(path, {
       ...options,
       method: "PATCH",
@@ -90,7 +99,7 @@ export const apiRequest = {
   patchFormData<T>(
     path: string,
     body: FormData,
-    options?: RequestInit,
+    options?: ApiRequestOptions,
   ): Promise<T> {
     return request<T>(path, {
       ...options,
@@ -103,7 +112,7 @@ export const apiRequest = {
     });
   },
 
-  delete<T>(path: string, options?: RequestInit): Promise<T> {
+  delete<T>(path: string, options?: ApiRequestOptions): Promise<T> {
     return request<T>(path, {
       ...options,
       method: "DELETE",

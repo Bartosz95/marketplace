@@ -11,11 +11,11 @@ import {
   EnvPMSchema,
   EnvPaymentSchema,
 } from "../libs/validationSchemas";
-import { ModifyImagesUrls } from "../libs/modifyImagesUrls";
+import { UsersStateRepository } from "../repositories/usersStateRepository";
 
 export default () => {
   const envSchema = z.object({
-    app: EnvPMSchema.extend({ imagesUrl: z.string() }),
+    app: EnvPMSchema,
     db: EnvDBSchema,
     purchaseProvider: EnvPaymentSchema,
   });
@@ -27,7 +27,6 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
-      imagesUrl: process.env.AWS_BUCKET_URL,
     },
     db: {
       host: process.env.DB_HOST,
@@ -38,20 +37,21 @@ export default () => {
     },
     purchaseProvider: {
       secretKey: process.env.STRIPE_SECRET_KEY,
+      frontendUrl: process.env.FRONTEND_URL,
     },
   });
 
   const logger = Logger(env.app.logLevel);
   const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
   const eventSourceRepository = EventSourceRepository(env.db);
+  const usersStateRepository = UsersStateRepository(env.db);
   const paymentProviderRepository = PaymentProviderRepository(
     env.purchaseProvider,
   );
-  const modifyImagesUrls = ModifyImagesUrls(env.app.imagesUrl);
   const paymentProcessManager = PaymentProcessManager(
     paymentProviderRepository,
     eventSourceRepository,
-    modifyImagesUrls,
+    usersStateRepository,
   );
   const iterationMetrics = IterationMetrics(env.app.name, logger);
   iterationMetrics.startMetricsServer();

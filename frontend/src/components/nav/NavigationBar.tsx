@@ -9,10 +9,12 @@ import DarkModeSwitch from "./DarkModeSwitch";
 import { listingStoreSelector } from "@/lib/redux/selectors";
 import { useEffect } from "react";
 import { Shop } from "react-bootstrap-icons";
+import { useAuthSession } from "@/providers/AuthProvider";
 
 function NavigationBar() {
   const { theme } = useAppSelector(listingStoreSelector);
   const { isAuthenticated } = useAuth0();
+  const { sessionExpired } = useAuthSession();
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -20,7 +22,8 @@ function NavigationBar() {
     }
   }, [theme]);
 
-  const createListingButton = isAuthenticated && <CreateListingButton />;
+  const hasActiveSession = isAuthenticated && !sessionExpired;
+  const createListingButton = hasActiveSession && <CreateListingButton />;
 
   return (
     <Navbar
@@ -34,7 +37,7 @@ function NavigationBar() {
       <Navbar.Collapse>
         <Nav className="me-auto gap-2">
           <NavItem>{createListingButton}</NavItem>
-          <NavItem>{isAuthenticated && <FilterDropdown />}</NavItem>
+          <NavItem>{hasActiveSession && <FilterDropdown />}</NavItem>
         </Nav>
       </Navbar.Collapse>
       <Navbar.Collapse id="nav-menu" className="justify-content-end">

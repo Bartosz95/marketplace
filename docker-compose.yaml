@@ -18,6 +18,7 @@ services:
     depends_on:
       - users-api
       - listings-api
+      - payment-api
     networks:
       - monitoring
       - app
@@ -49,13 +50,15 @@ services:
       - APP_HOST=localhost
       - APP_PORT=3000
       - DB_HOST=db
+      - USERS_API_URL=http://users-api:3000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
 
-  listings-pm:
+  listings-state-pm:
     build:
       context: backend
       dockerfile: Dockerfile
@@ -63,10 +66,11 @@ services:
       - backend/.env
     environment:
       - DB_HOST=db
-      - APP_NAME=listings-pm
+      - APP_NAME=listings-state-pm
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
@@ -83,11 +87,29 @@ services:
       - APP_PORT=3000
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
-  user-pm:
+  payment-api:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      - APP_NAME=payment-api
+      - APP_HOST=localhost
+      - APP_PORT=3000
+      - DB_HOST=db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - monitoring
+      - app
+  users-state-pm:
     build:
       context: backend
       dockerfile: Dockerfile
@@ -95,25 +117,27 @@ services:
       - backend/.env
     environment:
       - DB_HOST=db
-      - APP_NAME=user-pm
+      - APP_NAME=users-state-pm
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
 
-  purchases-pm:
+  purchases-state-pm:
     build:
       context: backend
       dockerfile: Dockerfile
     env_file:
       - backend/.env
     environment:
-      - APP_NAME=purchases-pm
+      - APP_NAME=purchases-state-pm
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
@@ -127,7 +151,8 @@ services:
       - APP_NAME=payment-pm
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - monitoring
       - app
@@ -143,9 +168,28 @@ services:
     volumes:
       - postgres-storage:/var/lib/postgresql/data
       - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U default_user -d marketplace"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - app
-
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    profiles: ["stripe-local"]
+    command:
+      - listen
+      - --forward-to
+      - http://payment-api:3000/api/v1/payments/stripe/webhook
+    env_file:
+      - backend/.env
+    depends_on:
+      - payment-api
+    networks:
+      - app
   # node-exporter:
   #   image: prom/node-exporter:latest
   #   container_name: node-exporter

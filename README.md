@@ -33,6 +33,20 @@ The application is built using an Event Sourcing architecture pattern. Users can
 
 Process managers operate as separate applications responsible for handling these events and updating the states table based on the event type. This approach provides a complete history of user activity and listing changes.
 
+The sample `LISTING_CREATED` events in `db-init.sql` use the `userId` field
+expected by the listing projection and assign the demo listings to Marketplace
+user `748f3744-8636-48a6-9eaa-fb79519b07f9`. The init script is only run when
+PostgreSQL initializes an empty data directory. To reassign existing listings
+and normalize their event payloads, run the migration from the repository root:
+
+```
+docker compose exec -T db psql -U default_user -d marketplace < db-migrations/20261103_assign_listings_to_user1.sql
+```
+
+The migration requires that user1 already exists in `states.users`. It updates
+listing creation events and their current projection, but leaves historical
+purchase seller records unchanged.
+
 The diagram below illustrates the database tables created for this application.
 
 ![](docs/db.png)
@@ -45,7 +59,7 @@ How to use this application? It is very simple. Main page looks like:
 
 ### Login
 
-You can browse and view listings without logging in. However, logging in allows you to purchase items and create your own listings. Click the Login button, and you will be redirected to the Auth0 page, where you will need to create an account. After successful authentication, you will be redirected back to the Marketplace, where you should see a dashboard similar to the example below.
+You can browse and view listings without logging in. However, logging in allows you to purchase items and create your own listings. Click the Login button, and you will be redirected to the Auth0 page, where you will need to create an account. On the first authenticated request, the Users API verifies the account with Auth0 and provisions the local user record through the event stream. After successful authentication, you will be redirected back to the Marketplace, where you should see a dashboard similar to the example below.
 
 Notice that the Login to add listing button has been replaced by the _+ Create Listing_ button, and next to it, you will find a _Filter By_ dropdown. On the far right of the navigation bar, the Login button is replaced by your account nickname and profile photo.
 
@@ -157,6 +171,44 @@ NEXT_PUBLIC_AUTH_CLIENT_ID=2352356264366346
 NEXT_PUBLIC_AUTH0_AUDIENCE=http://marketplace/api
 NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost:3000
 ```
+
+### Stripe Connect payments
+
+Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `FRONTEND_URL` in
+`backend/.env`. The payment API needs the webhook secret; for local development
+start the Stripe CLI listener:
+
+```
+stripe listen --forward-to localhost:3000/api/v1/payments/stripe/webhook
+```
+
+The CLI prints a signing secret beginning with `whsec_`. Set that value as
+`STRIPE_WEBHOOK_SECRET` in `backend/.env`, then recreate the Payment API so it
+loads the updated environment:
+
+```
+docker compose up -d --force-recreate payment-api
+```
+
+Subscribe the webhook to `checkout.session.completed`,
+`checkout.session.async_payment_succeeded`,
+`checkout.session.async_payment_failed`, and `checkout.session.expired`.
+
+The Users API owns Stripe seller-account creation, onboarding, and account
+readiness. Sellers can open their profile and choose **Set up seller payments**
+to create an Express account and continue Stripe onboarding. The onboarding
+endpoint is `POST /api/v1/users/me/payment/onboarding-link`; payment status is
+available from `GET /api/v1/users/me/payment/status`. The Listings API asks the
+Users API to check seller readiness before accepting listing or purchase
+requests. The Payment process manager creates Checkout sessions and handles
+payment outcomes. Purchases are rejected until the seller's Stripe transfers
+capability is active. Accounts are created as individuals, and Stripe onboarding
+collects currently due requirements first; Stripe can request additional
+information later if it becomes due. The seller's email is prefilled, but legal
+identity, address, payout, and item details are collected from the seller rather
+than inferred from their Auth0 display name or listing. Checkout uses a
+destination charge: 95% is routed to the seller and a 5% application fee is
+retained by the platform.
 
 ### Build and run the project
 

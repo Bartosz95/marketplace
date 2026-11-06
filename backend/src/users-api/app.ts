@@ -8,11 +8,22 @@ import {
   AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
 } from "../libs/authentication";
-import { EnvDBSchema } from "../libs/validationSchemas";
+import {
+  EnvDBSchema,
+  EnvPaymentSchema,
+} from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
 import { UsersRouter } from "./usersRouter";
 import { UsersStateRepository } from "../repositories/usersStateRepository";
 import { UsersDomain } from "./usersDomain";
+import { EventSourceRepository } from "../repositories/eventSourceRepository";
+import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
+import { UserPaymentDomain } from "./userPaymentDomain";
+import {
+  AuthenticationProviderRepository,
+  EnvAuthenticationProviderSchema,
+} from "../repositories/authenticationProviderRepository";
+import { UserProvisioningDomain } from "./userProvisioningDomain";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -29,6 +40,8 @@ export default () => {
     app: EnvAppSchema,
     db: EnvDBSchema,
     authentication: EnvAuthenticationMiddlewareSchema,
+    authenticationProvider: EnvAuthenticationProviderSchema,
+    paymentProvider: EnvPaymentSchema,
   });
 
   const env = envSchema.parse({
@@ -50,6 +63,15 @@ export default () => {
       audience: process.env.AUTH_AUDIENCE,
       issuerBaseURL: process.env.AUTH_ISSUER_BASE_URL,
     },
+    authenticationProvider: {
+      domain: process.env.AUTH_MANAGEMENT_DOMAIN,
+      clientId: process.env.AUTH_MANAGEMENT_CLIENT_ID,
+      clientSecret: process.env.AUTH_MANAGEMENT_CLIENT_SECRET,
+    },
+    paymentProvider: {
+      secretKey: process.env.STRIPE_SECRET_KEY,
+      frontendUrl: process.env.FRONTEND_URL,
+    },
   });
 
   const logger = Logger(env.app.logLevel);
@@ -59,8 +81,27 @@ export default () => {
   const authentication = AuthenticationWriteRoute(env.authentication);
 
   const usersStateRepository = UsersStateRepository(env.db);
+  const eventSourceRepository = EventSourceRepository(env.db);
+  const authenticationProviderRepository = AuthenticationProviderRepository(
+    env.authenticationProvider,
+  );
+  const paymentProvider = PaymentProviderRepository(env.paymentProvider);
   const usersDomain = UsersDomain(usersStateRepository);
-  const usersRouter = UsersRouter(usersDomain);
+  const userProvisioningDomain = UserProvisioningDomain(
+    usersStateRepository,
+    authenticationProviderRepository,
+    eventSourceRepository,
+  );
+  const userPaymentDomain = UserPaymentDomain(
+    usersStateRepository,
+    eventSourceRepository,
+    paymentProvider,
+  );
+  const usersRouter = UsersRouter(
+    usersDomain,
+    userProvisioningDomain,
+    userPaymentDomain,
+  );
 
   const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
   startMetricsServer(env.app.metricsPort);

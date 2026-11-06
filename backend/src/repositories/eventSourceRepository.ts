@@ -5,6 +5,10 @@ import { EnvDB } from "../libs/validationSchemas";
 
 export interface EventSourceRepository {
   insertEvent: (eventType: EventType, eventData: EventData) => Promise<UUID>;
+  ensureUserFirstRequest: (
+    authenticationProviderId: string,
+    eventData: EventData,
+  ) => Promise<void>;
   insertEventByStreamId: (
     streamId: UUID,
     eventType: EventType,
@@ -35,6 +39,38 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
       const { stream_id } = result.rows[0];
       return stream_id;
     } catch (error) {
+      throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const ensureUserFirstRequest = async (
+    authenticationProviderId: string,
+    data: EventData,
+  ) => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query("BEGIN");
+      await dbClient.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        authenticationProviderId,
+      ]);
+      const existing = await dbClient.query(
+        `SELECT 1
+        FROM event_store.events
+        WHERE event_type = $1 AND data->>'authenticationProviderId' = $2
+        LIMIT 1`,
+        [EventType.USER_FIRST_REQUEST, authenticationProviderId],
+      );
+      if (existing.rowCount === 0) {
+        await dbClient.query(
+          "INSERT INTO event_store.events (event_type, data) VALUES ($1, $2)",
+          [EventType.USER_FIRST_REQUEST, data],
+        );
+      }
+      await dbClient.query("COMMIT");
+    } catch (error) {
+      await dbClient.query("ROLLBACK");
       throw error;
     } finally {
       dbClient.release();
@@ -124,6 +160,7 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
   });
   return {
     insertEvent,
+    ensureUserFirstRequest,
     insertEventByStreamId,
     getEventsFromPosition,
     getEventByCheckoutSessionId,

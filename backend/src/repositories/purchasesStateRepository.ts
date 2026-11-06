@@ -12,7 +12,7 @@ import { EnvDB } from "../libs/validationSchemas";
 export interface PurchasesStateRepository {
   updatePurchase: (purchase: PurchaseState) => Promise<void>;
   updatePurchaseStatus: (
-    listingId: UUID,
+    purchaseId: UUID,
     status: PurchaseStatus,
     modifiedAt: Date,
   ) => Promise<void>;
@@ -48,12 +48,13 @@ export const PurchasesStateRepository = (
     const dbClient = await pool.connect();
     try {
       await dbClient.query(
-        `INSERT INTO states.purchases (listing_id, seller_id, buyer_id, price, status, version, modified_at) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (listing_id) DO UPDATE
-        SET status = $5, version = $6, modified_at = $7;
+        `INSERT INTO states.purchases (purchase_id, listing_id, seller_id, buyer_id, price, status, version, modified_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (purchase_id) DO UPDATE
+        SET status = $6, version = $7, modified_at = $8;
         `,
         [
+          purchase.purchaseId,
           purchase.listingId,
           purchase.sellerId,
           purchase.buyerId,
@@ -71,7 +72,7 @@ export const PurchasesStateRepository = (
   };
 
   const updatePurchaseStatus = async (
-    listingId: UUID,
+    purchaseId: UUID,
     status: PurchaseStatus,
     modifiedAt: Date = new Date(),
   ): Promise<void> => {
@@ -80,9 +81,9 @@ export const PurchasesStateRepository = (
       await dbClient.query(
         `UPDATE states.purchases
         SET status = $2, modified_at = $3
-        WHERE listing_id = $1;
+        WHERE purchase_id = $1;
         `,
-        [listingId, status, modifiedAt],
+        [purchaseId, status, modifiedAt],
       );
     } catch (error) {
       throw error;
@@ -107,7 +108,7 @@ export const PurchasesStateRepository = (
         [statuses, limit, offset],
       );
       const countOfAll = await dbClient.query(
-        `SELECT count(*) FROM states.listings
+        `SELECT count(*) FROM states.purchases
         WHERE status = ANY($1::text[]);
         `,
         [statuses],
@@ -194,6 +195,7 @@ export const PurchasesStateRepository = (
   };
 
   const mapPurchase = (row: PurchaseStateTableRow): PurchaseState => ({
+    purchaseId: row.purchase_id as UUID,
     listingId: row.listing_id as UUID,
     sellerId: row.seller_id,
     buyerId: row.buyer_id,

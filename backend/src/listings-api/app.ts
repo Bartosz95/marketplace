@@ -15,14 +15,19 @@ import {
   AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
 } from "../libs/authentication";
-import { EnvDBSchema, EnvAWSSchema } from "../libs/validationSchemas";
+import {
+  EnvDBSchema,
+  EnvAWSSchema,
+} from "../libs/validationSchemas";
 import { RequestMetrics } from "../libs/requestMetrics";
-import { SynchronizeUserMiddleware } from "../libs/syncUserMiddleware";
 import { UsersStateRepository } from "../repositories/usersStateRepository";
 import { UsersListingsReadDomain } from "./usersListingsDomain";
 import { UsersListingsReadRouter } from "./usersListingsReadRouter";
 import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
 import { UsersDomain } from "../users-api/usersDomain";
+import { PurchaseDomain } from "./purchaseDomain";
+import { PurchaseRouter } from "./purchaseRouter";
+import { UserRepository } from "../repositories/userRepository";
 
 export const EnvAppSchema = z.object({
   port: z.coerce.number(),
@@ -40,6 +45,7 @@ export default () => {
     db: EnvDBSchema,
     auth: EnvAuthenticationMiddlewareSchema,
     aws: EnvAWSSchema,
+    usersApiUrl: z.url(),
   });
 
   const env = envSchema.parse({
@@ -71,6 +77,7 @@ export default () => {
         url: process.env.AWS_BUCKET_URL,
       },
     },
+    usersApiUrl: process.env.USERS_API_URL ?? "http://users-api:3000",
   });
 
   const logger = Logger(env.app.logLevel);
@@ -82,6 +89,7 @@ export default () => {
   const listingsStateRepository = ListingsStateRepository(env.db);
   const eventSourceRepository = EventSourceRepository(env.db);
   const usersStateRepository = UsersStateRepository(env.db);
+  const userRepository = UserRepository(env.usersApiUrl);
   const purchasesStateRepository = PurchasesStateRepository(env.db);
   const imagesRepository = ImagesRepository(env.aws);
 
@@ -91,6 +99,7 @@ export default () => {
     listingsStateRepository,
     eventSourceRepository,
     imagesRepository,
+    userRepository,
   );
 
   const userListingsReadDomain = UsersListingsReadDomain(
@@ -99,13 +108,20 @@ export default () => {
     imagesRepository,
   );
 
-  const synchronizeUserMiddleware = SynchronizeUserMiddleware(
-    usersStateRepository,
-    eventSourceRepository,
-  );
-
   const listingsReadRouter = ListingsReadRouter(listingsDomain);
-  const listingsWriteRouter = ListingsWriteRouter(listingsDomain, userDomain);
+  const listingsWriteRouter = ListingsWriteRouter(
+    listingsDomain,
+    userDomain,
+  );
+  const purchaseDomain = PurchaseDomain(
+    listingsStateRepository,
+    eventSourceRepository,
+    userRepository,
+  );
+  const purchaseRouter = PurchaseRouter(
+    purchaseDomain,
+    userDomain,
+  );
   const userListingsReadRouter = UsersListingsReadRouter(
     userListingsReadDomain,
     userDomain,
@@ -124,7 +140,7 @@ export default () => {
   app.use(requestLogger);
   app.use(`/api/v1/listings`, listingsReadRouter);
   app.use(authenticationWrite);
-  app.use(synchronizeUserMiddleware);
+  app.use(`/api/v1/listings`, purchaseRouter);
   app.use(`/api/v1/listings`, listingsWriteRouter);
   app.use(`/api/v1/listings/user`, userListingsReadRouter);
   app.use(errorHandler);

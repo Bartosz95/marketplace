@@ -1,7 +1,10 @@
 import { Router, urlencoded } from "express";
 import z from "zod";
 import { UUID } from "crypto";
-import { ListingsDomain } from "./listingsDomain";
+import {
+  ListingsDomain,
+  SellerPaymentsNotReadyError,
+} from "./listingsDomain";
 import multer from "multer";
 import { userIdSchema, listingIdSchema } from "../libs/validationSchemas";
 import { UsersDomain } from "../users-api/usersDomain";
@@ -59,19 +62,28 @@ export const ListingsWriteRouter = (
   const storage = multer.memoryStorage();
   const upload = multer({ storage: storage });
 
-  router.post("/", upload.array("images", 10), async (req, res) => {
-    const authenticationProviderId = userIdSchema.parse(
-      req?.auth?.payload?.sub,
-    );
-    const data = createListingReqBodySchema.parse({
-      ...req.body,
-      images: req.files as Express.Multer.File[],
-    });
-    const user = await userDomain.getUserByAuthenticationId(
-      authenticationProviderId,
-    );
-    await listingsDomain.create(user.userId, data);
-    res.sendStatus(204);
+  router.post("/", upload.array("images", 10), async (req, res, next) => {
+    try {
+      const authenticationProviderId = userIdSchema.parse(
+        req?.auth?.payload?.sub,
+      );
+      const data = createListingReqBodySchema.parse({
+        ...req.body,
+        images: req.files as Express.Multer.File[],
+      });
+      const user = await userDomain.getUserByAuthenticationId(
+        authenticationProviderId,
+      );
+      const authorization = req.header("authorization");
+      if (!authorization) return res.sendStatus(401);
+      await listingsDomain.create(user.userId, data, authorization);
+      res.sendStatus(204);
+    } catch (error) {
+      if (error instanceof SellerPaymentsNotReadyError) {
+        return res.status(409).send({ error: "seller_payments_not_ready" });
+      }
+      next(error);
+    }
   });
 
   router.patch("/:listingId", upload.array("images", 10), async (req, res) => {

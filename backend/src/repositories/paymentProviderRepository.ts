@@ -4,21 +4,23 @@ import { UUID } from "crypto";
 import { PurchaseRequestedEventData } from "../types";
 
 export interface PaymentProviderRepository {
-  createProduct: (id: string, name: string, price: number) => Promise<string>;
-  updateProductName: (id: string, price: string) => Promise<void>;
-  updateProductPrice: (id: string, price: number) => Promise<string>;
-  updateProductImages: (id: string, images: string[]) => Promise<void>;
-  createUser: (email: string) => Promise<UUID>;
-  createUserOnbordingLink: (accountId: string) => Promise<string>;
-  getUserStatus: (accountId: string) => Promise<Stripe.V2.Core.Account>;
-  getUserProducts: (
-    accountId: string,
-  ) => Promise<Stripe.ApiList<Stripe.Product>>;
+  createConnectedAccount: (
+    email: string,
+    idempotencyKey: string,
+  ) => Promise<string>;
+  createAccountOnboardingLink: (accountId: string) => Promise<string>;
+  canReceiveTransfers: (accountId: string) => Promise<boolean>;
   createCheckoutSession: (
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
+    sellerAccountId: string,
     idempotencyKey: string,
-  ) => Promise<{ checkoutSessionId: string; checkoutUrl: string }>;
+  ) => Promise<{
+    checkoutSessionId: string;
+    checkoutUrl: string;
+    sellerAccountId: string;
+    applicationFeeAmount: number;
+  }>;
 }
 
 export const PaymentProviderRepository = (
@@ -26,191 +28,96 @@ export const PaymentProviderRepository = (
 ): PaymentProviderRepository => {
   const stripe = new Stripe(env.secretKey);
 
-  const getProductIfExists = async (productId: string) => {
-    try {
-      return await stripe.products.retrieve(productId);
-    } catch (err: any) {
-      if (err.code === "resource_missing") {
-        return null;
-      }
-      throw err;
-    }
-  };
-
-  const createProduct = async (id: string, name: string, price: number) => {
-    const products = await getProductIfExists(id);
-    if (!products) {
-      console.log(products);
-      const newProduct: Stripe.ProductCreateParams = {
-        id,
-        name,
-      };
-      await stripe.products.create(newProduct);
-
-      const productPrice = await stripe.prices.create({
-        product: id,
-        unit_amount: price * 100,
-        currency: "aud",
-      });
-
-      const paymentLink = await stripe.paymentLinks.create({
-        line_items: [
-          {
-            price: productPrice.id,
-            quantity: 1,
-          },
-        ],
-      });
-      return paymentLink.url;
-    } else {
-      const existingPriceQuery = await stripe.prices.search({
-        query: `product:'${id}'`,
-      });
-      const existingPrice = existingPriceQuery.data[0];
-
-      if (!existingPrice) {
-        const productPrice = await stripe.prices.create({
-          product: id,
-          unit_amount: price * 100,
-          currency: "aud",
-        });
-
-        const paymentLink = await stripe.paymentLinks.create({
-          line_items: [
-            {
-              price: productPrice.id,
-              quantity: 1,
-            },
-          ],
-        });
-        return paymentLink.url;
-      } else {
-        const paymentLink = await stripe.paymentLinks.create({
-          line_items: [
-            {
-              price: existingPrice.id,
-              quantity: 1,
-            },
-          ],
-        });
-        return paymentLink.url;
-      }
-    }
-  };
-
-  const updateProductName = async (id: string, name: string) => {
-    const updateProductParams: Stripe.ProductUpdateParams = {
-      name,
-    };
-    await stripe.products.update(id, updateProductParams);
-  };
-
-  const updateProductPrice = async (id: string, price: number) => {
-    const existingPriceQuery = await stripe.prices.search({
-      query: `product:'${id}'`,
-    });
-    const existingPrice = existingPriceQuery.data[0];
-    await stripe.prices.update(existingPrice.id, {
-      active: false,
-    });
-
-    await stripe.prices.create({
-      product: id,
-      unit_amount: price * 100,
-      currency: "aud",
-    });
-    const paymentLink = await stripe.paymentLinks.create({
-      line_items: [
-        {
-          price: existingPrice.id,
-          quantity: 1,
-        },
-      ],
-    });
-    return paymentLink.url;
-  };
-
-  const updateProductImages = async (id: string, images: string[]) => {
-    const updateProductParams: Stripe.ProductUpdateParams = {
-      images,
-    };
-    await stripe.products.update(id, updateProductParams);
-  };
-
-  const createUser = async (email: string) => {
+  const createConnectedAccount = async (
+    email: string,
+    idempotencyKey: string,
+  ) => {
     const account = await stripe.accounts.create({
       email,
       type: "express",
       country: "AU",
-    });
-    return account.id as UUID;
+      business_type: "individual",
+      capabilities: {
+        transfers: { requested: true },
+      },
+    }, { idempotencyKey });
+    return account.id;
   };
 
-  const createUserOnbordingLink = async (accountId: string) => {
-    const accountLink = await stripe.v2.core.accountLinks.create({
+  const createAccountOnboardingLink = async (accountId: string) => {
+    const frontendUrl = (env.frontendUrl ?? "http://localhost").replace(
+      /\/+$/,
+      "",
+    );
+    const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      use_case: {
-        type: "account_onboarding",
-        account_onboarding: {
-          configurations: ["recipient"],
-          refresh_url: "https://example.com",
-          return_url: `https://example.com?accountId=${accountId}`,
-        },
+      type: "account_onboarding",
+      collection_options: {
+        fields: "currently_due",
+        future_requirements: "omit",
       },
+      refresh_url: `${frontendUrl}/create?stripe_onboarding=refresh`,
+      return_url: `${frontendUrl}/create?stripe_onboarding=return`,
     });
     return accountLink.url;
   };
 
-  const getUserStatus = async (accountId: string) => {
-    const account = await stripe.v2.core.accounts.retrieve(accountId, {
-      include: ["requirements", "configuration.recipient"],
-    });
-    return account;
-  };
-
-  const getUserProducts = async (accountId: string) => {
-    const products = await stripe.products.list({
-      limit: 100,
-    });
-    return products;
+  const canReceiveTransfers = async (accountId: string) => {
+    const account = await stripe.accounts.retrieve(accountId);
+    return account.capabilities?.transfers === "active";
   };
 
   const createCheckoutSession = async (
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
+    sellerAccountId: string,
     idempotencyKey: string,
   ) => {
+    const amount = Math.round(purchase.price * 100);
+    const applicationFeeAmount = Math.round(amount * 0.05);
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
         client_reference_id: purchaseId,
-        metadata: { purchaseId, listingId: purchase.listingId, buyerId: purchase.buyerId },
+        metadata: {
+          purchaseId,
+          listingId: purchase.listingId,
+          buyerId: purchase.buyerId,
+          sellerAccountId,
+          applicationFeeAmount: String(applicationFeeAmount),
+        },
+        payment_intent_data: {
+          transfer_data: { destination: sellerAccountId },
+          ...(applicationFeeAmount > 0
+            ? { application_fee_amount: applicationFeeAmount }
+            : {}),
+        },
         line_items: [{
           price_data: {
             currency: purchase.currency,
-            unit_amount: Math.round(purchase.price * 100),
+            unit_amount: amount,
             product_data: { name: `Marketplace listing ${purchase.listingId}` },
           },
           quantity: 1,
         }],
-        success_url: `${env.frontendUrl ?? "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.frontendUrl ?? "http://localhost:3000"}/payment/cancel`,
+        success_url: `${env.frontendUrl ?? "http://localhost"}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.frontendUrl ?? "http://localhost"}/?payment=cancelled`,
       },
       { idempotencyKey },
     );
     if (!session.url) throw new Error("Stripe did not return a Checkout URL");
-    return { checkoutSessionId: session.id, checkoutUrl: session.url };
+    return {
+      checkoutSessionId: session.id,
+      checkoutUrl: session.url,
+      sellerAccountId,
+      applicationFeeAmount,
+    };
   };
 
   return {
-    createProduct,
-    updateProductName,
-    updateProductPrice,
-    updateProductImages,
-    createUser,
-    createUserOnbordingLink,
-    getUserStatus,
-    getUserProducts,
+    createConnectedAccount,
+    createAccountOnboardingLink,
+    canReceiveTransfers,
     createCheckoutSession,
   };
 };

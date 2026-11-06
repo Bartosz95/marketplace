@@ -1,9 +1,9 @@
 import z from "zod";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
+import { ListingsStateRepository } from "../repositories/listingsStateRepository";
 import { Logger } from "../libs/logger";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
-import { PurchasesStateProcessManager } from "./purchasesStateProcessManager";
-import { PurchasesStateRepository } from "../repositories/purchasesStateRepository";
+import { ListingsStateProcessManager } from "./listingStateProcessManager";
 import { Iteration } from "../libs/iteration";
 import { IterationMetrics } from "../libs/iterationMetrics";
 
@@ -23,6 +23,7 @@ export default () => {
       password: z.string(),
       database: z.string(),
     }),
+    imageHost: z.string(),
   });
 
   const env = envSchema.parse({
@@ -32,6 +33,7 @@ export default () => {
       timeout: process.env.APP_LOOP_TIMEOUT,
       numberOfEventsPerIteration:
         process.env.APP_NUMBER_OF_EVENTS_PER_ITERATION,
+      metricsPort: process.env.APP_METRICS_PORT,
     },
     db: {
       host: process.env.DB_HOST,
@@ -40,15 +42,17 @@ export default () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     },
+    imageHost: process.env.AWS_BUCKET_URL,
   });
 
   const logger = Logger(env.app.logLevel);
-  const bookmarkRepository = BookmarkRepository(env.db, env.app.name);
+  const bookmarkRepository = BookmarkRepository(env.db, "listings-state-pm");
   const eventSourceRepository = EventSourceRepository(env.db);
-  const purchasesStateRepository = PurchasesStateRepository(env.db);
-  const processManager = PurchasesStateProcessManager(purchasesStateRepository);
+  const listingsStateRepository = ListingsStateRepository(env.db);
+  const processManager = ListingsStateProcessManager(listingsStateRepository);
   const iterationMetrics = IterationMetrics(env.app.name, logger);
-  iterationMetrics.startMetricsServer();
+  iterationMetrics.startMetricsServer(env.app.metricsPort);
+
   const iterate = Iteration(
     bookmarkRepository,
     eventSourceRepository,
@@ -56,7 +60,6 @@ export default () => {
     env.app.numberOfEventsPerIteration,
     iterationMetrics
   );
-
   const delay = (timeout: number) =>
     new Promise((resolve) => setTimeout(resolve, timeout));
 
