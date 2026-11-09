@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS states.stripe_webhook_events (
   received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE states.stripe_webhook_events OWNER TO default_user;
 ALTER TABLE states.bookmarks OWNER TO default_user;
 
 CREATE TABLE IF NOT EXISTS states.users (    

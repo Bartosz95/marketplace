@@ -4,7 +4,6 @@ type ApiRequestOptions = RequestInit & { requiresAuth?: boolean };
 let getToken: TokenGetter | undefined;
 
 export function configureApi(tokenGetter: TokenGetter): void {
-  console.log("Configuring API with token");
   getToken = tokenGetter;
 }
 

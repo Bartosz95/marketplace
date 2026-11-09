@@ -182,6 +182,8 @@ services:
     profiles: ["stripe-local"]
     command:
       - listen
+      - --events
+      - checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired
       - --forward-to
       - http://payment-api:3000/api/v1/payments/stripe/webhook
     env_file:

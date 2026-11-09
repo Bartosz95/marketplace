@@ -57,8 +57,6 @@ function ViewListingModal() {
     </Carousel>
   );
 
-  console.log(showListingView);
-
   return (
     <Modal
       show={!!showListingView}

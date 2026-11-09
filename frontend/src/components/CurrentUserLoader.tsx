@@ -12,7 +12,6 @@ export default function CurrentUserLoader() {
 
   useEffect(() => {
     configureApi(getAccessTokenSilently);
-    console.log("CurrentUserLoader: isLoading: ", isLoading);
 
     if (isLoading || !isAuthenticated) return;
 
