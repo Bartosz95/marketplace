@@ -11,6 +11,7 @@ This repository contains the source code for the Marketplace application, a plat
 - React - UI Framework
 - Bootstrap - CSS framework
 - Auth0 - authentication
+- Stripe - payments
 - AWS S3 Bucket - storage
 - Postgres - database
 - Docker Compose - runtime
@@ -101,98 +102,131 @@ To view your account details, click the button featuring your nickname, which is
 
 ## Requirements
 
-- Docker
-- Auth0 account
-- AWS account
+- Docker with the Compose plugin
+- Node.js 24 and npm for the frontend
+- An Auth0 tenant
+- An AWS S3 bucket and IAM credentials for listing images
+- A Stripe account and Sandbox for payment testing
 
 ## Installation process
 
-You need to do steps below to install this project.
+### Download the project
 
-### Install Docker
-
-To install this project you have to need a have a Docker on your local machine and be able to perform _docker compose_ actions.
-
-### Download project
-
-If you have installed Github you can download a project from Github by executing command below. Otherwise, download and unpack a zip file from here [here](https://github.com/Bartosz95/marketplace/archive/refs/heads/main.zip)
+Clone the repository or download and unpack the [main branch ZIP](https://github.com/Bartosz95/marketplace/archive/refs/heads/main.zip):
 
 ```
 git clone https://github.com/Bartosz95/marketplace.git
 ```
 
-### Authentication account
+### Configure Auth0
 
-In your Auth0 account, create two applications.
-First, create a _Regular Web Application_. Fill in the required fields, and in the _Application URIs_ section, set http://localhost for:
+In Auth0, create:
 
-- Allowed Callback URLs
-- Allowed Logout URLs
-- Allowed Web Origins
+- A **Regular Web Application**. Add `http://localhost` to its Allowed Callback URLs, Allowed Logout URLs, and Allowed Web Origins.
+- An **API** with an identifier to use as the audience.
+- A **Machine to Machine Application** authorized for the Auth0 Management API with the `read:users` permission. This is used to provision local user records from Auth0 profiles.
 
-Next, create a second application of type _API_. Once created, navigate to the _Machine to Machine Applications_ tab and enable authorization for the previously created Regular Web Application.
+Use the tenant domain, API audience, and application credentials in the environment files below. The frontend redirect URI must match the Auth0 callback URL.
 
-### Configure environment variables
+### Configure the backend
 
-Configure 2 _.env_ files.
+Create `backend/.env` (the file is git-ignored) and fill in the values for your setup:
 
-In `<project_dir>/api/` directory create a `.env` file with _AUTH_AUDIENCE_ and _AUTH_ISSUER_BASE_URL_ taken from Auth0 webside.
+```dotenv
+# Compose uses these credentials to initialize the local PostgreSQL database.
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=default_user
+DB_PASSWORD=password
+DB_NAME=marketplace
 
+APP_LOG_LEVEL=info
+APP_LOOP_TIMEOUT=1000
+
+# Auth0 API and tenant
+AUTH_AUDIENCE=<Auth0 API identifier>
+AUTH_ISSUER_BASE_URL=https://<Auth0 tenant domain>/
+AUTH_MANAGEMENT_DOMAIN=<Auth0 tenant domain>
+AUTH_MANAGEMENT_CLIENT_ID=<Auth0 machine-to-machine client ID>
+AUTH_MANAGEMENT_CLIENT_SECRET=<Auth0 machine-to-machine client secret>
+
+# S3 bucket used to store and serve listing images
+AWS_BUCKET_REGION=<AWS region>
+AWS_BUCKET_NAME=<bucket name>
+AWS_BUCKET_ARN=<bucket ARN>
+AWS_BUCKET_ACCESS_KEY=<IAM access key ID>
+AWS_BUCKET_SECRET_ACCESS_KEY=<IAM secret access key>
+AWS_BUCKET_URL=<public base URL used to serve bucket objects>
+
+# Stripe Sandbox credentials; see Stripe Connect payments below
+STRIPE_SECRET_KEY=<Stripe Sandbox secret key>
+STRIPE_WEBHOOK_SECRET=<Stripe webhook signing secret>
+FRONTEND_URL=http://localhost
 ```
-AUTH_AUDIENCE=<your api identifier>
-AUTH_ISSUER_BASE_URL=https://<your Auth0 Domain URL>
+
+The Compose file supplies service-specific `APP_NAME`, `APP_PORT`, `APP_HOST`,
+and `DB_HOST` values. It maps the gateway to `http://localhost:3000`; the
+frontend is run separately below. The AWS IAM credentials need access to list,
+upload, and delete objects in the configured bucket. Configure the bucket so
+the image URLs in `AWS_BUCKET_URL` can be read by the browser.
+
+### Configure the frontend
+
+Create `frontend/.env`:
+
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+NEXT_PUBLIC_AUTH0_DOMAIN=<Auth0 tenant domain>
+NEXT_PUBLIC_AUTH0_CLIENT_ID=<Auth0 Regular Web Application client ID>
+NEXT_PUBLIC_AUTH0_AUDIENCE=<Auth0 API identifier>
+NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost
 ```
 
-Example:
-
-```
-AUTH_AUDIENCE=http://marketplace/api
-AUTH_ISSUER_BASE_URL=https://dev-e857rf6yf68r.us.auth0.com/
-```
-
-In `<project_dir>/ui/` directory create a `.env` file with _AUTH_AUDIENCE_ and _AUTH_ISSUER_BASE_URL_ taken from Auth0 webside.
-
-```
-NEXT_PUBLIC_AUTH0_DOMAIN=<your Auth0 Domain URL>
-NEXT_PUBLIC_AUTH_CLIENT_ID=<your Client ID>
-NEXT_PUBLIC_AUTH0_AUDIENCE=<your api identifier>
-NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost/
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_IMAGES_URL=http://localhost:3002/images
-```
-
-Example:
-
-```
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_IMAGES_URL=http://localhost:3002/images
-NEXT_PUBLIC_AUTH0_DOMAIN=dev-e857rf6yf68r.us.auth0.com
-NEXT_PUBLIC_AUTH_CLIENT_ID=2352356264366346
-NEXT_PUBLIC_AUTH0_AUDIENCE=http://marketplace/api
-NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost:3000
-```
+The names above must match the variables read by the frontend and backend.
+Never put Stripe secret keys, webhook signing secrets, AWS credentials, or
+Auth0 machine-to-machine credentials in the frontend environment file.
 
 ### Stripe Connect payments
 
-Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `FRONTEND_URL` in
-`backend/.env`. The payment API needs the webhook secret; for local development
-start the Stripe CLI listener:
+Use the same Stripe **Sandbox** for `STRIPE_SECRET_KEY`, the Stripe CLI, and
+the test payments. The backend secret key must be a Sandbox secret key
+(`sk_test_...`). For the Compose listener, set `STRIPE_API_KEY` in
+`backend/.env` to a test-mode API key accepted by the current Stripe CLI. A
+restricted key created from Stripe's **Platform and marketplace payments**
+template can be used; keep it private. Do not use a live-mode key.
 
-```
-stripe listen --forward-to localhost:3000/api/v1/payments/stripe/webhook
+The local listener is included in Compose under the `stripe-local` profile. The
+Payment API requires a webhook signing secret on startup, so initially set
+`STRIPE_WEBHOOK_SECRET` to a temporary placeholder, then start the services:
+
+```bash
+docker compose up --build -d
+docker compose --profile stripe-local up -d stripe-cli
+docker compose --profile stripe-local logs -f stripe-cli
 ```
 
-The CLI prints a signing secret beginning with `whsec_`. Set that value as
-`STRIPE_WEBHOOK_SECRET` in `backend/.env`, then recreate the Payment API so it
-loads the updated environment:
+Copy the `whsec_...` signing secret printed by Stripe CLI into
+`STRIPE_WEBHOOK_SECRET` in `backend/.env` and recreate the Payment API:
 
-```
+```bash
 docker compose up -d --force-recreate payment-api
 ```
 
-Subscribe the webhook to `checkout.session.completed`,
+The Compose listener forwards `checkout.session.completed`,
 `checkout.session.async_payment_succeeded`,
-`checkout.session.async_payment_failed`, and `checkout.session.expired`.
+`checkout.session.async_payment_failed`, and `checkout.session.expired` to the
+Payment API. No Dashboard webhook destination or ngrok tunnel is needed for
+local testing. Keep the listener running while generating test events.
+
+To resend an existing Sandbox event while the listener is running, use its
+Stripe event ID:
+
+```bash
+docker compose --profile stripe-local exec stripe-cli stripe events resend evt_<event_id>
+```
+
+The event must belong to the same Sandbox and its Checkout Session must match a
+`CHECKOUT_SESSION_CREATED` event in the local event store.
 
 The Users API owns Stripe seller-account creation, onboarding, and account
 readiness. Sellers can open their profile and choose **Set up seller payments**
@@ -204,18 +238,33 @@ requests. The Payment process manager creates Checkout sessions and handles
 payment outcomes. Purchases are rejected until the seller's Stripe transfers
 capability is active. Accounts are created as individuals, and Stripe onboarding
 collects currently due requirements first; Stripe can request additional
-information later if it becomes due. The seller's email is prefilled, but legal
-identity, address, payout, and item details are collected from the seller rather
-than inferred from their Auth0 display name or listing. Checkout uses a
+information later if it becomes due. Seller onboarding pre-fills the seller's
+email; legal identity, address, and payout details are collected from the seller
+rather than inferred from their Auth0 display name or listing. Checkout uses a
 destination charge: 95% is routed to the seller and a 5% application fee is
-retained by the platform.
+retained by the platform. Checkout pre-fills the buyer's email from the local
+user record. Stripe Sandbox payments are simulated and do not move real funds.
 
 ### Build and run the project
 
-In your main project directory run command below.
+Start the backend services and database from the repository root:
 
 ```
 docker compose up --build -d
 ```
 
-Open your browser on http://localhost.
+The frontend is not enabled as a Compose service. In another terminal, install
+its dependencies and start the development server:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+The frontend development script listens on port 80. Some systems require
+elevated privileges to bind to this port; if so, configure a local development
+port and allow its origin in both Kong's CORS configuration and Auth0. Open
+[http://localhost](http://localhost) in your browser when using the default
+port. To stop the Stripe listener when you are done testing, run
+`docker compose --profile stripe-local stop stripe-cli`.
