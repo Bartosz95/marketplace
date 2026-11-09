@@ -13,6 +13,14 @@ export const PaymentProcessManager =
     const { eventType } = event;
     switch (eventType) {
       case EventType.PURCHASE_REQUESTED: {
+        const buyer = await usersStateRepository.getUserByAuthenticationId(
+          event.data.buyerAuthenticationProviderId,
+        );
+        if (!buyer) {
+          throw new Error(
+            `Buyer ${event.data.buyerAuthenticationProviderId} was not found`,
+          );
+        }
         const sellerAccountId = await usersStateRepository.getPaymentProviderId(
           event.data.sellerId,
         );
@@ -30,6 +38,7 @@ export const PaymentProcessManager =
           event.streamId,
           event.data,
           sellerAccountId,
+          buyer.email,
           `checkout:${event.position}`,
         );
         await eventSourceRepository.insertEventByStreamId(

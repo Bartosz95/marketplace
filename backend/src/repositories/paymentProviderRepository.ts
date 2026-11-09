@@ -14,6 +14,7 @@ export interface PaymentProviderRepository {
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
     sellerAccountId: string,
+    buyerEmail: string,
     idempotencyKey: string,
   ) => Promise<{
     checkoutSessionId: string;
@@ -71,6 +72,7 @@ export const PaymentProviderRepository = (
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
     sellerAccountId: string,
+    buyerEmail: string,
     idempotencyKey: string,
   ) => {
     const amount = Math.round(purchase.price * 100);
@@ -79,6 +81,7 @@ export const PaymentProviderRepository = (
       {
         mode: "payment",
         client_reference_id: purchaseId,
+        customer_email: buyerEmail,
         metadata: {
           purchaseId,
           listingId: purchase.listingId,
