@@ -10,12 +10,9 @@ const getListingsQuerychema = z.object({
 
 const getListingParamsSchema = z.uuid();
 
-const userIdSchema = z.uuid();
-
 export const ListingsReadRouter = (listingsDomain: ListingsDomain) => {
   const router = Router();
   router.get("/", async (req, res) => {
-    console.log("GET /listings");
     const { limit, offset } = await getListingsQuerychema.parse(req.query);
     const data = await listingsDomain.getListings(limit, offset);
     res.status(200).send(data);

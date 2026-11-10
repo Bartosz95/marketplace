@@ -254,6 +254,7 @@ function UpdateListing() {
                           .catch((error) =>
                             console.error("Failed to delete listing", error),
                           );
+                        router.push("/");
                       }}
                     >
                       Delete

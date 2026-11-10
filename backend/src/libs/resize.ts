@@ -41,8 +41,6 @@ const resizeImages = async () => {
       await sharp(file)
         .resize({ height: 689, width: 689, fit: "contain" })
         .toFile(outputPath);
-
-      console.log(`✅ Resized: ${file} -> ${outputPath}`);
     } catch (err) {
       console.error(`❌ Failed: ${file}`, err);
     }

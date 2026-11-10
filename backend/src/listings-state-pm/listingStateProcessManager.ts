@@ -10,8 +10,7 @@ export const ListingsStateProcessManager =
       eventType === EventType.PAYMENT_FAILED
         ? event.data.listingId
         : streamId;
-    const previousState = await listingStateRepository.getListing(listingId);
-    console.log(event);
+    const currentState = await listingStateRepository.getListing(listingId);
 
     switch (eventType) {
       case EventType.LISTING_CREATED: {
@@ -27,26 +26,35 @@ export const ListingsStateProcessManager =
         break;
       }
       case EventType.LISTING_UPDATED: {
-        if (!previousState) throw new Error(`previousState undefined`);
+        if (!currentState) throw new Error(`currentState undefined`);
+        if (
+          event.data.status === ListingStatus.ARCHIVED &&
+          (currentState.status === ListingStatus.SOLD ||
+            currentState.status === ListingStatus.RESERVED)
+        ) {
+          throw new Error(
+            `Cannot archive listing ${listingId} because it is ${currentState.status}`,
+          );
+        }
         const updated: ListingState = {
-          ...previousState,
+          ...currentState,
           ...event.data,
         };
         await listingStateRepository.updateListing(updated);
         break;
       }
       case EventType.IMAGES_UPLOADED: {
-        if (!previousState) throw new Error(`previousState undefined`);
+        if (!currentState) throw new Error(`currentState undefined`);
         const imagesUrls = event.data.imagesUrls;
         const imagesUploaded: ListingState = {
-          ...previousState,
+          ...currentState,
           imagesUrls,
         };
         await listingStateRepository.updateListing(imagesUploaded);
         break;
       }
       case EventType.PURCHASE_REQUESTED:
-        if (!previousState) throw new Error(`previousState undefined`);
+        if (!currentState) throw new Error(`currentState undefined`);
         await listingStateRepository.updateListingStatus(
           listingId,
           ListingStatus.RESERVED,
@@ -54,7 +62,7 @@ export const ListingsStateProcessManager =
         );
         break;
       case EventType.PAYMENT_SUCCEEDED:
-        if (!previousState) throw new Error(`previousState undefined`);
+        if (!currentState) throw new Error(`currentState undefined`);
         await listingStateRepository.updateListingStatus(
           listingId,
           ListingStatus.SOLD,
@@ -62,8 +70,8 @@ export const ListingsStateProcessManager =
         );
         break;
       case EventType.PAYMENT_FAILED:
-        if (!previousState) throw new Error(`previousState undefined`);
-        if (previousState.status === ListingStatus.RESERVED) {
+        if (!currentState) throw new Error(`currentState undefined`);
+        if (currentState.status === ListingStatus.RESERVED) {
           await listingStateRepository.updateListingStatus(
             listingId,
             ListingStatus.ACTIVE,
@@ -72,10 +80,20 @@ export const ListingsStateProcessManager =
         }
         break;
       case EventType.LISTING_DELETED: {
-        if (!previousState) throw new Error(`previousState undefined`);
-        if (previousState.status === ListingStatus.DELETED) {
+        if (!currentState) throw new Error(`currentState undefined`);
+        if (currentState.status === ListingStatus.DELETED) {
           throw new Error(
-            `Cannot delete listing ${listingId} because its status is: ${previousState.status}`,
+            `Cannot delete listing ${listingId} because its status is: ${currentState.status}`,
+          );
+        }
+        if (currentState.status === ListingStatus.SOLD) {
+          throw new Error(
+            `Cannot delete listing ${listingId} because it has been sold`,
+          );
+        }
+        if (currentState.status === ListingStatus.RESERVED) {
+          throw new Error(
+            `Cannot delete listing ${listingId} because it is reserved`,
           );
         }
 

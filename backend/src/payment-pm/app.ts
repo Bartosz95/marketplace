@@ -71,7 +71,6 @@ export default () => {
       try {
         await iterate();
       } catch (error) {
-        console.log(error);
         logger.error(error);
       } finally {
         await delay(env.app.timeout);

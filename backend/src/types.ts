@@ -45,6 +45,7 @@ export interface ListingUpdatedEventData {
   title?: string;
   description?: string;
   price?: number;
+  status?: ListingStatus;
 }
 
 export interface ListingPurchasedEvent extends EventBaseInfo {

@@ -90,6 +90,15 @@ export const ListingsDomain = (
     if (userId !== currentState.userId)
       throw new Error(`User ${userId} try modify not his listing ${listingId}`);
     if (
+      status === ListingStatus.ARCHIVED &&
+      (currentState.status === ListingStatus.SOLD ||
+        currentState.status === ListingStatus.RESERVED)
+    ) {
+      throw new Error(
+        `Cannot archive listing ${listingId} because it is ${currentState.status}`,
+      );
+    }
+    if (
       currentState.status !== ListingStatus.ACTIVE &&
       currentState.status !== ListingStatus.ARCHIVED
     )
@@ -120,6 +129,16 @@ export const ListingsDomain = (
       throw Error(`User ${userId} try to modify listing ${listingId}`);
     if (listing.status === ListingStatus.DELETED) {
       throw new Error(`Listing ${listingId} has already been deleted`);
+    }
+    if (listing.status === ListingStatus.SOLD) {
+      throw new Error(
+        `Cannot delete listing ${listingId} because it has been sold`,
+      );
+    }
+    if (listing.status === ListingStatus.RESERVED) {
+      throw new Error(
+        `Cannot delete listing ${listingId} because it is reserved`,
+      );
     }
     await eventSourceRepository.insertEventByStreamId(
       listingId,

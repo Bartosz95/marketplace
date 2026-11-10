@@ -17,7 +17,6 @@ export const UsersListingsReadRouter = (
   const router = Router();
 
   router.get("/all", async (req, res) => {
-    console.log("req.query: ", req.query);
     const { limit, offset } = await listingsQuerySchema.parse(req.query);
     const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
@@ -35,7 +34,6 @@ export const UsersListingsReadRouter = (
   });
 
   router.get("/active", async (req, res) => {
-    console.log("Actived req.query: ", req.query);
     const authenticationProviderId = await userIdSchema.parse(
       req?.auth?.payload?.sub,
     );

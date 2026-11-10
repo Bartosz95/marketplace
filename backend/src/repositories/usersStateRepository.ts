@@ -167,10 +167,6 @@ export const UsersStateRepository = (env: EnvDB): UsersStateRepository => {
   ): Promise<boolean> => {
     const dbClient = await pool.connect();
     try {
-      console.log(
-        "Checking authentication provioder for ID:",
-        authenticationProviderId,
-      );
       const results = await dbClient.query(
         `SELECT 1 FROM states.users 
         WHERE authentication_provider_id = $1 LIMIT 1;`,

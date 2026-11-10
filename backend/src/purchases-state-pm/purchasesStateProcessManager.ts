@@ -6,7 +6,6 @@ export const PurchasesStateProcessManager =
   async (event: Event) => {
     const { eventType } = event;
 
-    console.log(event);
     switch (eventType) {
       case EventType.PURCHASE_REQUESTED: {
         const purchase: PurchaseState = {
@@ -19,7 +18,6 @@ export const PurchasesStateProcessManager =
           status: PurchaseStatus.REQUESTED,
           version: 1,
         };
-        console.log(purchase);
         await purchasesStateRepository.updatePurchase(purchase);
         break;
       }
