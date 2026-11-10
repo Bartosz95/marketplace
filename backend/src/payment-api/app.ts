@@ -10,6 +10,7 @@ import { StripeWebhookRepository } from "../repositories/stripeWebhookRepository
 import { StripeWebhookRouter } from "./stripeWebhookRouter";
 import { PaymentDomain } from "./paymentDomain";
 import { PaymentRouter } from "./paymentRouter";
+import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
 import {
   AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
@@ -59,9 +60,11 @@ export default () => {
     stripe,
     env.paymentProvider.webhookSecret,
   );
+  const paymentProvider = PaymentProviderRepository(env.paymentProvider);
   const paymentDomain = PaymentDomain(
     eventSourceRepository,
     stripeWebhookRepository,
+    paymentProvider,
   );
   const webhookRouter = StripeWebhookRouter(paymentDomain);
   const paymentRouter = PaymentRouter(paymentDomain);
@@ -76,7 +79,15 @@ export default () => {
   app.use(AuthenticationWriteRoute(env.authentication));
   app.use("/api/v1/payments", paymentRouter);
   app.use(errorHandler);
-  app.listen(env.app.port, () =>
-    logger.info(`Payment API listening on port ${env.app.port}`),
-  );
+  stripeWebhookRepository
+    .ensurePaymentEventSchema()
+    .then(() =>
+      app.listen(env.app.port, () =>
+        logger.info(`Payment API listening on port ${env.app.port}`),
+      ),
+    )
+    .catch((error) => {
+      logger.error("Failed to prepare payment event storage", { error });
+      process.exitCode = 1;
+    });
 };

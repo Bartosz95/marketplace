@@ -5,6 +5,7 @@ import userStateProcessManager from "./users-state-pm/app";
 import purchasesStateProcessManager from "./purchases-state-pm/app";
 import paymentProcessManager from "./payment-pm/app";
 import paymentAPI from "./payment-api/app";
+import paymentReconciliationProcessManager from "./payment-reconciliation-pm/app";
 
 console.log(`Starting: ${process.env.APP_NAME}`);
 switch (process.env.APP_NAME) {
@@ -28,6 +29,9 @@ switch (process.env.APP_NAME) {
     break;
   case `payment-api`:
     paymentAPI();
+    break;
+  case `payment-reconciliation-pm`:
+    paymentReconciliationProcessManager();
     break;
   default:
     console.log(`App not found: ${process.env.APP_NAME}`);

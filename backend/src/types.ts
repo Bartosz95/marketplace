@@ -128,11 +128,11 @@ export interface CheckoutSessionCreatedEventData extends PurchaseRequestedEventD
 }
 
 export interface PaymentSucceededEventData extends CheckoutSessionCreatedEventData {
-  stripeEventId: string;
+  stripeEventId?: string;
 }
 
 export interface PaymentFailedEventData extends CheckoutSessionCreatedEventData {
-  stripeEventId: string;
+  stripeEventId?: string;
   failureReason?: string;
 }
 

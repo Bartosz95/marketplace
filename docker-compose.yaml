@@ -156,6 +156,22 @@ services:
     networks:
       - monitoring
       - app
+  payment-reconciliation-pm:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      - APP_NAME=payment-reconciliation-pm
+      - APP_LOG_LEVEL=info
+      - DB_HOST=db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - monitoring
+      - app
   db:
     image: postgres:17
     container_name: postgres_container

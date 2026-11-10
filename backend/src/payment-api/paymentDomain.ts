@@ -2,17 +2,29 @@ import { UUID } from "crypto";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { EventType } from "../types";
 import { StripeWebhookRepository } from "../repositories/stripeWebhookRepository";
+import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
+import { PaymentReconciliation } from "./paymentReconciliation";
 
 export type CheckoutLookup =
   | { status: "pending" }
   | { status: "forbidden" }
   | { checkoutUrl: string };
 
+export type PurchasePaymentStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "forbidden";
+
 export interface PaymentDomain {
   getCheckoutForBuyer: (
     purchaseId: UUID,
     buyerAuthenticationProviderId: string,
   ) => Promise<CheckoutLookup>;
+  getPurchasePaymentStatus: (
+    purchaseId: UUID,
+    buyerAuthenticationProviderId: string,
+  ) => Promise<PurchasePaymentStatus>;
   handleStripeWebhook: (
     payload: Buffer,
     signature: string,
@@ -22,7 +34,13 @@ export interface PaymentDomain {
 export const PaymentDomain = (
   eventSourceRepository: EventSourceRepository,
   stripeWebhookRepository: ReturnType<typeof StripeWebhookRepository>,
+  paymentProvider: PaymentProviderRepository,
 ): PaymentDomain => {
+  const paymentReconciliation = PaymentReconciliation(
+    stripeWebhookRepository,
+    paymentProvider,
+  );
+
   const getCheckoutForBuyer = async (
     purchaseId: UUID,
     buyerAuthenticationProviderId: string,
@@ -42,6 +60,24 @@ export const PaymentDomain = (
 
     return { checkoutUrl: checkoutEvent.data.checkoutUrl };
   };
+
+  const getPurchasePaymentStatus: PaymentDomain["getPurchasePaymentStatus"] =
+    async (purchaseId, buyerAuthenticationProviderId) => {
+      const checkoutEvent = await eventSourceRepository.getLatestEventInStream(
+        purchaseId,
+        EventType.CHECKOUT_SESSION_CREATED,
+      );
+      if (!checkoutEvent) return "pending";
+      if (
+        checkoutEvent.eventType !== EventType.CHECKOUT_SESSION_CREATED ||
+        checkoutEvent.data.buyerAuthenticationProviderId !==
+          buyerAuthenticationProviderId
+      ) {
+        return "forbidden";
+      }
+
+      return paymentReconciliation.reconcileCheckout(checkoutEvent);
+    };
 
   const handleStripeWebhook: PaymentDomain["handleStripeWebhook"] = async (
     payload,
@@ -83,9 +119,14 @@ export const PaymentDomain = (
                 ? "Checkout session expired"
                 : "Checkout payment failed",
           },
+      "webhook",
     );
     return inserted ? "processed" : "duplicate";
   };
 
-  return { getCheckoutForBuyer, handleStripeWebhook };
+  return {
+    getCheckoutForBuyer,
+    getPurchasePaymentStatus,
+    handleStripeWebhook,
+  };
 };

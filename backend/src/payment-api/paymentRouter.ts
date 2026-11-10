@@ -30,5 +30,24 @@ export const PaymentRouter = (paymentDomain: PaymentDomain) => {
     }
   });
 
+  router.get("/purchases/:purchaseId/status", async (req, res, next) => {
+    try {
+      const buyerAuthenticationProviderId = userIdSchema.parse(
+        req.auth?.payload?.sub,
+      );
+      const purchaseId = listingIdSchema.parse(
+        req.params.purchaseId,
+      ) as UUID;
+      const status = await paymentDomain.getPurchasePaymentStatus(
+        purchaseId,
+        buyerAuthenticationProviderId,
+      );
+      if (status === "forbidden") return res.sendStatus(403);
+      return res.send({ status });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   return router;
 };

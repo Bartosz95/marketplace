@@ -65,12 +65,35 @@ CREATE TABLE IF NOT EXISTS states.bookmarks (
 );
 
 CREATE TABLE IF NOT EXISTS states.stripe_webhook_events (
-  stripe_event_id TEXT PRIMARY KEY,
+  idempotency_key TEXT PRIMARY KEY,
+  purchase_id UUID,
+  source TEXT NOT NULL DEFAULT 'webhook'
+    CHECK (source IN ('webhook', 'reconciliation')),
+  event_type TEXT,
   received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS states.payment_reconciliation (
+  checkout_session_id TEXT PRIMARY KEY,
+  purchase_id UUID NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  next_attempt_at TIMESTAMP,
+  last_checked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_error TEXT
+);
+
+ALTER TABLE states.stripe_webhook_events
+  ADD COLUMN IF NOT EXISTS purchase_id UUID;
+ALTER TABLE states.payment_reconciliation
+  ADD COLUMN IF NOT EXISTS purchase_id UUID;
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_purchase_id
+  ON states.stripe_webhook_events (purchase_id);
+CREATE INDEX IF NOT EXISTS idx_payment_reconciliation_purchase_id
+  ON states.payment_reconciliation (purchase_id);
+
 ALTER TABLE states.stripe_webhook_events OWNER TO default_user;
 ALTER TABLE states.bookmarks OWNER TO default_user;
+ALTER TABLE states.payment_reconciliation OWNER TO default_user;
 
 CREATE TABLE IF NOT EXISTS states.users (    
     user_id                     UUID PRIMARY KEY,

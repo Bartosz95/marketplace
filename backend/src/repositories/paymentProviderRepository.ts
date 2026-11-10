@@ -10,6 +10,13 @@ export interface PaymentProviderRepository {
   ) => Promise<string>;
   createAccountOnboardingLink: (accountId: string) => Promise<string>;
   canReceiveTransfers: (accountId: string) => Promise<boolean>;
+  getCheckoutSessionStatus: (
+    checkoutSessionId: string,
+  ) => Promise<{
+    status: string | null;
+    paymentStatus: string;
+    paymentIntentStatus?: string;
+  }>;
   createCheckoutSession: (
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
@@ -68,6 +75,21 @@ export const PaymentProviderRepository = (
     return account.capabilities?.transfers === "active";
   };
 
+  const getCheckoutSessionStatus = async (checkoutSessionId: string) => {
+    const session = await stripe.checkout.sessions.retrieve(checkoutSessionId, {
+      expand: ["payment_intent"],
+    });
+    const paymentIntent = session.payment_intent;
+    return {
+      status: session.status,
+      paymentStatus: session.payment_status,
+      paymentIntentStatus:
+        typeof paymentIntent === "object" && paymentIntent !== null
+          ? paymentIntent.status
+          : undefined,
+    };
+  };
+
   const createCheckoutSession = async (
     purchaseId: UUID,
     purchase: PurchaseRequestedEventData,
@@ -103,7 +125,7 @@ export const PaymentProviderRepository = (
           },
           quantity: 1,
         }],
-        success_url: `${env.frontendUrl ?? "http://localhost"}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${env.frontendUrl ?? "http://localhost"}/?payment=success&session_id={CHECKOUT_SESSION_ID}&purchase_id=${purchaseId}`,
         cancel_url: `${env.frontendUrl ?? "http://localhost"}/?payment=cancelled`,
       },
       { idempotencyKey },
@@ -121,6 +143,7 @@ export const PaymentProviderRepository = (
     createConnectedAccount,
     createAccountOnboardingLink,
     canReceiveTransfers,
+    getCheckoutSessionStatus,
     createCheckoutSession,
   };
 };
