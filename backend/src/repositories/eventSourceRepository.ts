@@ -23,6 +23,7 @@ export interface EventSourceRepository {
     position: number,
     eventsNumber: number
   ) => Promise<Event[]>;
+  getLatestEventPosition: () => Promise<number>;
   getEventByCheckoutSessionId: (checkoutSessionId: string) => Promise<Event | undefined>;
   getLatestEventInStream: (streamId: UUID, eventType: EventType) => Promise<Event | undefined>;
   ensurePaymentReconciliationTable: () => Promise<void>;
@@ -132,6 +133,18 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
       return events;
     } catch (error) {
       throw error;
+    } finally {
+      dbClient.release();
+    }
+  };
+
+  const getLatestEventPosition = async (): Promise<number> => {
+    const dbClient = await pool.connect();
+    try {
+      const result = await dbClient.query(
+        "SELECT COALESCE(MAX(position), 0) AS position FROM event_store.events;",
+      );
+      return Number(result.rows[0].position);
     } finally {
       dbClient.release();
     }
@@ -306,6 +319,7 @@ export const EventSourceRepository = (env: EnvDB): EventSourceRepository => {
     ensureUserFirstRequest,
     insertEventByStreamId,
     getEventsFromPosition,
+    getLatestEventPosition,
     getEventByCheckoutSessionId,
     getLatestEventInStream,
     ensurePaymentReconciliationTable,

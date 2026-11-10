@@ -31,7 +31,11 @@ export const RequestMetrics = (logger: Logger) => {
     res.on("finish", () => {
       const diff = process.hrtime(start);
       const durationInSeconds = diff[0] + diff[1] / 1e9;
-      const route = req.route?.path || req.path;
+      const routePath = req.route?.path;
+      const route =
+        typeof routePath === "string"
+          ? `${req.baseUrl}${routePath}`
+          : "unmatched";
 
       httpRequestsTotal
         .labels(req.method, route, res.statusCode.toString())

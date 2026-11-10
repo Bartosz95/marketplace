@@ -1,4 +1,4 @@
-import { de } from "zod/locales";
+import { Counter, Gauge, Histogram } from "prom-client";
 import { BookmarkRepository } from "../repositories/bookmarkRepository";
 import { EventSourceRepository } from "../repositories/eventSourceRepository";
 import { Event } from "../types";
@@ -9,31 +9,54 @@ export const Iteration = (
   processManager: (event: Event) => Promise<void>,
   eventsNumber: number,
   iterationMetrics: {
-    startMetricsServer?: (port?: number) => void;
-    eventsProcessed: any;
-    bookmartDepth: any;
-    eventDuration: any;
-  }
+    processName: string;
+    eventsProcessed: Counter<string>;
+    bookmarkDepth: Gauge<string>;
+    bookmarkPosition: Gauge<string>;
+    latestEventPosition: Gauge<string>;
+    eventDuration: Histogram<string>;
+  },
 ) => {
-  const { eventsProcessed, bookmartDepth, eventDuration } = iterationMetrics;
+  const {
+    processName,
+    eventsProcessed,
+    bookmarkDepth,
+    bookmarkPosition,
+    latestEventPosition,
+    eventDuration,
+  } = iterationMetrics;
   const iterate = async () => {
-    const bookmarkPosition = await bookmarkRepository.getBookmark();
+    const savedBookmarkPosition = await bookmarkRepository.getBookmark();
+    const currentEventPosition =
+      await eventSourceRepository.getLatestEventPosition();
+    const processLabels = { process_name: processName };
+    bookmarkPosition.labels(processLabels).set(savedBookmarkPosition);
+    latestEventPosition.labels(processLabels).set(currentEventPosition);
+    bookmarkDepth
+      .labels(processLabels)
+      .set(Math.max(0, currentEventPosition - savedBookmarkPosition));
     const events = await eventSourceRepository.getEventsFromPosition(
-      bookmarkPosition + 1,
+      savedBookmarkPosition + 1,
       eventsNumber
     );
     if (events.length === 0) return;
-    const start = process.hrtime();
     for (const event of events) {
+      const start = process.hrtime();
       await processManager(event);
-      eventsProcessed.labels({ event_type: event.eventType }).inc();
-      const depth = bookmarkPosition + events.length - event.position;
-      bookmartDepth.set(depth);
+      const diff = process.hrtime(start);
+      const duration = diff[0] + diff[1] / 1e9;
+      eventsProcessed
+        .labels({ process_name: processName, event_type: event.eventType })
+        .inc();
+      eventDuration
+        .labels({ process_name: processName })
+        .observe(duration);
       await bookmarkRepository.setBookmark(event.position);
+      bookmarkPosition.labels(processLabels).set(event.position);
+      bookmarkDepth
+        .labels(processLabels)
+        .set(Math.max(0, currentEventPosition - event.position));
     }
-    const diff = process.hrtime(start);
-    const duration = diff[0] + diff[1] / (1e9 * events.length);
-    eventDuration.observe(duration);
   };
   return iterate;
 };

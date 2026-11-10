@@ -110,6 +110,14 @@ To view your account details, click the button featuring your nickname, which is
 
 ## Installation process
 
+Grafana requires `GRAFANA_ADMIN_PASSWORD` for every Docker Compose command.
+Set a local password in the shell where you will run Compose; do not commit it
+to the repository:
+
+```bash
+export GRAFANA_ADMIN_PASSWORD='choose-a-local-password'
+```
+
 ### Download the project
 
 Clone the repository or download and unpack the [main branch ZIP](https://github.com/Bartosz95/marketplace/archive/refs/heads/main.zip):
@@ -247,11 +255,33 @@ user record. Stripe Sandbox payments are simulated and do not move real funds.
 
 ### Build and run the project
 
-Start the backend services and database from the repository root:
+With `GRAFANA_ADMIN_PASSWORD` set as above, start the backend services,
+database, Prometheus, and Grafana from the repository root:
 
-```
+```bash
 docker compose up --build -d
 ```
+
+Open [Grafana](http://localhost:3002) and sign in as `admin` with the password
+you set above. The provisioned **Marketplace Operations** dashboard includes
+service health, API request rate, HTTP 5xx rate and latency, event-worker
+throughput and lag, payment reconciliation activity, and process CPU and
+memory. Use the **Service** filter to focus on specific APIs or workers.
+
+The bookmark panels show:
+
+- **Latest event position**: the highest event position currently in the event
+  store.
+- **Worker bookmark position**: the last event position a worker successfully
+  processed and saved.
+- **Bookmark position lag**: the difference between the latest event position
+  and that worker's bookmark. Event positions come from a database sequence,
+  so gaps can occur; this is a position difference, not always an exact count
+  of pending events.
+
+Prometheus is available at [http://localhost:9090](http://localhost:9090).
+Use its **Status → Targets** page to check whether service metrics are being
+scraped. The Prometheus and Grafana ports are bound to localhost.
 
 The frontend is not enabled as a Compose service. In another terminal, install
 its dependencies and start the development server:

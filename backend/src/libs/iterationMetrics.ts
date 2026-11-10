@@ -35,18 +35,32 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
     labelNames: ["process_name", "event_type"],
     registers: [register],
   });
-  eventsProcessed.labels({ process_name: processName });
   register.registerMetric(eventsProcessed);
 
-  const bookmartDepth = new Gauge({
+  const bookmarkDepth = new Gauge({
     name: "bookmark_depth",
-    help: "Depth of the bookmark during iteration",
+    help: "Difference between the latest event position and the worker bookmark position",
     labelNames: ["process_name"],
     registers: [register],
   });
 
-  bookmartDepth.labels({ process_name: processName });
-  register.registerMetric(bookmartDepth);
+  register.registerMetric(bookmarkDepth);
+
+  const bookmarkPosition = new Gauge({
+    name: "event_bookmark_position",
+    help: "Latest event position successfully processed by the worker",
+    labelNames: ["process_name"],
+    registers: [register],
+  });
+  register.registerMetric(bookmarkPosition);
+
+  const latestEventPosition = new Gauge({
+    name: "event_store_latest_position",
+    help: "Highest event position currently present in the event store",
+    labelNames: ["process_name"],
+    registers: [register],
+  });
+  register.registerMetric(latestEventPosition);
 
   const eventDuration = new Histogram({
     name: "event_processing_duration_seconds",
@@ -56,13 +70,21 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
     registers: [register],
   });
 
-  eventDuration.labels({ process_name: processName });
-  register.registerMetric(eventDuration);
+  const paymentReconciliationChecks = new Counter({
+    name: "payment_reconciliation_checks_total",
+    help: "Checkout sessions checked by the payment reconciliation worker",
+    labelNames: ["process_name", "result"],
+    registers: [register],
+  });
 
   return {
+    processName,
     startMetricsServer,
     eventsProcessed,
-    bookmartDepth,
+    bookmarkDepth,
+    bookmarkPosition,
+    latestEventPosition,
     eventDuration,
+    paymentReconciliationChecks,
   };
 };

@@ -1,10 +1,23 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+
   - job_name: "listings-api"
     static_configs:
       - targets: ["listings-api:4001"]
+
+  - job_name: "users-api"
+    static_configs:
+      - targets: ["users-api:4001"]
+
+  - job_name: "payment-api"
+    static_configs:
+      - targets: ["payment-api:4001"]
 
   - job_name: "listings-state-pm"
     static_configs:
@@ -18,6 +31,14 @@ scrape_configs:
     static_configs:
       - targets: ["users-state-pm:4001"]
 
+  - job_name: "payment-pm"
+    static_configs:
+      - targets: ["payment-pm:4001"]
+
+  - job_name: "payment-reconciliation-pm"
+    static_configs:
+      - targets: ["payment-reconciliation-pm:4001"]
+
   - job_name: "node-exporter"
     static_configs:
       - targets: ["node-exporter:9100"]
@@ -25,7 +46,3 @@ scrape_configs:
   - job_name: "cadvisor"
     static_configs:
       - targets: ["cadvisor:8080"]
-
-  - job_name: "prometheus"
-    static_configs:
-      - targets: ["prometheus:9090"]

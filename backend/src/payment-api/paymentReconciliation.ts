@@ -52,15 +52,17 @@ export const PaymentReconciliation = (
     eventSourceRepository: EventSourceRepository,
     batchSize: number,
     onError: (error: unknown, checkoutSessionId: string) => void,
+    onResult: (result: ReconciliationResult | "error") => void,
   ): Promise<void> => {
     const checkoutEvents =
       await eventSourceRepository.getCheckoutEventsToReconcile(batchSize);
     for (const checkoutEvent of checkoutEvents) {
       let lastError: string | null = null;
       try {
-        await reconcileCheckout(checkoutEvent);
+        onResult(await reconcileCheckout(checkoutEvent));
       } catch (error) {
         onError(error, checkoutEvent.data.checkoutSessionId);
+        onResult("error");
         lastError = error instanceof Error ? error.message : String(error);
       }
       await eventSourceRepository.recordCheckoutReconciliationAttempt(

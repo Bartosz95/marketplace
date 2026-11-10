@@ -11,6 +11,7 @@ import { StripeWebhookRouter } from "./stripeWebhookRouter";
 import { PaymentDomain } from "./paymentDomain";
 import { PaymentRouter } from "./paymentRouter";
 import { PaymentProviderRepository } from "../repositories/paymentProviderRepository";
+import { RequestMetrics } from "../libs/requestMetrics";
 import {
   AuthenticationWriteRoute,
   EnvAuthenticationMiddlewareSchema,
@@ -21,6 +22,7 @@ export default () => {
     app: z.object({
       port: z.coerce.number(),
       logLevel: z.string(),
+      metricsPort: z.coerce.number().default(4001),
     }),
     db: EnvDBSchema,
     authentication: EnvAuthenticationMiddlewareSchema,
@@ -33,6 +35,7 @@ export default () => {
     app: {
       port: process.env.APP_PORT,
       logLevel: process.env.APP_LOG_LEVEL,
+      metricsPort: process.env.APP_METRICS_PORT,
     },
     db: {
       host: process.env.DB_HOST,
@@ -68,8 +71,11 @@ export default () => {
   );
   const webhookRouter = StripeWebhookRouter(paymentDomain);
   const paymentRouter = PaymentRouter(paymentDomain);
+  const { collectRequestMetrics, startMetricsServer } = RequestMetrics(logger);
+  startMetricsServer(env.app.metricsPort);
 
   const app = express();
+  app.use(collectRequestMetrics);
   app.use(cors({ origin: "*" }));
   app.use(
     "/api/v1/payments/stripe/webhook",

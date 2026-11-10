@@ -1,6 +1,6 @@
 services:
   kong:
-    image: kong:latest
+    image: kong:3.9.1
     container_name: kong-apigateway
     restart: unless-stopped
     environment:
@@ -173,7 +173,7 @@ services:
       - monitoring
       - app
   db:
-    image: postgres:17
+    image: postgres:17.6
     container_name: postgres_container
     restart: always
     shm_size: 128mb
@@ -194,7 +194,7 @@ services:
     networks:
       - app
   stripe-cli:
-    image: stripe/stripe-cli:latest
+    image: stripe/stripe-cli:v1.27.0
     profiles: ["stripe-local"]
     command:
       - listen
@@ -209,37 +209,43 @@ services:
     networks:
       - app
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.9.1
     container_name: node-exporter
-    ports:
-      - 9100:9100
     command:
-      - "--path.rootfs=/"
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
     restart: unless-stopped
     networks:
       - monitoring
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     container_name: cadvisor
     restart: always
     privileged: true
-    ports:
-      - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
     command:
       - --docker_only
     networks:
       - monitoring
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.5.0
     container_name: prometheus
+    restart: unless-stopped
     ports:
-      - 9090:9090
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus-storage:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yaml"
       - "--storage.tsdb.path=/prometheus"
@@ -247,14 +253,14 @@ services:
       - monitoring
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.2.1
     container_name: grafana
     restart: unless-stopped
     ports:
-      - 3002:3000
+      - "127.0.0.1:3002:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=password
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD}
       - GF_LOG_LEVEL=warn
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     volumes:
@@ -267,6 +273,8 @@ services:
 
 volumes:
   postgres-storage:
+    driver: local
+  prometheus-storage:
     driver: local
   grafana-storage:
     driver: local
