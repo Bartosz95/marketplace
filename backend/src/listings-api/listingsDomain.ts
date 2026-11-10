@@ -92,7 +92,8 @@ export const ListingsDomain = (
     if (
       status === ListingStatus.ARCHIVED &&
       (currentState.status === ListingStatus.SOLD ||
-        currentState.status === ListingStatus.RESERVED)
+        currentState.status === ListingStatus.RESERVED ||
+        currentState.status === ListingStatus.DELETED)
     ) {
       throw new Error(
         `Cannot archive listing ${listingId} because it is ${currentState.status}`,

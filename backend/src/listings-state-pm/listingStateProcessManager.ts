@@ -30,7 +30,8 @@ export const ListingsStateProcessManager =
         if (
           event.data.status === ListingStatus.ARCHIVED &&
           (currentState.status === ListingStatus.SOLD ||
-            currentState.status === ListingStatus.RESERVED)
+            currentState.status === ListingStatus.RESERVED ||
+            currentState.status === ListingStatus.DELETED)
         ) {
           throw new Error(
             `Cannot archive listing ${listingId} because it is ${currentState.status}`,
@@ -62,6 +63,7 @@ export const ListingsStateProcessManager =
         );
         break;
       case EventType.PAYMENT_SUCCEEDED:
+      case EventType.LISTING_PURCHASED:
         if (!currentState) throw new Error(`currentState undefined`);
         await listingStateRepository.updateListingStatus(
           listingId,

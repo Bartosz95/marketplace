@@ -1,7 +1,11 @@
 import { Pool, PoolConfig } from "pg";
 import { EnvDB } from "../libs/validationSchemas";
 import { UUID } from "crypto";
-import { EventData, EventType } from "../types";
+import {
+  EventType,
+  PaymentFailedEventData,
+  PaymentSucceededEventData,
+} from "../types";
 import Stripe from "stripe";
 
 export interface VerifiedStripeWebhookEvent {
@@ -44,7 +48,7 @@ export const StripeWebhookRepository = (
     stripeEventId: string,
     streamId: UUID,
     eventType: EventType.PAYMENT_SUCCEEDED | EventType.PAYMENT_FAILED,
-    data: EventData,
+    data: PaymentSucceededEventData | PaymentFailedEventData,
   ): Promise<boolean> => {
     const client = await pool.connect();
     try {
@@ -69,6 +73,27 @@ export const StripeWebhookRepository = (
         FROM max_version`,
         [streamId, eventType, data],
       );
+      if (eventType === EventType.PAYMENT_SUCCEEDED) {
+        await client.query(
+          `WITH max_version AS (
+            SELECT COALESCE(MAX(version), 0) AS v
+            FROM event_store.events
+            WHERE stream_id = $1
+          )
+          INSERT INTO event_store.events (stream_id, event_type, data, version)
+          SELECT $1, $2, $3, v + 1
+          FROM max_version`,
+          [
+            data.listingId,
+            EventType.LISTING_PURCHASED,
+            {
+              sellerId: data.sellerId,
+              buyerId: data.buyerId,
+              price: data.price,
+            },
+          ],
+        );
+      }
       await client.query("COMMIT");
       return true;
     } catch (error) {
