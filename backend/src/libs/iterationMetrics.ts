@@ -35,7 +35,6 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
     labelNames: ["process_name", "event_type"],
     registers: [register],
   });
-  register.registerMetric(eventsProcessed);
 
   const bookmarkDepth = new Gauge({
     name: "bookmark_depth",
@@ -44,15 +43,12 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
     registers: [register],
   });
 
-  register.registerMetric(bookmarkDepth);
-
   const bookmarkPosition = new Gauge({
     name: "event_bookmark_position",
     help: "Latest event position successfully processed by the worker",
     labelNames: ["process_name"],
     registers: [register],
   });
-  register.registerMetric(bookmarkPosition);
 
   const latestEventPosition = new Gauge({
     name: "event_store_latest_position",
@@ -60,7 +56,6 @@ export const IterationMetrics = (processName: string, logger: Logger) => {
     labelNames: ["process_name"],
     registers: [register],
   });
-  register.registerMetric(latestEventPosition);
 
   const eventDuration = new Histogram({
     name: "event_processing_duration_seconds",
