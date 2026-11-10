@@ -36,7 +36,7 @@ export const UserStateProcessManager =
             email,
             nickname,
             email_verified: emailVerified,
-          } = response.data);
+          } = response);
         }
         if (!name || !email) {
           throw new Error(

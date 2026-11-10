@@ -1,4 +1,4 @@
-type TokenGetter = () => Promise<string>;
+type TokenGetter = () => Promise<string | undefined>;
 type ApiRequestOptions = RequestInit & { requiresAuth?: boolean };
 
 let getToken: TokenGetter | undefined;
@@ -21,6 +21,9 @@ async function request<T>(
       throw new Error("Auth0 token getter is not configured");
     }
     const token = await getToken();
+    if (!token) {
+      throw new Error("Auth0 did not return an access token");
+    }
     headers.set("Authorization", `Bearer ${token}`);
   }
 

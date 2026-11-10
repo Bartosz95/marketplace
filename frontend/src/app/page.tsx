@@ -20,7 +20,7 @@ export default function Page() {
   const reconciledPurchaseId = useRef<string | null>(null);
 
   useEffect(() => {
-    configureApi(getAccessTokenSilently);
+    configureApi(() => getAccessTokenSilently());
     if (isLoading || !isAuthenticated) return;
 
     const params = new URLSearchParams(window.location.search);

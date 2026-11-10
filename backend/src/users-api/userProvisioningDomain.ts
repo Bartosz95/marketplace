@@ -38,7 +38,7 @@ export const UserProvisioningDomain = (
       );
     }
 
-    const profile = authenticationUserSchema.parse(response.data);
+    const profile = authenticationUserSchema.parse(response);
     await eventSourceRepository.ensureUserFirstRequest(
       authenticationProviderId,
       {

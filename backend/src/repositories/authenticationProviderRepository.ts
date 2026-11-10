@@ -1,4 +1,5 @@
-import { ManagementClient } from "auth0";
+import { ManagementClient, ManagementError } from "auth0";
+import type { Management } from "auth0";
 import z from "zod";
 
 export const EnvAuthenticationProviderSchema = z.object({
@@ -12,7 +13,9 @@ export type EnvAuthenticationprovider = z.infer<
 >;
 
 export interface AuthenticationProviderRepository {
-  getUser: (id: string) => Promise<any>;
+  getUser: (
+    id: string,
+  ) => Promise<Management.GetUserResponseContent | null>;
 }
 
 export const AuthenticationProviderRepository = (
@@ -26,13 +29,13 @@ export const AuthenticationProviderRepository = (
 
   const getUser = async (id: string) => {
     try {
-      const user = await management.users.get({ id });
+      const user = await management.users.get(id);
       return user;
-    } catch (err: any) {
-      if (err.code === "resource_missing") {
+    } catch (error: unknown) {
+      if (error instanceof ManagementError && error.statusCode === 404) {
         return null;
       }
-      throw err;
+      throw error;
     }
   };
 
