@@ -103,7 +103,7 @@ To view your account details, click the button featuring your nickname, which is
 ## Requirements
 
 - Docker with the Compose plugin
-- Node.js 24 and npm for the frontend
+- Node.js 26 LTS and npm for the frontend
 - An Auth0 tenant
 - An AWS S3 bucket and IAM credentials for listing images
 - A Stripe account and Sandbox for payment testing

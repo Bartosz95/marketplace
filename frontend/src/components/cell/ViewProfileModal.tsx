@@ -25,22 +25,36 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
     const response = await apiRequest.get<{
       status: "not_started" | "pending" | "onboarding_required" | "ready";
     }>("/users/me/payment/status");
-    setPaymentStatus(response.status);
+    return response.status;
   }, []);
 
   useEffect(() => {
     if (!show) return;
+    let active = true;
+    refreshPaymentStatus()
+      .then((status) => {
+        if (active) setPaymentStatus(status);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setPaymentError(
+          error instanceof Error
+            ? error.message
+            : "Unable to check seller payment setup",
+        );
+        setPaymentStatus("not_started");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshPaymentStatus, show]);
+
+  const closeProfile = () => {
     setPaymentStatus("loading");
     setPaymentError(undefined);
-    refreshPaymentStatus().catch((error: unknown) => {
-      setPaymentError(
-        error instanceof Error
-          ? error.message
-          : "Unable to check seller payment setup",
-      );
-      setPaymentStatus("not_started");
-    });
-  }, [refreshPaymentStatus, show]);
+    handleClose();
+  };
 
   const startOnboarding = async () => {
     setStartingOnboarding(true);
@@ -94,7 +108,7 @@ function ViewProfile({ show, handleClose, user }: ProfileProps) {
   return (
     <Modal
       show={show}
-      onHide={handleClose}
+      onHide={closeProfile}
       backdrop="static"
       aria-labelledby="contained-modal-title-vcenter"
       className="blure m-auto"

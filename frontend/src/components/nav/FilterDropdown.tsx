@@ -30,7 +30,7 @@ function FilterDropdown() {
     <NavDropdown title={mapFilterBy(lastFilterBy)}>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.All));
         }}
       >
@@ -38,7 +38,7 @@ function FilterDropdown() {
       </NavDropdown.Item>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.UserAll));
         }}
       >
@@ -46,7 +46,7 @@ function FilterDropdown() {
       </NavDropdown.Item>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.UserActive));
         }}
       >
@@ -54,7 +54,7 @@ function FilterDropdown() {
       </NavDropdown.Item>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.UserSold));
         }}
       >
@@ -62,7 +62,7 @@ function FilterDropdown() {
       </NavDropdown.Item>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.UserPurchased));
         }}
       >
@@ -70,7 +70,7 @@ function FilterDropdown() {
       </NavDropdown.Item>
       <NavDropdown.Item
         onClick={async () => {
-          await setActivePage(1);
+          dispatch(setActivePage(1));
           await dispatch(getListings(FilterBy.UserArchived));
         }}
       >

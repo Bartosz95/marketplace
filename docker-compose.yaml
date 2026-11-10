@@ -22,22 +22,22 @@ services:
     networks:
       - monitoring
       - app
-  # ui:
-  #   build:
-  #     context: frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 80:80
-  #   env_file:
-  #     - frontend/.env
-  #   environment:
-  #     - NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost
-  #   depends_on:
-  #     - listings-api
-  #     - user-api
-  #   networks:
-  #     - monitoring
-  #     - app
+  ui:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    env_file:
+      - frontend/.env
+    environment:
+      - NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost
+    depends_on:
+      - listings-api
+      - users-api
+    networks:
+      - monitoring
+      - app
 
   listings-api:
     build:
@@ -215,7 +215,7 @@ services:
       - "--path.rootfs=/host"
     pid: host
     volumes:
-      - /:/host:ro,rslave
+      - /:/host:ro
     restart: unless-stopped
     networks:
       - monitoring
