@@ -402,7 +402,7 @@ Use these values in the environment files and GitHub repository variables:
 4. The EC2 instance role also needs permission to list the bucket and upload
    and delete objects under `images/*`, plus upload the seeded sample images
    under `demo/*`. Attach the policy from
-   [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json) to
+   [`deploy/ec2-s3-policy.json`](deploy/ec2-s3-policy.json) to
    `MarketplaceEC2Role`, replacing `<bucket-name>` with the exact bucket name.
    If you already created this role, update its attached policy to include the
    `demo/*` upload statement; editing the repository example does not update
@@ -453,7 +453,7 @@ ECR, and store listing images in your S3 bucket without AWS access keys.
 5. Name the role `MarketplaceEC2Role` and choose **Create role**.
 6. Open the new role. Choose **Add permissions → Create inline policy**, open
    the **JSON** tab, and paste the contents of
-   [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json),
+   [`deploy/ec2-s3-policy.json`](deploy/ec2-s3-policy.json),
    replacing every instance of `<bucket-name>` with your S3 bucket name.
    Choose **Next**, name the policy `MarketplaceImageBucketAccess`, and choose
    **Create policy**.
@@ -523,7 +523,7 @@ remaining commands. The lifecycle policy keeps the five most recent images.
    setup only, run:
 
    ```bash
-   sudo cp /opt/marketplace/deploy/backend.env.example /opt/marketplace/backend/.env
+   sudo cp /opt/marketplace/deploy/backend.env /opt/marketplace/backend/.env
    ```
 
    Then open the file for editing:
@@ -592,13 +592,13 @@ need AWS access keys stored in GitHub.
 
 3. In IAM, choose **Roles → Create role**. For the trusted entity, choose
    **Custom trust policy**. Replace `<account-id>` in
-   [`deploy/github-actions-trust-policy.example.json`](deploy/github-actions-trust-policy.example.json)
+   [`deploy/github-actions-trust-policy.json`](deploy/github-actions-trust-policy.json)
    with the account ID from the previous step, paste the JSON into the policy
    editor, and choose **Next**. Name the role
    `MarketplaceGitHubDeployRole` and create it.
 4. Open `MarketplaceGitHubDeployRole`. Choose **Add permissions → Create
    inline policy → JSON**. Paste the contents of
-   [`deploy/github-actions-policy.example.json`](deploy/github-actions-policy.example.json)
+   [`deploy/github-actions-policy.json`](deploy/github-actions-policy.json)
    after replacing `<region>`, `<account-id>`, and `<instance-id>`. Choose
    **Next**, name the policy `MarketplaceGitHubDeploy`, and create it.
 5. Copy the role's **ARN** from the role details page.
