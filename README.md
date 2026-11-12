@@ -121,13 +121,21 @@ git clone https://github.com/Bartosz95/marketplace.git
 
 ### Configure Auth0
 
-In Auth0, create:
-
-- A **Regular Web Application**. Add `http://localhost` to its Allowed Callback URLs, Allowed Logout URLs, and Allowed Web Origins.
-- An **API** with an identifier to use as the audience.
-- A **Machine to Machine Application** authorized for the Auth0 Management API with the `read:users` permission. This is used to provision local user records from Auth0 profiles.
+1. In **Applications → Applications**, create a **Single Page Application**
+   for the browser frontend. In its settings, add `http://localhost` to
+   **Allowed Callback URLs**, **Allowed Logout URLs**, and **Allowed Web
+   Origins**. The frontend uses Authorization Code with PKCE; do not put a
+   client secret in frontend configuration.
+2. In **Applications → APIs**, create an API and choose a unique **Identifier**.
+   This identifier is the API audience. Use **RS256** as the signing algorithm.
+3. Create a **Machine to Machine Application** and authorize it for the Auth0
+   Management API with the `read:users` permission. The backend uses this
+   private credential to provision local user records from Auth0 profiles; do
+   not expose it to browsers or API consumers.
 
 Use the tenant domain, API audience, and application credentials in the environment files below. The frontend redirect URI must match the Auth0 callback URL.
+
+If you add another browser frontend, create a separate SPA application and add its callback, logout, and web-origin URLs to that application. It can request access tokens for the same API audience. Human users calling the API from a client such as Postman also need a user access token for this audience; the backend Management API credential is not an API access token.
 
 ### Configure the backend
 
@@ -151,13 +159,13 @@ AUTH_MANAGEMENT_DOMAIN=<Auth0 tenant domain>
 AUTH_MANAGEMENT_CLIENT_ID=<Auth0 machine-to-machine client ID>
 AUTH_MANAGEMENT_CLIENT_SECRET=<Auth0 machine-to-machine client secret>
 
-# S3 bucket used to store and serve listing images
+# S3 bucket used to store listing images; AWS uses CloudFront to serve them
 AWS_BUCKET_REGION=<AWS region>
 AWS_BUCKET_NAME=<bucket name>
 AWS_BUCKET_ARN=<bucket ARN>
 AWS_BUCKET_ACCESS_KEY=<IAM access key ID>
 AWS_BUCKET_SECRET_ACCESS_KEY=<IAM secret access key>
-AWS_BUCKET_URL=<public base URL used to serve bucket objects>
+AWS_BUCKET_URL=<public base URL used to serve bucket objects; no trailing slash>
 
 # Stripe Sandbox credentials; see Stripe Connect payments below
 STRIPE_SECRET_KEY=<Stripe Sandbox secret key>
@@ -169,8 +177,9 @@ The Compose file supplies service-specific `APP_NAME`, `APP_PORT`, `APP_HOST`,
 and `DB_HOST` values. It maps the gateway to `http://localhost:3000`. Local
 development can use the AWS access keys above; on EC2, omit those two keys and
 grant the instance role access to list, upload, and delete objects in the
-configured bucket. Configure the bucket so the image URLs in `AWS_BUCKET_URL`
-can be read by the browser.
+configured bucket. For AWS, keep the S3 bucket private and use CloudFront to
+serve images to browsers; see the AWS provider setup below. `AWS_BUCKET_URL`
+must be the public base URL for image objects, without a trailing slash.
 
 ### Configure the frontend
 
@@ -179,7 +188,7 @@ Create `frontend/.env`:
 ```dotenv
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
 NEXT_PUBLIC_AUTH0_DOMAIN=<Auth0 tenant domain>
-NEXT_PUBLIC_AUTH0_CLIENT_ID=<Auth0 Regular Web Application client ID>
+NEXT_PUBLIC_AUTH0_CLIENT_ID=<Auth0 Single Page Application client ID>
 NEXT_PUBLIC_AUTH0_AUDIENCE=<Auth0 API identifier>
 NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost
 GRAFANA_ADMIN_PASSWORD=<choose-a-local-password>
@@ -316,7 +325,7 @@ them through AWS Systems Manager using GitHub OIDC. The AWS setup uses
 You need:
 
 - An AWS account and access to its AWS Management Console.
-- An existing S3 bucket configured as described in [Configure the backend](#configure-the-backend).
+- An S3 bucket and CloudFront distribution configured as described below.
 - An Auth0 tenant and Stripe test-mode API key and webhook signing secret.
 - Admin access to the GitHub repository settings.
 
@@ -327,6 +336,96 @@ local `docker-compose.yaml` for local work; the AWS host uses
 The steps below use `ap-southeast-2` as an example region. In the AWS Console,
 choose your region from the menu in the upper-right corner and use that same
 region throughout this guide.
+
+### Prepare Auth0, S3, and Stripe
+
+#### Auth0
+
+Use the tenant and API created in [Configure Auth0](#configure-auth0). For the
+AWS frontend, add `https://<your-duckdns-hostname>` to the SPA application's
+Allowed Callback URLs, Allowed Logout URLs, and Allowed Web Origins. Keep
+`http://localhost` in those fields if you also use local development. Auth0
+accepts multiple comma-separated URLs.
+
+Use these values in the environment files and GitHub repository variables:
+
+- The API identifier is `AUTH_AUDIENCE`, `NEXT_PUBLIC_AUTH0_AUDIENCE`, and
+  GitHub's `AUTH0_AUDIENCE`.
+- The tenant domain is `AUTH_ISSUER_BASE_URL=https://<tenant-domain>/`,
+  `AUTH_MANAGEMENT_DOMAIN=<tenant-domain>`, and GitHub's `AUTH0_DOMAIN`
+  (without `https://`).
+- Use the SPA application's client ID for `NEXT_PUBLIC_AUTH0_CLIENT_ID` and
+  GitHub's `AUTH0_CLIENT_ID`.
+- Use the Management API M2M application's client ID and secret only for
+  `AUTH_MANAGEMENT_CLIENT_ID` and `AUTH_MANAGEMENT_CLIENT_SECRET` in the
+  backend environment file. Do not put this secret in GitHub variables or the
+  frontend.
+
+#### S3 bucket and CloudFront
+
+1. In S3, create a general-purpose bucket in the same region as EC2. Keep
+   **Block all public access** enabled, disable ACLs with **Bucket owner
+   enforced**, and use the default S3-managed encryption. Listing photos are
+   served through CloudFront, so the bucket itself does not need public access.
+2. Create a CloudFront distribution with the S3 bucket as its origin. Use the
+   bucket's S3 REST endpoint (not the static website endpoint), create an
+   **Origin Access Control (OAC)**, and enable signed origin requests. Allow
+   CloudFront to update the bucket policy. If adding the policy yourself, add
+   a statement like this to the existing bucket policy, replacing the
+   placeholders:
+
+   ```json
+   {
+     "Sid": "AllowCloudFrontReadMarketplaceImages",
+     "Effect": "Allow",
+     "Principal": { "Service": "cloudfront.amazonaws.com" },
+     "Action": "s3:GetObject",
+     "Resource": "arn:aws:s3:::<bucket-name>/images/*",
+     "Condition": {
+       "StringEquals": {
+         "AWS:SourceArn": "arn:aws:cloudfront::<account-id>:distribution/<distribution-id>"
+       }
+     }
+   }
+   ```
+
+   Set the viewer protocol policy to **Redirect HTTP to HTTPS**.
+3. Use the CloudFront distribution domain (for example,
+   `https://d123example.cloudfront.net`) as `AWS_BUCKET_URL`, with no trailing
+   slash. Set `AWS_BUCKET_NAME`, `AWS_BUCKET_ARN` (`arn:aws:s3:::<bucket-name>`),
+   and `AWS_BUCKET_REGION` to match the bucket.
+4. The EC2 instance role also needs permission to list the bucket and upload
+   and delete objects under `images/*`. Attach the policy from
+   [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json) to
+   `MarketplaceEC2Role`, replacing `<bucket-name>` with the exact bucket name.
+   The policy grants writes to the app; CloudFront, not the EC2 role, reads
+   images for browsers.
+
+#### Stripe Connect and webhooks
+
+1. In Stripe, use the same test-mode platform account for API keys, Connect,
+   and webhooks. Enable Stripe Connect for the platform; the app creates
+   Express connected accounts in Australia.
+2. Copy the **Standard key → Secret key** from test mode (starts with
+   `sk_test_`) into `STRIPE_SECRET_KEY` in the EC2 backend environment file.
+   Do not use the publishable key (`pk_test_...`) or put the secret in the
+   frontend or GitHub variables.
+3. After the DuckDNS hostname is set up in section 4, create a webhook endpoint
+   in Stripe's test-mode Workbench/Webhooks for
+   `https://<your-duckdns-hostname>/api/v1/payments/stripe/webhook`. Subscribe
+   to `checkout.session.completed`,
+   `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed`, and
+   `checkout.session.expired`. You can create the endpoint before the app is
+   deployed; Stripe can deliver events after the endpoint is reachable.
+4. Copy that endpoint's signing secret (starts with `whsec_`) to
+   `STRIPE_WEBHOOK_SECRET` when you edit the EC2 backend environment file in
+   section 4. This is different from the API secret key.
+
+Both `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` belong only in the
+server-side `backend/.env`. The local Stripe CLI setup described earlier in
+this README is for local development; the AWS deployment receives webhooks
+directly from Stripe.
 
 ### 1. Create the EC2 instance role
 
@@ -488,12 +587,12 @@ need AWS access keys stored in GitHub.
    | `EC2_INSTANCE_ID` | EC2 instance ID copied in section 2 |
    | `APP_URL` | `https://` followed by your DuckDNS hostname, no trailing slash |
    | `AUTH0_DOMAIN` | Auth0 tenant domain without `https://` |
-   | `AUTH0_CLIENT_ID` | Auth0 Regular Web Application client ID |
+   | `AUTH0_CLIENT_ID` | Auth0 Single Page Application client ID |
    | `AUTH0_AUDIENCE` | Auth0 API audience |
 
 ### 6. Allow the application URL in Auth0 and deploy
 
-1. In Auth0, open the Regular Web Application settings. Add the application
+1. In Auth0, open the Single Page Application settings. Add the application
    HTTPS URL (`https://<your-duckdns-hostname>`) to **Allowed Callback URLs**,
    **Allowed Logout URLs**, and **Allowed Web Origins**. Keep the existing
    `http://localhost` entries in these fields if you also use local
