@@ -126,7 +126,7 @@ jobs:
             'umask 077' \
             'trap "rm -f /tmp/marketplace-ecr-token" EXIT' \
             'cd /opt/marketplace' \
-            'git pull --ff-only origin main' \
+            'git -c safe.directory=/opt/marketplace pull --ff-only origin main' \
             "aws ecr get-login-password --region '$AWS_REGION' > /tmp/marketplace-ecr-token" \
             "docker login --username AWS --password-stdin '$REGISTRY' < /tmp/marketplace-ecr-token" \
             'rm -f /tmp/marketplace-ecr-token' \
