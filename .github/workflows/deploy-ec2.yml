@@ -1,0 +1,170 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: marketplace-ec2-deploy
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26.13.0
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Validate frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Validate backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+          npm test -- --runInBand --passWithNoTests
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      APP_URL: ${{ vars.APP_URL }}
+      AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+      AUTH0_CLIENT_ID: ${{ vars.AUTH0_CLIENT_ID }}
+      AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        run: |
+          set -euo pipefail
+          : "${AWS_REGION:?Set repository variable AWS_REGION}"
+          : "${AWS_DEPLOY_ROLE_ARN:?Set repository variable AWS_DEPLOY_ROLE_ARN}"
+          : "${EC2_INSTANCE_ID:?Set repository variable EC2_INSTANCE_ID}"
+          : "${APP_URL:?Set repository variable APP_URL}"
+          : "${AUTH0_DOMAIN:?Set repository variable AUTH0_DOMAIN}"
+          : "${AUTH0_CLIENT_ID:?Set repository variable AUTH0_CLIENT_ID}"
+          : "${AUTH0_AUDIENCE:?Set repository variable AUTH0_AUDIENCE}"
+          case "$APP_URL" in
+            http://*|https://*) ;;
+            *) echo "APP_URL must start with http:// or https://" >&2; exit 1 ;;
+          esac
+          if [[ "$APP_URL" == */ ]]; then
+            echo "APP_URL must not end with a slash" >&2
+            exit 1
+          fi
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Create ECR login
+        id: ecr
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          registry="${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          echo "registry=$registry" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --tag "$REGISTRY/marketplace/backend:$GITHUB_SHA" \
+            --push backend
+
+      - name: Build and push frontend
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg "NEXT_PUBLIC_API_URL=$APP_URL/api/v1" \
+            --build-arg "NEXT_PUBLIC_AUTH0_DOMAIN=$AUTH0_DOMAIN" \
+            --build-arg "NEXT_PUBLIC_AUTH0_CLIENT_ID=$AUTH0_CLIENT_ID" \
+            --build-arg "NEXT_PUBLIC_AUTH0_AUDIENCE=$AUTH0_AUDIENCE" \
+            --build-arg "NEXT_PUBLIC_AUTH0_REDIRECT_URI=$APP_URL" \
+            --tag "$REGISTRY/marketplace/frontend:$GITHUB_SHA" \
+            --push frontend
+
+      - name: Deploy through Systems Manager
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          commands="$(printf '%s\n' \
+            'set -eu' \
+            'umask 077' \
+            'trap "rm -f /tmp/marketplace-ecr-token" EXIT' \
+            'cd /opt/marketplace' \
+            'git pull --ff-only origin main' \
+            "aws ecr get-login-password --region '$AWS_REGION' > /tmp/marketplace-ecr-token" \
+            "docker login --username AWS --password-stdin '$REGISTRY' < /tmp/marketplace-ecr-token" \
+            'rm -f /tmp/marketplace-ecr-token' \
+            "ECR_REGISTRY='$REGISTRY' IMAGE_TAG='$GITHUB_SHA' docker compose --env-file backend/.env -f docker-compose.aws.yaml pull" \
+            "ECR_REGISTRY='$REGISTRY' IMAGE_TAG='$GITHUB_SHA' docker compose --env-file backend/.env -f docker-compose.aws.yaml up -d --remove-orphans --wait --wait-timeout 120" \
+            "docker image prune -af --filter 'until=168h'")"
+          parameters="$(jq -cn --arg commands "$commands" '{commands: [$commands]}')"
+          command_id="$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "Marketplace deployment $GITHUB_SHA" \
+            --parameters "$parameters" \
+            --query 'Command.CommandId' \
+            --output text)"
+
+          attempt=0
+          while [ "$attempt" -lt 120 ]; do
+            attempt=$((attempt + 1))
+            status="$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --query Status \
+              --output text 2>/dev/null || true)"
+            case "$status" in
+              Success)
+                echo "Deployment completed."
+                exit 0
+                ;;
+              Failed|TimedOut|Cancelled|Cancelling)
+                aws ssm get-command-invocation \
+                  --command-id "$command_id" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' \
+                  --output yaml
+                exit 1
+                ;;
+            esac
+            sleep 5
+          done
+          echo "Timed out waiting for the EC2 deployment command." >&2
+          exit 1

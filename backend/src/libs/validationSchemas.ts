@@ -26,9 +26,16 @@ export const EnvAWSSchema = z.object({
     region: z.string(),
     name: z.string(),
     arn: z.string(),
-    accessKey: z.string(),
-    secretAccessKey: z.string(),
+    accessKey: z.string().optional(),
+    secretAccessKey: z.string().optional(),
     url: z.string(),
+  }).superRefine(({ accessKey, secretAccessKey }, context) => {
+    if (Boolean(accessKey) !== Boolean(secretAccessKey)) {
+      context.addIssue({
+        code: "custom",
+        message: "AWS bucket access key and secret key must be set together",
+      });
+    }
   }),
 });
 

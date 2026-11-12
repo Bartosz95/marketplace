@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PushMarketplaceImages",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ],
+      "Resource": [
+        "arn:aws:ecr:<region>:<account-id>:repository/marketplace/backend",
+        "arn:aws:ecr:<region>:<account-id>:repository/marketplace/frontend"
+      ]
+    },
+    {
+      "Sid": "GetEcrLoginToken",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DeployToMarketplaceInstance",
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ssm:<region>::document/AWS-RunShellScript",
+        "arn:aws:ec2:<region>:<account-id>:instance/<instance-id>"
+      ]
+    },
+    {
+      "Sid": "CheckDeploymentResult",
+      "Effect": "Allow",
+      "Action": "ssm:GetCommandInvocation",
+      "Resource": "*"
+    }
+  ]
+}

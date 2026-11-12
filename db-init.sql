@@ -1,4 +1,5 @@
-CREATE USER default_user WITH PASSWORD 'password';
+\getenv app_db_password POSTGRES_PASSWORD
+CREATE USER default_user WITH PASSWORD :'app_db_password';
 CREATE DATABASE marketplace OWNER default_user;
 GRANT ALL PRIVILEGES ON DATABASE marketplace TO default_user;
 

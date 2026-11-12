@@ -17,11 +17,15 @@ export interface ImagesRepository {
 }
 
 export const ImagesRepository = (env: EnvAWS) => {
+  const credentials =
+    env.bucket.accessKey && env.bucket.secretAccessKey
+      ? {
+          accessKeyId: env.bucket.accessKey,
+          secretAccessKey: env.bucket.secretAccessKey,
+        }
+      : undefined;
   const bucket = new S3Client({
-    credentials: {
-      accessKeyId: env.bucket.accessKey,
-      secretAccessKey: env.bucket.secretAccessKey,
-    },
+    ...(credentials ? { credentials } : {}),
     region: env.bucket.region,
   });
 

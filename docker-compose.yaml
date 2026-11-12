@@ -26,12 +26,16 @@ services:
     build:
       context: frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000/api/v1}
+        NEXT_PUBLIC_AUTH0_DOMAIN: ${NEXT_PUBLIC_AUTH0_DOMAIN:-}
+        NEXT_PUBLIC_AUTH0_CLIENT_ID: ${NEXT_PUBLIC_AUTH0_CLIENT_ID:-}
+        NEXT_PUBLIC_AUTH0_AUDIENCE: ${NEXT_PUBLIC_AUTH0_AUDIENCE:-}
+        NEXT_PUBLIC_AUTH0_REDIRECT_URI: ${NEXT_PUBLIC_AUTH0_REDIRECT_URI:-http://localhost}
     ports:
-      - 80:80
+      - 80:3000
     env_file:
       - frontend/.env
-    environment:
-      - NEXT_PUBLIC_AUTH_REDIRECT_URI=http://localhost
     depends_on:
       - listings-api
       - users-api

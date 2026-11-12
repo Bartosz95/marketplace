@@ -41,7 +41,7 @@ PostgreSQL initializes an empty data directory. To reassign existing listings
 and normalize their event payloads, run the migration from the repository root:
 
 ```
-docker compose exec -T db psql -U default_user -d marketplace < db-migrations/20261103_assign_listings_to_user1.sql
+docker compose --env-file frontend/.env exec -T db psql -U default_user -d marketplace < db-migrations/20261103_assign_listings_to_user1.sql
 ```
 
 The migration requires that user1 already exists in `states.users`. It updates
@@ -105,18 +105,11 @@ To view your account details, click the button featuring your nickname, which is
 - Docker with the Compose plugin
 - Node.js 26 LTS and npm for the frontend
 - An Auth0 tenant
-- An AWS S3 bucket and IAM credentials for listing images
+- An AWS S3 bucket for listing images (local development uses IAM credentials;
+  EC2 uses an instance role)
 - A Stripe account and Sandbox for payment testing
 
 ## Installation process
-
-Grafana requires `GRAFANA_ADMIN_PASSWORD` for every Docker Compose command.
-Set a local password in the shell where you will run Compose; do not commit it
-to the repository:
-
-```bash
-export GRAFANA_ADMIN_PASSWORD='choose-a-local-password'
-```
 
 ### Download the project
 
@@ -173,10 +166,11 @@ FRONTEND_URL=http://localhost
 ```
 
 The Compose file supplies service-specific `APP_NAME`, `APP_PORT`, `APP_HOST`,
-and `DB_HOST` values. It maps the gateway to `http://localhost:3000`; the
-frontend is run separately below. The AWS IAM credentials need access to list,
-upload, and delete objects in the configured bucket. Configure the bucket so
-the image URLs in `AWS_BUCKET_URL` can be read by the browser.
+and `DB_HOST` values. It maps the gateway to `http://localhost:3000`. Local
+development can use the AWS access keys above; on EC2, omit those two keys and
+grant the instance role access to list, upload, and delete objects in the
+configured bucket. Configure the bucket so the image URLs in `AWS_BUCKET_URL`
+can be read by the browser.
 
 ### Configure the frontend
 
@@ -188,11 +182,16 @@ NEXT_PUBLIC_AUTH0_DOMAIN=<Auth0 tenant domain>
 NEXT_PUBLIC_AUTH0_CLIENT_ID=<Auth0 Regular Web Application client ID>
 NEXT_PUBLIC_AUTH0_AUDIENCE=<Auth0 API identifier>
 NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost
+GRAFANA_ADMIN_PASSWORD=<choose-a-local-password>
 ```
 
-The names above must match the variables read by the frontend and backend.
-Never put Stripe secret keys, webhook signing secrets, AWS credentials, or
-Auth0 machine-to-machine credentials in the frontend environment file.
+Compose reads `GRAFANA_ADMIN_PASSWORD` from this file when starting Grafana.
+This password is used only by the Grafana service; it is not included in the
+frontend build. Keep the file local and do not commit it.
+
+The `NEXT_PUBLIC_*` names must match the variables read by the frontend. Never
+put Stripe secret keys, webhook signing secrets, AWS credentials, or Auth0
+machine-to-machine credentials in the frontend environment file.
 
 ### Stripe Connect payments
 
@@ -208,16 +207,16 @@ Payment API requires a webhook signing secret on startup, so initially set
 `STRIPE_WEBHOOK_SECRET` to a temporary placeholder, then start the services:
 
 ```bash
-docker compose up --build -d
-docker compose --profile stripe-local up -d stripe-cli
-docker compose --profile stripe-local logs -f stripe-cli
+docker compose --env-file frontend/.env up --build -d
+docker compose --env-file frontend/.env --profile stripe-local up -d stripe-cli
+docker compose --env-file frontend/.env --profile stripe-local logs -f stripe-cli
 ```
 
 Copy the `whsec_...` signing secret printed by Stripe CLI into
 `STRIPE_WEBHOOK_SECRET` in `backend/.env` and recreate the Payment API:
 
 ```bash
-docker compose up -d --force-recreate payment-api
+docker compose --env-file frontend/.env up -d --force-recreate payment-api
 ```
 
 The Compose listener forwards `checkout.session.completed`,
@@ -230,7 +229,7 @@ To resend an existing Sandbox event while the listener is running, use its
 Stripe event ID:
 
 ```bash
-docker compose --profile stripe-local exec stripe-cli stripe events resend evt_<event_id>
+docker compose --env-file frontend/.env --profile stripe-local exec stripe-cli stripe events resend evt_<event_id>
 ```
 
 The event must belong to the same Sandbox and its Checkout Session must match a
@@ -255,12 +254,16 @@ user record. Stripe Sandbox payments are simulated and do not move real funds.
 
 ### Build and run the project
 
-With `GRAFANA_ADMIN_PASSWORD` set as above, start the backend services,
-database, Prometheus, and Grafana from the repository root:
+Start the backend services, database, Prometheus, and Grafana from the
+repository root:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file frontend/.env up --build -d
 ```
+
+The containerized frontend is available at [http://localhost](http://localhost).
+The frontend image gets its public Auth0/API settings as build arguments from
+`frontend/.env`.
 
 Open [Grafana](http://localhost:3002) and sign in as `admin` with the password
 you set above. The provisioned **Marketplace Operations** dashboard includes
@@ -283,10 +286,11 @@ Prometheus is available at [http://localhost:9090](http://localhost:9090).
 Use its **Status → Targets** page to check whether service metrics are being
 scraped. The Prometheus and Grafana ports are bound to localhost.
 
-The frontend is not enabled as a Compose service. In another terminal, install
-its dependencies and start the development server:
+For frontend hot reload, stop the Compose UI and run the Next.js development
+server from another terminal:
 
 ```bash
+docker compose --env-file frontend/.env stop ui
 cd frontend
 npm ci
 npm run dev
@@ -297,4 +301,190 @@ elevated privileges to bind to this port; if so, configure a local development
 port and allow its origin in both Kong's CORS configuration and Auth0. Open
 [http://localhost](http://localhost) in your browser when using the default
 port. To stop the Stripe listener when you are done testing, run
-`docker compose --profile stripe-local stop stripe-cli`.
+`docker compose --env-file frontend/.env --profile stripe-local stop stripe-cli`.
+
+## AWS deployment (EC2 + Docker Compose)
+
+The AWS deployment runs the application on one EC2 instance. GitHub Actions
+builds the images, pushes them to private Amazon ECR repositories, and deploys
+them through AWS Systems Manager using GitHub OIDC. The AWS setup uses
+[`docker-compose.aws.yaml`](docker-compose.aws.yaml) and
+[`.github/workflows/deploy-ec2.yml`](.github/workflows/deploy-ec2.yml).
+
+### Before you start
+
+You need:
+
+- An AWS account and access to its AWS Management Console.
+- An existing S3 bucket configured as described in [Configure the backend](#configure-the-backend).
+- An Auth0 tenant and Stripe test-mode API key and webhook signing secret.
+- Admin access to the GitHub repository settings.
+
+Use the same AWS region for the EC2 instance and ECR repositories. Keep the
+local `docker-compose.yaml` for local work; the AWS host uses
+`docker-compose.aws.yaml`.
+
+The steps below use `ap-southeast-2` as an example region. In the AWS Console,
+choose your region from the menu in the upper-right corner and use that same
+region throughout this guide.
+
+### 1. Create the EC2 instance role
+
+The instance role lets the server connect to Systems Manager, pull images from
+ECR, and store listing images in your S3 bucket without AWS access keys.
+
+1. In the AWS Console search box, type **IAM**, then open **Identity and
+   Access Management (IAM)**.
+2. In the left menu choose **Roles → Create role**.
+3. For **Trusted entity type**, select **AWS service**. For **Service or use
+   case**, select **EC2**, then choose **Next**.
+4. Search for and select both of these permissions policies, then choose
+   **Next**:
+   - `AmazonSSMManagedInstanceCore`
+   - `AmazonEC2ContainerRegistryReadOnly`
+5. Name the role `MarketplaceEC2Role` and choose **Create role**.
+6. Open the new role. Choose **Add permissions → Create inline policy**, open
+   the **JSON** tab, and paste the contents of
+   [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json),
+   replacing both instances of `<bucket-name>` with your S3 bucket name.
+   Choose **Next**, name the policy `MarketplaceImageBucketAccess`, and choose
+   **Create policy**.
+
+### 2. Launch Ubuntu on EC2
+
+1. In the AWS Console, search for **EC2** and choose **Launch instance**.
+2. Enter a name such as `marketplace-prototype`.
+3. Under **Application and OS Images**, choose **Ubuntu Server 26.04 LTS,
+   64-bit (x86)**.
+4. Under **Instance type**, select `t3.small`.
+5. Under **Key pair**, choose **Proceed without a key pair**. You will connect
+   through Systems Manager, not SSH.
+6. Under **Network settings**, choose **Edit**:
+   - Use the default VPC and a public subnet.
+   - Enable **Auto-assign public IP**.
+   - Create a security group with an inbound **HTTP** rule on port `80` from
+     `0.0.0.0/0`. Do not add an SSH rule.
+   - Leave the default outbound rule enabled so the host can download packages
+     and container images.
+7. Under **Configure storage**, use a 16 GiB encrypted `gp3` root volume.
+8. Under **Advanced details**:
+   - Set **IAM instance profile** to `MarketplaceEC2Role`.
+   - Set metadata version to **V2 only** and **Metadata response hop limit**
+     to `2`. This lets containers use the instance role for S3.
+   - Expand **User data**, paste the complete contents of
+     [`deploy/bootstrap-ubuntu.sh`](deploy/bootstrap-ubuntu.sh), including its
+     first `#!/usr/bin/env bash` line.
+9. Choose **Launch instance**. Wait until **Instance state** is `Running` and
+   **Status check** is `2/2 checks passed`. Copy the **Instance ID** and
+   **Public IPv4 address** from the instance details.
+10. In **Systems Manager → Fleet Manager → Managed nodes**, wait for the
+    instance to appear with **Ping status: Online**.
+
+### 3. Create the ECR repositories
+
+Amazon ECR stores the two private application images. Open **CloudShell** from
+the AWS Console toolbar. In CloudShell, copy and run these commands. Replace
+the example region if you chose a different one:
+
+```bash
+export AWS_REGION=ap-southeast-2
+aws ecr create-repository --region "$AWS_REGION" --repository-name marketplace/backend
+aws ecr create-repository --region "$AWS_REGION" --repository-name marketplace/frontend
+LIFECYCLE_POLICY='{"rules":[{"rulePriority":1,"description":"Keep the five newest images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":5},"action":{"type":"expire"}}]}'
+aws ecr put-lifecycle-policy --region "$AWS_REGION" --repository-name marketplace/backend --lifecycle-policy-text "$LIFECYCLE_POLICY"
+aws ecr put-lifecycle-policy --region "$AWS_REGION" --repository-name marketplace/frontend --lifecycle-policy-text "$LIFECYCLE_POLICY"
+```
+
+If a command reports that a repository already exists, continue with the
+remaining commands. The lifecycle policy keeps the five most recent images.
+
+### 4. Configure the application on EC2
+
+1. In the AWS Console, open **Systems Manager → Session Manager → Start
+   session**, select the instance, and choose **Start session**. If it is not
+   listed, return to EC2 and check that `MarketplaceEC2Role` is attached and
+   the Systems Manager node status is Online.
+2. In the terminal session, run:
+
+   ```bash
+   sudo cp /opt/marketplace/deploy/backend.env.example /opt/marketplace/backend/.env
+   sudo nano /opt/marketplace/backend/.env
+   ```
+
+3. Replace every placeholder in the file:
+   - Set `DB_PASSWORD` to a new, strong password. Use the same value only for
+     this application database.
+   - Set the Auth0 tenant, API audience, and machine-to-machine application
+     values.
+   - Set `FRONTEND_URL` to `http://` followed by the EC2 public IPv4 address.
+   - Set the S3 bucket name, ARN, region, and browser-accessible image URL.
+   - Set the Stripe test-mode secret key and webhook signing secret.
+   - Leave `AWS_BUCKET_ACCESS_KEY` and `AWS_BUCKET_SECRET_ACCESS_KEY` unset;
+     the EC2 role provides S3 access.
+4. Save and exit nano with **Ctrl+O**, **Enter**, then **Ctrl+X**. Restrict
+   access to the environment file:
+
+   ```bash
+   sudo chmod 600 /opt/marketplace/backend/.env
+   ```
+
+The database is created on first start and stored in the Docker volume
+`marketplace-postgres` on the EC2 root disk.
+
+### 5. Set up GitHub Actions deployment access
+
+GitHub Actions uses OIDC to request short-lived AWS credentials. It does not
+need AWS access keys stored in GitHub.
+
+1. In the AWS Console, open **IAM → Identity providers**. If
+   `token.actions.githubusercontent.com` is not already listed, choose
+   **Add provider** → **OpenID Connect**, enter
+   `https://token.actions.githubusercontent.com` as the provider URL, and
+   `sts.amazonaws.com` as the audience.
+2. In CloudShell, get your AWS account ID by running:
+
+   ```bash
+   aws sts get-caller-identity --query Account --output text
+   ```
+
+3. In IAM, choose **Roles → Create role**. For the trusted entity, choose
+   **Custom trust policy**. Replace `<account-id>` in
+   [`deploy/github-actions-trust-policy.example.json`](deploy/github-actions-trust-policy.example.json)
+   with the account ID from the previous step, paste the JSON into the policy
+   editor, and choose **Next**. Name the role
+   `MarketplaceGitHubDeployRole` and create it.
+4. Open `MarketplaceGitHubDeployRole`. Choose **Add permissions → Create
+   inline policy → JSON**. Paste the contents of
+   [`deploy/github-actions-policy.example.json`](deploy/github-actions-policy.example.json)
+   after replacing `<region>`, `<account-id>`, and `<instance-id>`. Choose
+   **Next**, name the policy `MarketplaceGitHubDeploy`, and create it.
+5. Copy the role's **ARN** from the role details page.
+6. In GitHub, open the repository **Settings → Secrets and variables →
+   Actions → Variables** and add:
+
+   | Name | Value |
+   | --- | --- |
+   | `AWS_REGION` | The region used for EC2 and ECR |
+   | `AWS_DEPLOY_ROLE_ARN` | ARN of `MarketplaceGitHubDeployRole` |
+   | `EC2_INSTANCE_ID` | EC2 instance ID copied in section 2 |
+   | `APP_URL` | `http://<public-ip>` with no trailing slash |
+   | `AUTH0_DOMAIN` | Auth0 tenant domain without `https://` |
+   | `AUTH0_CLIENT_ID` | Auth0 Regular Web Application client ID |
+   | `AUTH0_AUDIENCE` | Auth0 API audience |
+
+### 6. Allow the application URL in Auth0 and deploy
+
+1. In Auth0, open the Regular Web Application settings. Add the application
+   URL (`http://<public-ip>`) to **Allowed Callback URLs**, **Allowed Logout
+   URLs**, and **Allowed Web Origins**, then save.
+2. In GitHub, open **Actions → Deploy to EC2 → Run workflow**, select `main`,
+   and start the workflow.
+3. Wait for the workflow to finish. It checks the code, builds the frontend
+   and backend Docker images, pushes them to ECR, then tells Systems Manager to
+   start the Compose services.
+4. Open `http://<public-ip>` in a browser. Subsequent pushes to `main`
+   automatically repeat the build and deployment.
+
+To develop locally, continue using the instructions above and the regular
+`docker-compose.yaml`. The EC2 deployment uses a separate Compose file and
+does not change your local development workflow.
