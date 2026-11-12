@@ -380,7 +380,10 @@ Use these values in the environment files and GitHub repository variables:
      "Effect": "Allow",
      "Principal": { "Service": "cloudfront.amazonaws.com" },
      "Action": "s3:GetObject",
-     "Resource": "arn:aws:s3:::<bucket-name>/images/*",
+     "Resource": [
+       "arn:aws:s3:::<bucket-name>/images/*",
+       "arn:aws:s3:::<bucket-name>/demo/*"
+     ],
      "Condition": {
        "StringEquals": {
          "AWS:SourceArn": "arn:aws:cloudfront::<account-id>:distribution/<distribution-id>"
@@ -389,15 +392,21 @@ Use these values in the environment files and GitHub repository variables:
    }
    ```
 
+   If the distribution or bucket policy already exists, update its existing
+   CloudFront read statement to include both `images/*` and `demo/*`.
    Set the viewer protocol policy to **Redirect HTTP to HTTPS**.
 3. Use the CloudFront distribution domain (for example,
    `https://d123example.cloudfront.net`) as `AWS_BUCKET_URL`, with no trailing
    slash. Set `AWS_BUCKET_NAME`, `AWS_BUCKET_ARN` (`arn:aws:s3:::<bucket-name>`),
    and `AWS_BUCKET_REGION` to match the bucket.
 4. The EC2 instance role also needs permission to list the bucket and upload
-   and delete objects under `images/*`. Attach the policy from
+   and delete objects under `images/*`, plus upload the seeded sample images
+   under `demo/*`. Attach the policy from
    [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json) to
    `MarketplaceEC2Role`, replacing `<bucket-name>` with the exact bucket name.
+   If you already created this role, update its attached policy to include the
+   `demo/*` upload statement; editing the repository example does not update
+   the AWS policy.
    The policy grants writes to the app; CloudFront, not the EC2 role, reads
    images for browsers.
 
@@ -445,7 +454,7 @@ ECR, and store listing images in your S3 bucket without AWS access keys.
 6. Open the new role. Choose **Add permissions → Create inline policy**, open
    the **JSON** tab, and paste the contents of
    [`deploy/ec2-s3-policy.example.json`](deploy/ec2-s3-policy.example.json),
-   replacing both instances of `<bucket-name>` with your S3 bucket name.
+   replacing every instance of `<bucket-name>` with your S3 bucket name.
    Choose **Next**, name the policy `MarketplaceImageBucketAccess`, and choose
    **Create policy**.
 
@@ -542,6 +551,22 @@ remaining commands. The lifecycle policy keeps the five most recent images.
    ```bash
    sudo chmod 600 /opt/marketplace/backend/.env
    ```
+
+6. Upload the sample listing images from the repository to S3 using the EC2
+   instance role:
+
+   ```bash
+   aws s3 sync /opt/marketplace/docs/images/ \
+     s3://YOUR_BUCKET_NAME/demo/ \
+     --region ap-southeast-2
+   aws s3 ls s3://YOUR_BUCKET_NAME/demo/ \
+     --recursive --region ap-southeast-2
+   ```
+
+   Replace `YOUR_BUCKET_NAME` and the example region. Keep the `demo/` prefix:
+   [`db-init.sql`](db-init.sql) refers to the seeded objects as
+   `/demo/<listing-id>/<filename>`. The sync is safe to repeat and does not
+   delete other bucket objects.
 
 The database is created on first start and stored in the Docker volume
 `marketplace-postgres` on the EC2 root disk. The AWS Compose file runs Caddy
