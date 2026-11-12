@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 26.13.0
           cache: npm
@@ -56,7 +56,7 @@ jobs:
       AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validate deployment configuration
         run: |
@@ -69,8 +69,8 @@ jobs:
           : "${AUTH0_CLIENT_ID:?Set repository variable AUTH0_CLIENT_ID}"
           : "${AUTH0_AUDIENCE:?Set repository variable AUTH0_AUDIENCE}"
           case "$APP_URL" in
-            http://*|https://*) ;;
-            *) echo "APP_URL must start with http:// or https://" >&2; exit 1 ;;
+            https://*) ;;
+            *) echo "APP_URL must start with https://" >&2; exit 1 ;;
           esac
           if [[ "$APP_URL" == */ ]]; then
             echo "APP_URL must not end with a slash" >&2

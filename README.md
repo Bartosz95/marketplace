@@ -362,8 +362,8 @@ ECR, and store listing images in your S3 bucket without AWS access keys.
 6. Under **Network settings**, choose **Edit**:
    - Use the default VPC and a public subnet.
    - Enable **Auto-assign public IP**.
-   - Create a security group with an inbound **HTTP** rule on port `80` from
-     `0.0.0.0/0`. Do not add an SSH rule.
+   - Create a security group with inbound **HTTP** (`80`) and **HTTPS** (`443`)
+     rules from `0.0.0.0/0`. Do not add an SSH rule.
    - Leave the default outbound rule enabled so the host can download packages
      and container images.
 7. Under **Configure storage**, use a 16 GiB encrypted `gp3` root volume.
@@ -404,24 +404,40 @@ remaining commands. The lifecycle policy keeps the five most recent images.
    session**, select the instance, and choose **Start session**. If it is not
    listed, return to EC2 and check that `MarketplaceEC2Role` is attached and
    the Systems Manager node status is Online.
-2. In the terminal session, run:
+2. Create a free hostname at [DuckDNS](https://www.duckdns.org/), then set its
+   IPv4 address to the EC2 public IPv4 address from section 2. Wait until the
+   hostname resolves to that address before deploying; Caddy uses it to obtain
+   an HTTPS certificate. DuckDNS provides a free subdomain, not a registered
+   domain.
+3. If this is a new setup, create the backend environment file. If
+   `/opt/marketplace/backend/.env` already exists, edit it in place instead of
+   copying over it, so you keep the credentials already configured. For a new
+   setup only, run:
 
    ```bash
    sudo cp /opt/marketplace/deploy/backend.env.example /opt/marketplace/backend/.env
+   ```
+
+   Then open the file for editing:
+
+   ```bash
    sudo nano /opt/marketplace/backend/.env
    ```
 
-3. Replace every placeholder in the file:
+4. Replace every placeholder in the file:
    - Set `DB_PASSWORD` to a new, strong password. Use the same value only for
      this application database.
    - Set the Auth0 tenant, API audience, and machine-to-machine application
      values.
-   - Set `FRONTEND_URL` to `http://` followed by the EC2 public IPv4 address.
+   - Set `APP_DOMAIN` to the DuckDNS hostname only (for example,
+     `marketplace-example.duckdns.org`), with no scheme or trailing slash.
+   - Set `FRONTEND_URL` to `https://` followed by that hostname, with no
+     trailing slash.
    - Set the S3 bucket name, ARN, region, and browser-accessible image URL.
    - Set the Stripe test-mode secret key and webhook signing secret.
    - Leave `AWS_BUCKET_ACCESS_KEY` and `AWS_BUCKET_SECRET_ACCESS_KEY` unset;
      the EC2 role provides S3 access.
-4. Save and exit nano with **Ctrl+O**, **Enter**, then **Ctrl+X**. Restrict
+5. Save and exit nano with **Ctrl+O**, **Enter**, then **Ctrl+X**. Restrict
    access to the environment file:
 
    ```bash
@@ -429,7 +445,10 @@ remaining commands. The lifecycle policy keeps the five most recent images.
    ```
 
 The database is created on first start and stored in the Docker volume
-`marketplace-postgres` on the EC2 root disk.
+`marketplace-postgres` on the EC2 root disk. The AWS Compose file runs Caddy
+as the public HTTPS endpoint; it obtains and renews a Let's Encrypt
+certificate automatically. Keep inbound ports 80 and 443 open so certificate
+issuance and HTTP-to-HTTPS redirects work.
 
 ### 5. Set up GitHub Actions deployment access
 
@@ -467,7 +486,7 @@ need AWS access keys stored in GitHub.
    | `AWS_REGION` | The region used for EC2 and ECR |
    | `AWS_DEPLOY_ROLE_ARN` | ARN of `MarketplaceGitHubDeployRole` |
    | `EC2_INSTANCE_ID` | EC2 instance ID copied in section 2 |
-   | `APP_URL` | `http://<public-ip>` with no trailing slash |
+   | `APP_URL` | `https://` followed by your DuckDNS hostname, no trailing slash |
    | `AUTH0_DOMAIN` | Auth0 tenant domain without `https://` |
    | `AUTH0_CLIENT_ID` | Auth0 Regular Web Application client ID |
    | `AUTH0_AUDIENCE` | Auth0 API audience |
@@ -475,15 +494,19 @@ need AWS access keys stored in GitHub.
 ### 6. Allow the application URL in Auth0 and deploy
 
 1. In Auth0, open the Regular Web Application settings. Add the application
-   URL (`http://<public-ip>`) to **Allowed Callback URLs**, **Allowed Logout
-   URLs**, and **Allowed Web Origins**, then save.
+   HTTPS URL (`https://<your-duckdns-hostname>`) to **Allowed Callback URLs**,
+   **Allowed Logout URLs**, and **Allowed Web Origins**, then save.
 2. In GitHub, open **Actions → Deploy to EC2 → Run workflow**, select `main`,
    and start the workflow.
 3. Wait for the workflow to finish. It checks the code, builds the frontend
    and backend Docker images, pushes them to ECR, then tells Systems Manager to
    start the Compose services.
-4. Open `http://<public-ip>` in a browser. Subsequent pushes to `main`
+4. Open the HTTPS application URL in a browser. Subsequent pushes to `main`
    automatically repeat the build and deployment.
+
+If the EC2 public IPv4 address changes, update the DuckDNS record to the new
+address. The free DuckDNS subdomain remains yours, so the Auth0 URLs and
+frontend build URL do not need to change.
 
 To develop locally, continue using the instructions above and the regular
 `docker-compose.yaml`. The EC2 deployment uses a separate Compose file and

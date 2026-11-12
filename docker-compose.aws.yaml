@@ -130,8 +130,6 @@ services:
       KONG_ADMIN_LISTEN: "127.0.0.1:8001"
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
-    ports:
-      - "80:8000"
     volumes:
       - ./gateway-kong.aws.yaml:/kong/kong.yml:ro
     depends_on:
@@ -142,9 +140,30 @@ services:
     networks:
       - app
 
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.aws:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - kong
+    networks:
+      - app
+
 volumes:
   postgres-storage:
     name: marketplace-postgres
+  caddy-data:
+    name: marketplace-caddy-data
+  caddy-config:
+    name: marketplace-caddy-config
 
 networks:
   app:
