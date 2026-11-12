@@ -495,7 +495,9 @@ need AWS access keys stored in GitHub.
 
 1. In Auth0, open the Regular Web Application settings. Add the application
    HTTPS URL (`https://<your-duckdns-hostname>`) to **Allowed Callback URLs**,
-   **Allowed Logout URLs**, and **Allowed Web Origins**, then save.
+   **Allowed Logout URLs**, and **Allowed Web Origins**. Keep the existing
+   `http://localhost` entries in these fields if you also use local
+   development; Auth0 accepts multiple comma-separated URLs. Then save.
 2. In GitHub, open **Actions → Deploy to EC2 → Run workflow**, select `main`,
    and start the workflow.
 3. Wait for the workflow to finish. It checks the code, builds the frontend
