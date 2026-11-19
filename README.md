@@ -356,6 +356,12 @@ Use these values in the environment files and GitHub repository variables:
   (without `https://`).
 - Use the SPA application's client ID for `NEXT_PUBLIC_AUTH0_CLIENT_ID` and
   GitHub's `AUTH0_CLIENT_ID`.
+- Enable Refresh Token Rotation for the SPA application and allow the API to
+  issue refresh tokens. The frontend requests `offline_access` and falls back
+  to silent iframe authentication when an existing cached session has no
+  refresh token. Add the frontend origin to the SPA application's Allowed Web
+  Origins so that fallback can complete. After changing these settings, sign
+  out and sign in again to establish a session with a refresh token.
 - Use the Management API M2M application's client ID and secret only for
   `AUTH_MANAGEMENT_CLIENT_ID` and `AUTH_MANAGEMENT_CLIENT_SECRET` in the
   backend environment file. Do not put this secret in GitHub variables or the

@@ -49,9 +49,12 @@ function AuthApiSetup() {
     configureApi(async () => {
       try {
         const token = await getAccessTokenSilently();
+        console.log("Access token retrieved successfully");
         setSessionExpired(false);
         return token;
       } catch (error) {
+        console.error("Failed to retrieve access token", error);
+        setSessionExpired(true);
         if (isAuthenticationError(error)) setSessionExpired(true);
         throw error;
       }
@@ -72,9 +75,12 @@ export default function AuthProvider({ children }: Props) {
         audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
       }}
       useRefreshTokens={true}
+      useRefreshTokensFallback={true}
       cacheLocation="localstorage"
     >
-      <AuthSessionContext.Provider value={{ sessionExpired, setSessionExpired }}>
+      <AuthSessionContext.Provider
+        value={{ sessionExpired, setSessionExpired }}
+      >
         <AuthApiSetup />
         {children}
       </AuthSessionContext.Provider>
